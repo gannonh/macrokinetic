@@ -1,0 +1,212 @@
+{
+  "Debug": {
+    "log": "/Users/gannonhall/Library/Developer/XcodeBuildMCP/workspaces/jab-tracker-ios-e8bc56e0c9ac/logs/build_sim_2026-09-30T20-55-48-375Z_pid19961_7531a675.log",
+    "commands": [
+      {
+        "compiler": "ExecuteExternalTool",
+        "definitions": [],
+        "optimization": []
+      },
+      {
+        "compiler": "builtin-SwiftDriver",
+        "definitions": [
+          "DEBUG",
+          "DEBUG=1",
+          "_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG"
+        ],
+        "optimization": [
+          "-Onone"
+        ]
+      },
+      {
+        "compiler": "builtin-Swift-Compilation-Requirements",
+        "definitions": [
+          "DEBUG",
+          "DEBUG=1",
+          "_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG"
+        ],
+        "optimization": [
+          "-Onone"
+        ]
+      },
+      {
+        "compiler": "builtin-Swift-Compilation",
+        "definitions": [
+          "DEBUG",
+          "DEBUG=1",
+          "_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG"
+        ],
+        "optimization": [
+          "-Onone"
+        ]
+      }
+    ],
+    "bundle_manifest": {
+      "inputs": {
+        "bundle_identifier": "com.gannonhall.JabTracker",
+        "compiler_overrides": {
+          "SWIFT_DRIVER_SWIFT_FRONTEND_EXEC": "",
+          "SWIFT_EXEC": "",
+          "SWIFT_FRONTEND_EXEC": ""
+        },
+        "configuration": "Debug",
+        "other_swift_flags": "",
+        "platform_name": "iphonesimulator",
+        "swift_active_compilation_conditions": "DEBUG",
+        "toolchain_dir": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain"
+      },
+      "schema_version": 1
+    },
+    "Info_identity": "com.gannonhall.JabTracker"
+  },
+  "Release": {
+    "log": "/Users/gannonhall/Library/Developer/XcodeBuildMCP/workspaces/jab-tracker-ios-e8bc56e0c9ac/logs/build_sim_2026-09-30T20-57-06-013Z_pid19961_3bdb88e8.log",
+    "commands": [
+      {
+        "compiler": "ExecuteExternalTool",
+        "definitions": [],
+        "optimization": []
+      },
+      {
+        "compiler": "builtin-SwiftDriver",
+        "definitions": [],
+        "optimization": [
+          "-O"
+        ]
+      },
+      {
+        "compiler": "builtin-SwiftDriver",
+        "definitions": [],
+        "optimization": [
+          "-O"
+        ]
+      },
+      {
+        "compiler": "builtin-Swift-Compilation",
+        "definitions": [],
+        "optimization": [
+          "-O"
+        ]
+      },
+      {
+        "compiler": "builtin-Swift-Compilation",
+        "definitions": [],
+        "optimization": [
+          "-O"
+        ]
+      },
+      {
+        "compiler": "builtin-Swift-Compilation-Requirements",
+        "definitions": [],
+        "optimization": [
+          "-O"
+        ]
+      },
+      {
+        "compiler": "builtin-Swift-Compilation-Requirements",
+        "definitions": [],
+        "optimization": [
+          "-O"
+        ]
+      }
+    ],
+    "bundle_manifest": {
+      "inputs": {
+        "bundle_identifier": "com.gannonhall.JabTracker",
+        "compiler_overrides": {
+          "SWIFT_DRIVER_SWIFT_FRONTEND_EXEC": "",
+          "SWIFT_EXEC": "",
+          "SWIFT_FRONTEND_EXEC": ""
+        },
+        "configuration": "Release",
+        "other_swift_flags": "",
+        "platform_name": "iphonesimulator",
+        "swift_active_compilation_conditions": "",
+        "toolchain_dir": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain"
+      },
+      "schema_version": 1
+    },
+    "Info_identity": "com.gannonhall.JabTracker"
+  },
+  "ReleaseTestHarness": {
+    "log": "/Users/gannonhall/Library/Developer/XcodeBuildMCP/workspaces/jab-tracker-ios-e8bc56e0c9ac/logs/build_sim_2026-09-30T20-59-18-075Z_pid19961_a9d30dd7.log",
+    "commands": [
+      {
+        "compiler": "ExecuteExternalTool",
+        "definitions": [],
+        "optimization": []
+      },
+      {
+        "compiler": "builtin-SwiftDriver",
+        "definitions": [
+          "JABTRACKER_TEST_HARNESS"
+        ],
+        "optimization": [
+          "-O"
+        ]
+      },
+      {
+        "compiler": "builtin-SwiftDriver",
+        "definitions": [
+          "JABTRACKER_TEST_HARNESS"
+        ],
+        "optimization": [
+          "-O"
+        ]
+      },
+      {
+        "compiler": "builtin-Swift-Compilation",
+        "definitions": [
+          "JABTRACKER_TEST_HARNESS"
+        ],
+        "optimization": [
+          "-O"
+        ]
+      },
+      {
+        "compiler": "builtin-Swift-Compilation",
+        "definitions": [
+          "JABTRACKER_TEST_HARNESS"
+        ],
+        "optimization": [
+          "-O"
+        ]
+      },
+      {
+        "compiler": "builtin-Swift-Compilation-Requirements",
+        "definitions": [
+          "JABTRACKER_TEST_HARNESS"
+        ],
+        "optimization": [
+          "-O"
+        ]
+      },
+      {
+        "compiler": "builtin-Swift-Compilation-Requirements",
+        "definitions": [
+          "JABTRACKER_TEST_HARNESS"
+        ],
+        "optimization": [
+          "-O"
+        ]
+      }
+    ],
+    "bundle_manifest": {
+      "inputs": {
+        "bundle_identifier": "com.gannonhall.JabTrackerTestHarness",
+        "compiler_overrides": {
+          "SWIFT_DRIVER_SWIFT_FRONTEND_EXEC": "",
+          "SWIFT_EXEC": "",
+          "SWIFT_FRONTEND_EXEC": ""
+        },
+        "configuration": "ReleaseTestHarness",
+        "other_swift_flags": "",
+        "platform_name": "iphonesimulator",
+        "swift_active_compilation_conditions": "JABTRACKER_TEST_HARNESS",
+        "toolchain_dir": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain"
+      },
+      "schema_version": 1
+    },
+    "Info_identity": "com.gannonhall.JabTrackerTestHarness"
+  }
+}

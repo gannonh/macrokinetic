@@ -55,7 +55,9 @@ public class SubscriptionManager: ObservableObject {
     // MARK: - Private Properties
 
     private var updateListenerTask: Task<Void, Error>?
+    #if DEBUG || JABTRACKER_TEST_HARNESS
     private let isTestEnvironment: Bool
+    #endif
 
     #if DEBUG
         public static var testModeOverride: TestMode?
@@ -64,6 +66,7 @@ public class SubscriptionManager: ObservableObject {
 
     // MARK: - Initialization
 
+    #if DEBUG || JABTRACKER_TEST_HARNESS
     public init(isTestEnvironment: Bool = false) {
         self.isTestEnvironment = isTestEnvironment
 
@@ -72,6 +75,12 @@ public class SubscriptionManager: ObservableObject {
             self.updateListenerTask = self.listenForTransactions()
         }
     }
+
+    #else
+    public init() {
+        self.updateListenerTask = self.listenForTransactions()
+    }
+    #endif
 
     deinit {
         updateListenerTask?.cancel()
@@ -139,12 +148,15 @@ public class SubscriptionManager: ObservableObject {
 
         defer { isLoading = false }
 
+        #if DEBUG || JABTRACKER_TEST_HARNESS
         // Bypass StoreKit in unit tests but allow real StoreKit for UI tests
         if self.isTestEnvironment,
             !ProcessInfo.processInfo.arguments.contains("--ui-testing")
         {
             throw SubscriptionError.purchaseFailed("Test environment (unit) - purchases disabled")
         }
+
+        #endif
 
         do {
             let result = try await product.purchase()
@@ -181,11 +193,14 @@ public class SubscriptionManager: ObservableObject {
 
         defer { isLoading = false }
 
+        #if DEBUG || JABTRACKER_TEST_HARNESS
         // Check if we should bypass actual restore operations
         if self.shouldBypassRestore() {
             await self.handleTestModeRestore()
             return
         }
+
+        #endif
 
         // Perform actual restore operation
         do {
@@ -239,6 +254,7 @@ public class SubscriptionManager: ObservableObject {
 
     // MARK: - Private Helper Methods
 
+    #if DEBUG || JABTRACKER_TEST_HARNESS
     /// Check if restore should be bypassed for testing
     private func shouldBypassRestore() -> Bool {
         // Test environment always bypasses
@@ -273,6 +289,8 @@ public class SubscriptionManager: ObservableObject {
         self.restoreMessage = "No purchases to restore"
     }
 
+    #endif
+
     /// Set appropriate restore message based on current status
     private func setRestoreMessage() {
         switch self.subscriptionStatus {
@@ -283,6 +301,7 @@ public class SubscriptionManager: ObservableObject {
         }
     }
 
+    #if DEBUG || JABTRACKER_TEST_HARNESS
     /// Check if running in unit test environment
     private func isRunningUnitTests() -> Bool {
         ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
@@ -294,6 +313,8 @@ public class SubscriptionManager: ObservableObject {
         ProcessInfo.processInfo.arguments.contains("--ui-testing")
             || ProcessInfo.processInfo.environment["UI_TESTING"] == "true"
     }
+
+    #endif
 
     // MARK: - Private Methods
 
@@ -319,7 +340,9 @@ public class SubscriptionManager: ObservableObject {
     /// Update subscription status based on current entitlements
     @MainActor
     private func updateSubscriptionStatus() async {
+        #if DEBUG || JABTRACKER_TEST_HARNESS
         if self.isTestEnvironment { return }
+        #endif
 
         let now = Date()
         let transactions: [Transaction] = await collectCurrentEntitlementTransactions()
@@ -366,6 +389,7 @@ extension SubscriptionManager {
         return now < trialEnd ? .trialActive : .premiumActive
     }
 
+    #if DEBUG || JABTRACKER_TEST_HARNESS
     // MARK: - Test-only convenience (no StoreKit dependency)
 
     /// Lightweight input to evaluate status for tests without requiring StoreKit Transaction values.
@@ -389,4 +413,6 @@ extension SubscriptionManager {
         let trialEnd = latest.purchaseDate.addingTimeInterval(trialSeconds)
         return now < trialEnd ? .trialActive : .premiumActive
     }
+    #endif
+
 }

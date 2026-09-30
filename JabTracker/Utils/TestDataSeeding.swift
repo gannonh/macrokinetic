@@ -7,7 +7,7 @@
 //
 //  IMPORTANT: Only compiled when building for testing (DEBUG or testing environments)
 
-#if DEBUG || TEST
+#if DEBUG || JABTRACKER_TEST_HARNESS
     import Foundation
     import OSLog
     import SwiftData

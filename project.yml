@@ -1,4 +1,8 @@
 name: JabTracker
+configs:
+  Debug: debug
+  Release: release
+  ReleaseTestHarness: release
 options:
   bundleIdPrefix: com.gannonhall
   deploymentTarget:
@@ -43,13 +47,34 @@ targets:
       - path: JabTracker/Resources/usda_foods.sqlite
       - path: JabTrackerStoreKit.storekit
     settings:
-      PRODUCT_BUNDLE_IDENTIFIER: com.gannonhall.JabTracker
-      CODE_SIGN_ENTITLEMENTS: JabTracker/JabTracker.entitlements
-      CODE_SIGN_STYLE: Automatic
-      INFOPLIST_FILE: JabTracker/Info.plist
-      ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-      ENABLE_PREVIEWS: true
-      SWIFT_EMIT_LOC_STRINGS: true
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.gannonhall.JabTracker
+        CODE_SIGN_ENTITLEMENTS: JabTracker/JabTracker.entitlements
+        CODE_SIGN_STYLE: Automatic
+        INFOPLIST_FILE: JabTracker/Info.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ENABLE_PREVIEWS: true
+        SWIFT_EMIT_LOC_STRINGS: true
+      configs:
+        Release:
+          SWIFT_ACTIVE_COMPILATION_CONDITIONS: ""
+        ReleaseTestHarness:
+          PRODUCT_BUNDLE_IDENTIFIER: com.gannonhall.JabTrackerTestHarness
+          CODE_SIGN_ENTITLEMENTS: JabTracker/JabTrackerTestHarness.entitlements
+          SWIFT_ACTIVE_COMPILATION_CONDITIONS: JABTRACKER_TEST_HARNESS
+    postBuildScripts:
+      - name: Record resolved Swift build inputs
+        script: |
+          /usr/bin/python3 "$SRCROOT/scripts/release/build-controls.py" generate \
+            --info-plist "$TARGET_BUILD_DIR/$INFOPLIST_PATH" \
+            --output "$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/JabTrackerBuildManifest.json"
+        inputFiles:
+          - "$(SRCROOT)/scripts/release/build-controls.py"
+          - "$(TARGET_BUILD_DIR)/$(INFOPLIST_PATH)"
+        outputFiles:
+          - "$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/JabTrackerBuildManifest.json"
+          - "$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/JabTrackerBuildManifest.json.tmp"
+        basedOnDependencyAnalysis: false
       
   JabTrackerUnitTests:
     type: bundle.unit-test
@@ -168,6 +193,8 @@ schemes:
         JabTrackerUnitTests: [test]
         JabTrackerIntegrationTests: [test]
         JabTrackerUITests: [test]
+    archive:
+      config: Release
     test:
       targets:
         - name: JabTrackerUnitTests
@@ -259,13 +286,29 @@ schemes:
         JabTracker: all
         JabTrackerFoodSearchBenchmarkTests: [test]
     test:
-      config: Release
+      config: ReleaseTestHarness
       targets:
         - name: JabTrackerFoodSearchBenchmarkTests
           parallelizable: false
       commandLineArguments:
         "--bypass-onboarding": true
         "--ui-testing": true
+
+  JabTrackerReleaseTestHarness:
+    build:
+      targets:
+        JabTracker: all
+        JabTrackerUITests: [test]
+    run:
+      config: ReleaseTestHarness
+    archive:
+      config: ReleaseTestHarness
+    test:
+      config: ReleaseTestHarness
+      targets:
+        - name: JabTrackerUITests
+          parallelizable: false
+      storeKitConfiguration: JabTrackerStoreKit.storekit
 
   JabTrackerUnitTests:
     build:

@@ -7,6 +7,7 @@ ipa="$2"
 expected_version="$3"
 expected_build="$4"
 expected_database_sha="$5"
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 archive_plist="$RUNNER_TEMP/archive-info.plist"
 plutil -convert xml1 -o "$archive_plist" "$archive_app/Info.plist"
@@ -27,5 +28,7 @@ ipa_build=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$RUNNER_TEMP/ip
 [[ "$ipa_version" == "$expected_version" && "$ipa_build" == "$expected_build" ]] || exit 1
 ipa_db_sha=$(shasum -a 256 "$ipa_app/usda_foods.sqlite" | awk '{print $1}')
 [[ "$ipa_db_sha" == "$expected_database_sha" ]] || { echo "IPA database checksum mismatch" >&2; exit 1; }
+
+python3 "$script_dir/build-controls.py" verify --archive-app "$archive_app" --ipa-app "$ipa_app"
 
 echo "archive and IPA version/build/checksum verification passed"

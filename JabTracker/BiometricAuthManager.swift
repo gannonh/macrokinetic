@@ -65,6 +65,7 @@ class BiometricAuthManager: ObservableObject {
     }
 
     private func checkBiometricAvailability() {
+        #if DEBUG || JABTRACKER_TEST_HARNESS
         // In testing mode, provide predictable behavior
         let isUITesting =
             ProcessInfo.processInfo.environment["UI_TESTING"] == "true"
@@ -77,6 +78,8 @@ class BiometricAuthManager: ObservableObject {
             self.biometricType = .faceID
             return
         }
+
+        #endif
 
         let context = LAContext()
         var error: NSError?
