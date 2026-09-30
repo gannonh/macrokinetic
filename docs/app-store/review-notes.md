@@ -18,7 +18,7 @@ Replace this section with the confirmed final route. Do not provide fictitious c
 - Sign-in requirement and reviewer access: UNRESOLVED. Verify the shipping Apple sign-in flow and any guest route.
 - First-run permission and onboarding steps: UNVERIFIED, KAT-3588.
 - Open Food Log, search the bundled library, add a food, and confirm the recorded meal and totals: UNVERIFIED, KAT-3587.
-- Open Metrics, record a measurement, and review persisted history: UNVERIFIED, KAT-3595.
+- Open Add (+), choose Metrics, and record a body measurement in Log Metrics: UNVERIFIED, KAT-3595. Confirm exact saved values and relaunch retention; no measurement-history screen is advertised.
 - Optional medication route through More, GLP-1 Programs, and dose history: UNVERIFIED, KAT-3186.
 - Open privacy, terms, support, and food dataset credits: UNVERIFIED, KAT-3592 and KAT-3593.
 - Account deletion route and its HealthKit, local-storage, and sync effects: UNRESOLVED, KAT-3586 and KAT-3584.
