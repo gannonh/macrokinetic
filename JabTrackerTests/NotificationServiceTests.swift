@@ -169,10 +169,8 @@ struct NotificationServiceTests {
         // THEN: Categories should be registered (verify through mock's stored categories)
         let categories = notificationCenter.setCategories
 
-        // Verify both categories exist
-        let categoryIdentifiers = categories.map { $0.identifier }
-        #expect(categoryIdentifiers.contains("DOSE_REMINDER"), "DOSE_REMINDER category should be registered")
-        #expect(categoryIdentifiers.contains("MISSED_DOSE"), "MISSED_DOSE category should be registered")
+        let categoryIdentifiers = Set(categories.map { $0.identifier })
+        #expect(categoryIdentifiers == ["DOSE_REMINDER", "MISSED_DOSE", "WEIGH_IN_REMINDER", "FOOD_LOG_REMINDER"])
 
         // Verify DOSE_REMINDER has correct actions
         let doseReminderCategory = categories.first { $0.identifier == "DOSE_REMINDER" }
@@ -752,205 +750,186 @@ struct NotificationServiceTests {
         #expect(true, "Limit warning logging behavior validated")
     }
 
-    // MARK: - Titration Notification Tests (4 tests - Stream D)
-
-    @Test("Schedule titration notification - basic scheduling")
-    func testScheduleTitrationNotificationBasic() async throws {
-        // GIVEN: NotificationService and titration
+    @Test(
+        "Titration notification scheduling is unavailable before profile validation or system scheduling",
+        arguments: ["future-increase", "future-decrease", "past", "orphan"]
+    )
+    func testTitrationSchedulingIsUnavailable(record: String) async throws {
         let (scheduleService, container) = try createTestScheduleService()
-        _ = container  // Keep container alive for duration of test
+        _ = container
         let mockCenter = createMockNotificationCenter()
-        let notificationService = NotificationService(
-            scheduleService: scheduleService,
-            notificationCenter: mockCenter
-        )
-
-        // Create medication profile and titration
+        mockCenter.authorizationStatus = .denied
+        let service = NotificationService(scheduleService: scheduleService, notificationCenter: mockCenter)
         let context = scheduleService.context
-        let profile = MedicationProfile(
-            genericName: "semaglutide",
-            brandName: "Ozempic",
-            currentDose: 0.5
-        )
+        let profile = MedicationProfile(genericName: "semaglutide", brandName: "Ozempic", currentDose: 0.5)
         context.insert(profile)
-
-        let titrationDate = Date().addingTimeInterval(86400)  // Tomorrow
+        let titrationDate = Date(timeIntervalSince1970: record == "past" ? 1_600_000_000 : 1_800_000_000)
+        let fromDose = record == "future-decrease" ? 2.5 : 0.5
+        let toDose = record == "future-decrease" ? 1.25 : 1.0
         let titration = DoseTitration(
-            fromDose: 0.5,
-            toDose: 1.0,
-            scheduledDate: titrationDate
+            fromDose: fromDose,
+            toDose: toDose,
+            scheduledDate: titrationDate,
+            notes: "Recorded plan",
+            medicationProfile: record == "orphan" ? nil : profile
         )
-        titration.medicationProfile = profile
+        titration.updatedAt = Date(timeIntervalSince1970: 1_700_000_000)
         context.insert(titration)
         try context.save()
 
-        // WHEN: Schedule titration notification
-        try await notificationService.scheduleTitrationNotification(for: titration)
-
-        // THEN: Notification should be scheduled
-        let pendingRequests = await mockCenter.pendingNotificationRequests()
-        #expect(!pendingRequests.isEmpty, "Should have pending notification")
-
-        // Verify notification content contains dose information
-        let request = pendingRequests.first
-        #expect(request?.content.title.contains("Dose") == true, "Title should mention dose")
-        #expect(
-            (request?.content.body.contains("0.5") == true) && (request?.content.body.contains("1.0") == true),
-            "Body should contain both dose amounts"
-        )
-        #expect(request?.content.categoryIdentifier == "TITRATION", "Should use TITRATION category")
-    }
-
-    @Test("Schedule titration notification - past date")
-    func testScheduleTitrationNotificationPastDate() async throws {
-        // GIVEN: NotificationService and titration with past date
-        let (scheduleService, container) = try createTestScheduleService()
-        _ = container  // Keep container alive for duration of test
-        let notificationService = NotificationService(
-            scheduleService: scheduleService,
-            notificationCenter: createMockNotificationCenter()
-        )
-
-        let context = scheduleService.context
-        let profile = MedicationProfile(
-            genericName: "semaglutide",
-            brandName: "Ozempic",
-            currentDose: 0.5
-        )
-        context.insert(profile)
-
-        let pastDate = Date().addingTimeInterval(-86400)  // Yesterday
-        let titration = DoseTitration(
-            fromDose: 0.5,
-            toDose: 1.0,
-            scheduledDate: pastDate
-        )
-        titration.medicationProfile = profile
-        context.insert(titration)
-        try context.save()
-
-        // WHEN: Attempt to schedule notification for past titration
-        try await notificationService.scheduleTitrationNotification(for: titration)
-
-        // THEN: No notification should be scheduled (past dates are skipped)
-        let mockCenter = notificationService.notificationCenter as? MockNotificationCenter
-        let pendingRequests = await mockCenter?.pendingNotificationRequests() ?? []
-        #expect(pendingRequests.isEmpty, "Should not schedule notifications for past dates")
-    }
-
-    @Test("Schedule titration notification - notification content")
-    func testScheduleTitrationNotificationContent() async throws {
-        // GIVEN: NotificationService and titration
-        let (scheduleService, container) = try createTestScheduleService()
-        _ = container  // Keep container alive for duration of test
-        let mockCenter = createMockNotificationCenter()
-        let notificationService = NotificationService(
-            scheduleService: scheduleService,
-            notificationCenter: mockCenter
-        )
-
-        let context = scheduleService.context
-        let profile = MedicationProfile(
-            genericName: "tirzepatide",
-            brandName: "Mounjaro",
-            currentDose: 2.5
-        )
-        context.insert(profile)
-
-        let titrationDate = Date().addingTimeInterval(86400)  // Tomorrow
-        let titration = DoseTitration(
-            fromDose: 2.5,
-            toDose: 5.0,
-            scheduledDate: titrationDate
-        )
-        titration.medicationProfile = profile
-        context.insert(titration)
-        try context.save()
-
-        // WHEN: Schedule titration notification
-        try await notificationService.scheduleTitrationNotification(for: titration)
-
-        // THEN: Verify notification content is complete and accurate
-        let pendingRequests = await mockCenter.pendingNotificationRequests()
-        let request = pendingRequests.first
-        #expect(request != nil, "Should have pending notification")
-
-        // Verify title indicates dose change
-        #expect(
-            (request?.content.title.contains("Dose") == true) && (request?.content.title.contains("Increase") == true),
-            "Title should indicate dose increase"
-        )
-
-        // Verify body contains both dose amounts
-        #expect(request?.content.body.contains("2.5") == true, "Body should contain fromDose")
-        #expect(request?.content.body.contains("5.0") == true, "Body should contain toDose")
-
-        // Verify category identifier for actions
-        #expect(request?.content.categoryIdentifier == "TITRATION", "Should use TITRATION category")
-
-        // Verify userInfo contains titration ID
-        #expect(
-            request?.content.userInfo["titrationId"] as? String == titration.id.uuidString,
-            "Should include titration ID in userInfo"
-        )
-    }
-
-    @Test("Schedule titration notification - trigger date")
-    func testScheduleTitrationNotificationTriggerDate() async throws {
-        // GIVEN: NotificationService and titration scheduled for specific date
-        let (scheduleService, container) = try createTestScheduleService()
-        _ = container  // Keep container alive for duration of test
-        let mockCenter = createMockNotificationCenter()
-        let notificationService = NotificationService(
-            scheduleService: scheduleService,
-            notificationCenter: mockCenter
-        )
-
-        let context = scheduleService.context
-        let profile = MedicationProfile(
-            genericName: "semaglutide",
-            brandName: "Ozempic",
-            currentDose: 0.5
-        )
-        context.insert(profile)
-
-        // Schedule titration for exactly 7 days from now at 9:00 AM
-        let calendar = Calendar.current
-        var components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: Date())
-        components.day! += 7
-        components.hour = 9
-        components.minute = 0
-        let titrationDate = calendar.date(from: components)!
-
-        let titration = DoseTitration(
-            fromDose: 0.5,
-            toDose: 1.0,
-            scheduledDate: titrationDate
-        )
-        titration.medicationProfile = profile
-        context.insert(titration)
-        try context.save()
-
-        // WHEN: Schedule titration notification
-        try await notificationService.scheduleTitrationNotification(for: titration)
-
-        // THEN: Notification should trigger on titration date at 9:00 AM
-        let pendingRequests = await mockCenter.pendingNotificationRequests()
-        let request = pendingRequests.first
-        #expect(request != nil, "Should have pending notification")
-
-        // Verify trigger is UNCalendarNotificationTrigger
-        if let trigger = request?.trigger as? UNCalendarNotificationTrigger {
-            let triggerDate = trigger.nextTriggerDate()
-            #expect(triggerDate != nil, "Trigger should have next trigger date")
-
-            // Verify trigger date matches titration date (within 1 minute tolerance)
-            if let triggerDate = triggerDate {
-                let timeDifference = abs(triggerDate.timeIntervalSince(titrationDate))
-                #expect(timeDifference < 60, "Trigger should be at titration date")
-            }
-        } else {
-            #expect(Bool(false), "Should have calendar trigger")
+        await #expect(throws: NotificationServiceError.medicalCalculatorsUnavailable) {
+            try await service.scheduleTitrationNotification(for: titration)
         }
+
+        #expect(titration.fromDose == (record == "future-decrease" ? 2.5 : 0.5))
+        #expect(titration.toDose == (record == "future-decrease" ? 1.25 : 1.0))
+        #expect(titration.scheduledDate.timeIntervalSince1970 == (record == "past" ? 1_600_000_000 : 1_800_000_000))
+        #expect(titration.updatedAt == Date(timeIntervalSince1970: 1_700_000_000))
+        #expect(titration.notes == "Recorded plan")
+        #expect(titration.isCompleted == false)
+        #expect(titration.completedDate == nil)
+        #expect(profile.currentDose == 0.5)
+        #expect(profile.brandName == "Ozempic")
+        #expect(try context.fetchCount(FetchDescriptor<DoseTitration>()) == 1)
+        #expect(try context.fetchCount(FetchDescriptor<MedicationProfile>()) == 1)
+        #expect(context.hasChanges == false)
+        #expect(mockCenter.addCallCount == 0)
+        #expect(mockCenter.addedRequests.isEmpty)
+        #expect(mockCenter.removedIdentifiers.isEmpty)
+        #expect(mockCenter.didRemoveAll == false)
+    }
+
+    @Test("Startup cancels only pending legacy titration requests and preserves every recorded value")
+    func testStartupCancelsOnlyPendingTitrationRequests() async throws {
+        let container = try TestDataSeeding.createTestContainer()
+        let context = container.mainContext
+        let originalDate = Date(timeIntervalSince1970: 1_800_000_000)
+        let profile = MedicationProfile(genericName: "semaglutide", brandName: "Ozempic", currentDose: 0.625)
+        context.insert(profile)
+        let schedule = DoseSchedule(medicationProfile: profile)
+        let originalSchedule = Data(#"{"doseAmount":0.375,"frequency":1,"pattern":"weekly"}"#.utf8)
+        schedule.baseSchedule = originalSchedule
+        schedule.createdAt = originalDate
+        context.insert(schedule)
+        let scheduledDose = ScheduledDose(scheduledTime: originalDate, doseAmount: 0.375)
+        scheduledDose.schedule = schedule
+        context.insert(scheduledDose)
+        let titration = DoseTitration(
+            fromDose: 0.625,
+            toDose: 1.25,
+            scheduledDate: originalDate,
+            notes: "Prescribed plan",
+            medicationProfile: profile
+        )
+        context.insert(titration)
+        try context.save()
+        let mockCenter = createMockNotificationCenter()
+        func request(
+            _ identifier: String, category: String = "", userInfo: [AnyHashable: Any] = [:]
+        ) -> UNNotificationRequest {
+            let content = UNMutableNotificationContent()
+            content.categoryIdentifier = category
+            content.userInfo = userInfo
+            content.body = identifier
+            return UNNotificationRequest(identifier: identifier, content: content, trigger: nil)
+        }
+        mockCenter.addedRequests = [
+            request("legacy-category", category: "TITRATION"),
+            request("legacy-payload", userInfo: ["titrationId": "recorded-plan"]),
+            request("titration-existing"),
+            request("titration-remind-existing"),
+            request("dose-existing", category: "DOSE_REMINDER", userInfo: ["scheduledDoseId": scheduledDose.id.uuidString]),
+            request("missed-existing", category: "MISSED_DOSE", userInfo: ["scheduledDoseId": scheduledDose.id.uuidString]),
+            request("weigh-existing", category: "WEIGH_IN_REMINDER"),
+            request("meal-existing", category: "FOOD_LOG_REMINDER"),
+        ]
+
+        await NotificationService.cancelUnavailableTitrationNotifications(notificationCenter: mockCenter)
+
+        #expect(mockCenter.removedIdentifiers == [[
+            "legacy-category", "legacy-payload", "titration-existing", "titration-remind-existing",
+        ]])
+        #expect(mockCenter.addedRequests.map(\.identifier) == [
+            "dose-existing", "missed-existing", "weigh-existing", "meal-existing",
+        ])
+        #expect(mockCenter.addedRequests.map { $0.content.body } == [
+            "dose-existing", "missed-existing", "weigh-existing", "meal-existing",
+        ])
+        #expect(mockCenter.addedRequests.map { $0.content.categoryIdentifier } == [
+            "DOSE_REMINDER", "MISSED_DOSE", "WEIGH_IN_REMINDER", "FOOD_LOG_REMINDER",
+        ])
+        let doseReminder = try #require(mockCenter.request(withIdentifier: "dose-existing"))
+        let missedReminder = try #require(mockCenter.request(withIdentifier: "missed-existing"))
+        #expect(doseReminder.content.userInfo["scheduledDoseId"] as? String == scheduledDose.id.uuidString)
+        #expect(missedReminder.content.userInfo["scheduledDoseId"] as? String == scheduledDose.id.uuidString)
+        #expect(mockCenter.addCallCount == 0)
+        #expect(mockCenter.didRemoveAll == false)
+        #expect(profile.genericName == "semaglutide")
+        #expect(profile.brandName == "Ozempic")
+        #expect(profile.currentDose == 0.625)
+        #expect(schedule.baseSchedule == originalSchedule)
+        #expect(schedule.createdAt == Date(timeIntervalSince1970: 1_800_000_000))
+        #expect(scheduledDose.doseAmount == 0.375)
+        #expect(scheduledDose.scheduledTime == Date(timeIntervalSince1970: 1_800_000_000))
+        #expect(scheduledDose.actualDose == nil)
+        #expect(titration.fromDose == 0.625)
+        #expect(titration.toDose == 1.25)
+        #expect(titration.scheduledDate == Date(timeIntervalSince1970: 1_800_000_000))
+        #expect(titration.notes == "Prescribed plan")
+        #expect(titration.isCompleted == false)
+        #expect(titration.completedDate == nil)
+        #expect(try context.fetchCount(FetchDescriptor<MedicationProfile>()) == 1)
+        #expect(try context.fetchCount(FetchDescriptor<DoseSchedule>()) == 1)
+        #expect(try context.fetchCount(FetchDescriptor<ScheduledDose>()) == 1)
+        #expect(try context.fetchCount(FetchDescriptor<DoseTitration>()) == 1)
+        #expect(context.hasChanges == false)
+
+        await NotificationService.cancelUnavailableTitrationNotifications(notificationCenter: mockCenter)
+        #expect(mockCenter.removedIdentifiers.count == 1)
+        #expect(mockCenter.addCallCount == 0)
+        #expect(mockCenter.addedRequests.map(\.identifier) == [
+            "dose-existing", "missed-existing", "weigh-existing", "meal-existing",
+        ])
+    }
+
+    @Test(
+        "Legacy titration requests have no foreground notification presentation",
+        arguments: ["category", "payload", "identifier"]
+    )
+    func testForegroundPresentationSuppressesTitrationRequests(marker: String) async throws {
+        let (scheduleService, container) = try createTestScheduleService()
+        _ = container
+        let mockCenter = createMockNotificationCenter()
+        let service = NotificationService(scheduleService: scheduleService, notificationCenter: mockCenter)
+        let content = UNMutableNotificationContent()
+        content.categoryIdentifier = marker == "category" ? "TITRATION" : "DOSE_REMINDER"
+        if marker == "payload" {
+            content.userInfo = ["titrationId": "recorded-plan"]
+        }
+        let request = UNNotificationRequest(
+            identifier: marker == "identifier" ? "titration-remind-existing" : "legacy-request",
+            content: content,
+            trigger: nil
+        )
+
+        #expect(service.foregroundPresentationOptions(for: request) == [])
+        #expect(mockCenter.addCallCount == 0)
+    }
+
+    @Test(
+        "Ordinary dose and nutrition reminders retain foreground presentation",
+        arguments: ["DOSE_REMINDER", "MISSED_DOSE", "WEIGH_IN_REMINDER", "FOOD_LOG_REMINDER"]
+    )
+    func testForegroundPresentationPreservesOrdinaryReminders(category: String) async throws {
+        let (scheduleService, container) = try createTestScheduleService()
+        _ = container
+        let mockCenter = createMockNotificationCenter()
+        let service = NotificationService(scheduleService: scheduleService, notificationCenter: mockCenter)
+        let content = UNMutableNotificationContent()
+        content.categoryIdentifier = category
+        let request = UNNotificationRequest(identifier: "ordinary-request", content: content, trigger: nil)
+
+        #expect(service.foregroundPresentationOptions(for: request) == [.banner, .sound, .badge])
+        #expect(mockCenter.addCallCount == 0)
     }
 }

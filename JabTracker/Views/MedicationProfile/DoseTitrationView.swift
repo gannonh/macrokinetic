@@ -22,6 +22,12 @@ struct DoseTitrationView: View {
     }
 
     var body: some View {
+        if ReleasePolicy.isEnabled(.medicalCalculators) {
+            titrationContent
+        }
+    }
+
+    private var titrationContent: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
@@ -155,6 +161,7 @@ struct DoseTitrationView: View {
     // MARK: - Business Logic
 
     private func markTitrationCompleted(_ titration: DoseTitration) {
+        guard ReleasePolicy.isEnabled(.medicalCalculators) else { return }
         titration.markCompleted()
 
         do {
@@ -165,6 +172,7 @@ struct DoseTitrationView: View {
     }
 
     private func deleteTitration(_ titration: DoseTitration) {
+        guard ReleasePolicy.isEnabled(.medicalCalculators) else { return }
         self.modelContext.delete(titration)
 
         do {
@@ -284,6 +292,12 @@ struct CreateTitrationView: View {
     }
 
     var body: some View {
+        if ReleasePolicy.isEnabled(.medicalCalculators) {
+            creationContent
+        }
+    }
+
+    private var creationContent: some View {
         NavigationStack {
             Form {
                 Section("Escalation Details") {
@@ -335,6 +349,7 @@ struct CreateTitrationView: View {
     }
 
     private func saveTitration() {
+        guard ReleasePolicy.isEnabled(.medicalCalculators) else { return }
         // Validate input
         guard self.targetDose > self.profile.currentDose else {
             self.errorMessage = "Target dose must be higher than current dose."

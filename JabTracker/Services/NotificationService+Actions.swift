@@ -58,11 +58,24 @@ extension NotificationService {
     /// - Parameter response: The notification response from UNUserNotificationCenter
     /// - Throws: NotificationServiceError if response handling fails
     func handleNotificationResponse(_ response: UNNotificationResponse) async throws {
-        actionLogger.info("Handling notification response: \(response.actionIdentifier)")
+        try await handleNotificationResponse(
+            actionIdentifier: response.actionIdentifier,
+            request: response.notification.request
+        )
+    }
+
+    func handleNotificationResponse(actionIdentifier: String, request: UNNotificationRequest) async throws {
+        if !ReleasePolicy.isEnabled(.medicalCalculators)
+            && (Self.isTitrationRequest(request)
+                || ["COMPLETE_TITRATION", "RESCHEDULE_TITRATION", "REMIND_LATER_TITRATION"].contains(actionIdentifier))
+        {
+            throw NotificationServiceError.medicalCalculatorsUnavailable
+        }
+        actionLogger.info("Handling notification response: \(actionIdentifier)")
 
         // Extract scheduled dose ID from user info
         guard
-            let doseIDString = response.notification.request.content.userInfo[
+            let doseIDString = request.content.userInfo[
                 NotificationService.UserInfoKeys.scheduledDoseId] as? String,
             let doseID = UUID(uuidString: doseIDString)
         else {
@@ -81,7 +94,7 @@ extension NotificationService {
         }
 
         // Route to action handler
-        try await handleNotificationAction(response.actionIdentifier, for: scheduledDose)
+        try await handleNotificationAction(actionIdentifier, for: scheduledDose)
     }
 
     // MARK: - Private Action Handlers
@@ -259,6 +272,9 @@ extension NotificationService {
         schedule: DoseSchedule? = nil,
         newDate: Date? = nil
     ) async throws {
+        guard ReleasePolicy.isEnabled(.medicalCalculators) else {
+            throw NotificationServiceError.medicalCalculatorsUnavailable
+        }
         actionLogger.info("Handling titration action: \(actionIdentifier) for titration: \(titration.id)")
 
         switch actionIdentifier {

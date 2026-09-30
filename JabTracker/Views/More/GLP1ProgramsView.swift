@@ -17,45 +17,49 @@ struct GLP1ProgramsView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var authManager: AuthenticationManager
 
-    // Services (same pattern as ShotsView)
     @State private var viewModel = AnalyticsViewModel()
     @State private var doseDataService = DoseDataService()
     @State private var chartDataProcessor = ChartDataProcessor()
     @State private var analyticsService = AnalyticsService()
     @State private var chartDatasetService: ChartDatasetService
 
-    // Section selection
     @State private var selectedSection: ProgramSection = .analytics
-    @State private var selectedAnalyticsSection: ShotsSection = .concentration
+    @State private var selectedAnalyticsSection: ShotsSection = .history
     @State private var selectedTimePeriod: ChartDataProcessor.TimePeriod = .last30Days
     @State private var selectedHistoryMode: HistoryMode = .list
 
-    // Data (manual fetch like ShotsView)
     @State private var currentUser: User?
     @State private var medicationProfiles: [MedicationProfile] = []
     @State private var isLoadingData = true
 
-    /// Top-level section selection for GLP-1 Programs
     enum ProgramSection: String, CaseIterable {
         case analytics = "Analytics"
         case medications = "Medications"
     }
 
-    /// Analytics sub-section selection (reuses ShotsView enum)
     enum ShotsSection: String, CaseIterable {
         case concentration = "Concentration"
         case adherence = "Adherence"
         case history = "History"
+
+        var isEnabled: Bool {
+            switch self {
+            case .concentration: return ReleasePolicy.isEnabled(.concentrationEstimates)
+            case .adherence, .history: return true
+            }
+        }
+    }
+
+    private var activeAnalyticsSection: ShotsSection {
+        selectedAnalyticsSection.isEnabled ? selectedAnalyticsSection : .history
     }
 
     init() {
         self._chartDatasetService = State(wrappedValue: ChartDatasetService())
     }
 
-    // State for adding medication
     @State private var showingAddMedication = false
 
-    // State for medication management
     @State private var profileToDelete: MedicationProfile?
     @State private var showingDeleteConfirmation = false
     @State private var showingError = false
@@ -63,7 +67,6 @@ struct GLP1ProgramsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Top-level section picker (Analytics | Medications)
             Picker("Section", selection: $selectedSection) {
                 ForEach(ProgramSection.allCases, id: \.self) { section in
                     Text(section.rawValue).tag(section)
@@ -76,7 +79,6 @@ struct GLP1ProgramsView: View {
             // descendant accessibility identifiers such as dose-history-search.
             .accessibilityIdentifier("glp1-programs-view")
 
-            // Content based on selected section
             switch selectedSection {
             case .analytics:
                 analyticsContent
@@ -96,7 +98,7 @@ struct GLP1ProgramsView: View {
                     .accessibilityIdentifier("add-medication-button")
                 }
             }
-            if selectedSection == .analytics && selectedAnalyticsSection == .concentration {
+            if selectedSection == .analytics && activeAnalyticsSection == .concentration {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         Self.logger.info("🔄 Toolbar refresh button tapped - clearing cache")
@@ -113,7 +115,7 @@ struct GLP1ProgramsView: View {
         }
         .onAppear {
             loadData()
-            if selectedSection == .analytics && selectedAnalyticsSection == .concentration {
+            if selectedSection == .analytics && activeAnalyticsSection == .concentration {
                 refreshChartDataset()
             }
         }
@@ -140,9 +142,11 @@ struct GLP1ProgramsView: View {
 
     @ViewBuilder
     private var analyticsContent: some View {
-        // Sub-picker for analytics sections
-        Picker("Analytics Section", selection: $selectedAnalyticsSection) {
-            ForEach(ShotsSection.allCases, id: \.self) { section in
+        Picker("Analytics Section", selection: Binding(
+            get: { activeAnalyticsSection },
+            set: { selectedAnalyticsSection = $0.isEnabled ? $0 : .history }
+        )) {
+            ForEach(ShotsSection.allCases.filter { $0.isEnabled }, id: \.self) { section in
                 Text(section.rawValue).tag(section)
             }
         }
@@ -151,11 +155,10 @@ struct GLP1ProgramsView: View {
         .padding(.bottom, 8)
         .accessibilityIdentifier("analytics-section-picker")
 
-        // Sub-controls based on selected analytics section
         analyticsControls
 
         // Content - History gets full height, others get ScrollView
-        if selectedAnalyticsSection == .history {
+        if activeAnalyticsSection == .history {
             HistorySection(selectedMode: selectedHistoryMode)
         } else {
             ScrollView {
@@ -176,7 +179,7 @@ struct GLP1ProgramsView: View {
 
     @ViewBuilder
     private var analyticsControls: some View {
-        switch selectedAnalyticsSection {
+        switch activeAnalyticsSection {
         case .concentration:
             TimePeriodSelector(selectedPeriod: $selectedTimePeriod)
                 .padding(.horizontal)
@@ -205,7 +208,7 @@ struct GLP1ProgramsView: View {
 
     @ViewBuilder
     private var analyticsSectionContent: some View {
-        switch selectedAnalyticsSection {
+        switch activeAnalyticsSection {
         case .concentration:
             ConcentrationSection(
                 user: currentUser,
@@ -232,7 +235,6 @@ struct GLP1ProgramsView: View {
     @ViewBuilder
     private var medicationsContent: some View {
         if medicationProfiles.isEmpty {
-            // Empty state with add button
             VStack(spacing: 16) {
                 Spacer()
 
@@ -244,7 +246,7 @@ struct GLP1ProgramsView: View {
                     .font(DesignTokens.Typography.headline)
                     .foregroundColor(.secondary)
 
-                Text("Add your first medication profile to get started with dose tracking and calculations.")
+                Text("Add your first medication profile to record prescribed doses and schedules.")
                     .font(DesignTokens.Typography.body)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -264,7 +266,6 @@ struct GLP1ProgramsView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
-            // Medication list
             List {
                 Section("Your Medications") {
                     ForEach(medicationProfiles, id: \.id) { profile in
@@ -412,6 +413,7 @@ struct GLP1ProgramsView: View {
     }
 
     private func refreshChartDataset() {
+        guard ReleasePolicy.isEnabled(.concentrationEstimates) else { return }
         guard let user = currentUser else {
             viewModel.fullChartDataset = nil
             viewModel.chartDataset = nil
@@ -447,8 +449,8 @@ struct GLP1ProgramsView: View {
     }
 
     /// Force regenerate chart dataset (bypasses cache)
-    /// Called when user taps refresh button to manually clear stale data
     private func forceRegenerateChartDataset() {
+        guard ReleasePolicy.isEnabled(.concentrationEstimates) else { return }
         guard let user = currentUser else { return }
 
         Self.logger.info("🔄 Force regenerating chart dataset (user requested)")
@@ -531,6 +533,9 @@ private struct MedicationProfileRowContent: View {
     }
 
     private var frequencyDisplay: String {
+        if !ReleasePolicy.isEnabled(.medicalCalculators) {
+            return profile.schedules?.contains { $0.isActive } == true ? "Recorded schedule" : "Schedule not set"
+        }
         guard let medication = Medication(rawValue: profile.medicationType) else {
             return "Unknown"
         }

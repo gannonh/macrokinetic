@@ -45,8 +45,6 @@ struct QuickDoseViewModelTests {
     @Test("Cannot save dose with zero amount (no profile selected)")
     @MainActor
     func cannotSaveDoseWithZeroAmount() async {
-        // Note: When a profile is selected, doseAmount clamps to valid range
-        // So to test zero amount, we need no profile (range 0...0)
         let viewModel = QuickDoseViewModel()
         viewModel.doseAmount = 0.0
         viewModel.selectedInjectionSite = "Thigh"
@@ -343,9 +341,9 @@ struct QuickDoseViewModelTests {
 
     // MARK: - Split Dose Tests
 
-    @Test("Split dose schedule shows half the weekly dose per administration")
+    @Test("Split profiles require an explicitly recorded prescribed amount")
     @MainActor
-    func splitDoseShowsHalfWeeklyDose() async {
+    func splitDoseRequiresExplicitPrescribedAmount() async {
         // Given: A medication profile with split-dose schedule
         let profile = MedicationProfile(genericName: "semaglutide", brandName: "Ozempic", currentDose: 2.0)
 
@@ -360,8 +358,13 @@ struct QuickDoseViewModelTests {
         // When: Selecting the profile
         viewModel.selectedMedicationProfile = profile
 
-        // Then: Dose amount should be half (split between 2 weekly doses)
-        #expect(viewModel.doseAmount == 1.0, "Split-dose should show half the weekly dose")
+        #expect(viewModel.doseAmount == 0)
+        #expect(viewModel.canSaveDose == false)
+        viewModel.doseAmount = 0.375
+        viewModel.selectedInjectionSite = "Thigh"
+        #expect(viewModel.doseAmount == 0.375)
+        #expect(viewModel.canSaveDose == true)
+        #expect(profile.currentDose == 2.0)
     }
 
     @Test("Non-split dose schedule shows full dose")
@@ -472,19 +475,18 @@ struct QuickDoseViewModelTests {
         #expect(viewModel.canSaveDose == true, "Should allow dose exactly 30 days in future")
     }
 
-    @Test("clampDoseAmount clamps negative values to minimum")
+    @Test("Negative recorded amounts stay invalid without coercion to a drug dose")
     @MainActor
-    func negativeDoseAmountClampsToMinimum() async {
-        // clampDoseAmount should clamp negative values to the minimum
+    func negativeAmountRemainsInvalid() async {
         let profile = MedicationProfile(genericName: "semaglutide", brandName: "Ozempic", currentDose: 1.0)
 
         let viewModel = QuickDoseViewModel()
         viewModel.selectedMedicationProfile = profile
 
-        // Use clampDoseAmount to verify clamping behavior (0.25 min for semaglutide)
-        let clampedValue = viewModel.clampDoseAmount(-1.0)
-
-        #expect(clampedValue == 0.25, "Negative dose should clamp to minimum")
+        viewModel.doseAmount = viewModel.clampDoseAmount(-1.0)
+        viewModel.selectedInjectionSite = "Thigh"
+        #expect(viewModel.doseAmount == -1.0)
+        #expect(viewModel.canSaveDose == false)
     }
 
     // MARK: - Medication Profile Extension Tests
@@ -537,24 +539,12 @@ struct QuickDoseViewModelTests {
 
         let viewModel = QuickDoseViewModel()
 
-        // Call the method under test
-        viewModel.prepareForScheduledDose(scheduledDoseId: scheduledDose.id, context: context)
-
-        // Yield to let the spawned Task start running, then wait for completion
-        // The Task sets isLoading=true first, then does work, then sets isLoading=false
-        try await Task.sleep(for: .milliseconds(50))
-
-        // Wait for async Task to complete - poll until loading is done
-        var attempts = 0
-        while viewModel.isLoading && attempts < 100 {
-            try await Task.sleep(for: .milliseconds(20))
-            attempts += 1
-        }
-
-        // The viewModel should have loaded without error
-        // (actual dose date population depends on loadSmartDefaults)
+        await viewModel.prepareForScheduledDose(scheduledDoseId: scheduledDose.id, context: context).value
         #expect(viewModel.isLoading == false)
         #expect(viewModel.errorMessage == nil)
+        #expect(viewModel.doseAmount == 1.0)
+        #expect(viewModel.doseDate == scheduledTime)
+        #expect(viewModel.doseTime == scheduledTime)
     }
 
     @Test("prepareForScheduledDose handles missing scheduled dose")
@@ -570,22 +560,8 @@ struct QuickDoseViewModelTests {
 
         let viewModel = QuickDoseViewModel()
 
-        // Call with non-existent UUID
-        viewModel.prepareForScheduledDose(scheduledDoseId: UUID(), context: context)
-
-        // Yield to let the spawned Task start running
-        try await Task.sleep(for: .milliseconds(50))
-
-        // Wait for async Task to complete - poll until we have an error message
-        var attempts = 0
-        while viewModel.errorMessage == nil && attempts < 100 {
-            try await Task.sleep(for: .milliseconds(20))
-            attempts += 1
-        }
-
-        // Should set error message for not found
-        #expect(viewModel.errorMessage != nil)
-        #expect(viewModel.errorMessage?.contains("not found") == true)
+        await viewModel.prepareForScheduledDose(scheduledDoseId: UUID(), context: context).value
+        #expect(viewModel.errorMessage == "Scheduled dose not found")
         #expect(viewModel.isLoading == false)
     }
 
@@ -627,56 +603,56 @@ struct QuickDoseViewModelTests {
 
     // MARK: - Dose Amount Range Tests
 
-    @Test("doseAmountRange returns correct bounds for Semaglutide")
+    @Test("Semaglutide dose range is unavailable in launch")
     @MainActor
-    func doseAmountRangeSemaglutide() async {
+    func semaglutideRangeIsUnavailable() async {
         let profile = MedicationProfile(genericName: "semaglutide", brandName: "Ozempic", currentDose: 1.0)
 
         let viewModel = QuickDoseViewModel()
         viewModel.selectedMedicationProfile = profile
 
         let range = viewModel.doseAmountRange
-        #expect(range.lowerBound == 0.25, "Semaglutide min should be 0.25mg")
-        #expect(range.upperBound == 2.4, "Semaglutide max should be 2.4mg")
+        #expect(range.lowerBound == 0)
+        #expect(range.upperBound == 0)
     }
 
-    @Test("doseAmountRange returns correct bounds for Tirzepatide")
+    @Test("Tirzepatide dose range is unavailable in launch")
     @MainActor
-    func doseAmountRangeTirzepatide() async {
+    func tirzepatideRangeIsUnavailable() async {
         let profile = MedicationProfile(genericName: "tirzepatide", brandName: "Mounjaro", currentDose: 5.0)
 
         let viewModel = QuickDoseViewModel()
         viewModel.selectedMedicationProfile = profile
 
         let range = viewModel.doseAmountRange
-        #expect(range.lowerBound == 2.5, "Tirzepatide min should be 2.5mg")
-        #expect(range.upperBound == 15.0, "Tirzepatide max should be 15.0mg")
+        #expect(range.lowerBound == 0)
+        #expect(range.upperBound == 0)
     }
 
-    @Test("doseAmountRange returns correct bounds for Liraglutide")
+    @Test("Liraglutide dose range is unavailable in launch")
     @MainActor
-    func doseAmountRangeLiraglutide() async {
+    func liraglutideRangeIsUnavailable() async {
         let profile = MedicationProfile(genericName: "liraglutide", brandName: "Saxenda", currentDose: 1.8)
 
         let viewModel = QuickDoseViewModel()
         viewModel.selectedMedicationProfile = profile
 
         let range = viewModel.doseAmountRange
-        #expect(range.lowerBound == 0.6, "Liraglutide min should be 0.6mg")
-        #expect(range.upperBound == 3.0, "Liraglutide max should be 3.0mg")
+        #expect(range.lowerBound == 0)
+        #expect(range.upperBound == 0)
     }
 
-    @Test("doseAmountRange returns correct bounds for Dulaglutide")
+    @Test("Dulaglutide dose range is unavailable in launch")
     @MainActor
-    func doseAmountRangeDulaglutide() async {
+    func dulaglutideRangeIsUnavailable() async {
         let profile = MedicationProfile(genericName: "dulaglutide", brandName: "Trulicity", currentDose: 1.5)
 
         let viewModel = QuickDoseViewModel()
         viewModel.selectedMedicationProfile = profile
 
         let range = viewModel.doseAmountRange
-        #expect(range.lowerBound == 0.75, "Dulaglutide min should be 0.75mg")
-        #expect(range.upperBound == 4.5, "Dulaglutide max should be 4.5mg")
+        #expect(range.lowerBound == 0)
+        #expect(range.upperBound == 0)
     }
 
     @Test("doseAmountRange returns empty range when no profile selected")
@@ -691,9 +667,9 @@ struct QuickDoseViewModelTests {
 
     // MARK: - Dose Amount Step Tests
 
-    @Test("doseAmountStep returns 0.25 for compounded medications")
+    @Test("Compounded medication has no recommended dose step in launch")
     @MainActor
-    func doseAmountStepCompounded() async {
+    func compoundedDoseStepIsUnavailable() async {
         let profile = MedicationProfile(
             genericName: "tirzepatide",
             brandName: "Generic",
@@ -705,12 +681,12 @@ struct QuickDoseViewModelTests {
         viewModel.selectedMedicationProfile = profile
 
         let step = viewModel.doseAmountStep
-        #expect(step == 0.25, "Compounded medications should use 0.25mg steps")
+        #expect(step == 0)
     }
 
-    @Test("doseAmountStep returns branded step for non-compounded medications")
+    @Test("Branded medication has no recommended dose step in launch")
     @MainActor
-    func doseAmountStepBranded() async {
+    func brandedDoseStepIsUnavailable() async {
         let profile = MedicationProfile(
             genericName: "semaglutide",
             brandName: "Ozempic",
@@ -722,17 +698,16 @@ struct QuickDoseViewModelTests {
         viewModel.selectedMedicationProfile = profile
 
         let step = viewModel.doseAmountStep
-        // Ozempic doses: [0.25, 0.5, 1.0, 2.0] - smallest step is 0.25
-        #expect(step == 0.25, "Ozempic should have 0.25mg step (smallest increment)")
+        #expect(step == 0)
     }
 
-    @Test("doseAmountStep returns 0.25 fallback when no profile")
+    @Test("No profile has no recommended dose step")
     @MainActor
-    func doseAmountStepNoProfile() async {
+    func noProfileDoseStepIsUnavailable() async {
         let viewModel = QuickDoseViewModel()
 
         let step = viewModel.doseAmountStep
-        #expect(step == 0.25)
+        #expect(step == 0)
     }
 
     // MARK: - Dose Reset on Medication Change Tests
@@ -758,34 +733,38 @@ struct QuickDoseViewModelTests {
         #expect(viewModel.doseAmount == 5.0, "Changing medication should reset dose to new profile's default")
     }
 
-    // MARK: - Dose Bounds Clamping Tests
+    // MARK: - Prescribed Amount Preservation
 
-    @Test("clampDoseAmount clamps to minimum when value below range")
+    @Test("Recording preserves a prescribed amount below the former drug range")
     @MainActor
-    func doseAmountClampsToMinimum() async {
+    func prescribedSmallAmountIsUnchanged() async {
         let profile = MedicationProfile(genericName: "tirzepatide", brandName: "Mounjaro", currentDose: 5.0)
 
         let viewModel = QuickDoseViewModel()
         viewModel.selectedMedicationProfile = profile
 
-        // Use clampDoseAmount to verify clamping behavior (2.5 min for tirzepatide)
         let clampedValue = viewModel.clampDoseAmount(1.0)
 
-        #expect(clampedValue == 2.5, "Dose should clamp to minimum (2.5mg)")
+        #expect(clampedValue == 1.0)
+        viewModel.doseAmount = clampedValue
+        viewModel.selectedInjectionSite = "Thigh"
+        #expect(viewModel.canSaveDose == true)
     }
 
-    @Test("clampDoseAmount clamps to maximum when value above range")
+    @Test("Recording preserves a prescribed amount above the former drug range")
     @MainActor
-    func doseAmountClampsToMaximum() async {
+    func prescribedLargeAmountIsUnchanged() async {
         let profile = MedicationProfile(genericName: "tirzepatide", brandName: "Mounjaro", currentDose: 5.0)
 
         let viewModel = QuickDoseViewModel()
         viewModel.selectedMedicationProfile = profile
 
-        // Use clampDoseAmount to verify clamping behavior (15.0 max for tirzepatide)
         let clampedValue = viewModel.clampDoseAmount(20.0)
 
-        #expect(clampedValue == 15.0, "Dose should clamp to maximum (15.0mg)")
+        #expect(clampedValue == 20.0)
+        viewModel.doseAmount = clampedValue
+        viewModel.selectedInjectionSite = "Thigh"
+        #expect(viewModel.canSaveDose == true)
     }
 
     @Test("Dose amount accepts valid values within range")
@@ -809,9 +788,9 @@ struct QuickDoseViewModelTests {
 
     // MARK: - Dose Step for Multi-Step Branded Medications
 
-    @Test("doseAmountStep calculates minimum step for Mounjaro (2.5mg)")
+    @Test("Mounjaro has no recommended dose step in launch")
     @MainActor
-    func doseAmountStepMounjaroMinStep() async {
+    func mounjaroDoseStepIsUnavailable() async {
         let profile = MedicationProfile(
             genericName: "tirzepatide",
             brandName: "Mounjaro",
@@ -823,31 +802,29 @@ struct QuickDoseViewModelTests {
         viewModel.selectedMedicationProfile = profile
 
         let step = viewModel.doseAmountStep
-        // Mounjaro doses: [2.5, 5.0, 7.5, 10.0, 12.5, 15.0] - smallest step is 2.5
-        #expect(step == 2.5, "Mounjaro should have 2.5mg step (smallest increment between available doses)")
+        #expect(step == 0)
     }
 
-    // MARK: - canSaveDose Range Validation
+    // MARK: - Recording Validation
 
-    @Test("canSaveDose returns false when dose is outside therapeutic range")
+    @Test("Recording accepts finite positive prescribed amounts and rejects invalid numbers")
     @MainActor
-    func canSaveDoseFailsForOutOfRangeDose() async {
+    func canSaveAnyFinitePositiveAmount() async {
         let profile = MedicationProfile(genericName: "semaglutide", brandName: "Ozempic", currentDose: 1.0)
 
         let viewModel = QuickDoseViewModel()
         viewModel.selectedMedicationProfile = profile
         viewModel.selectedInjectionSite = "Thigh"
 
-        // Set dose below minimum (0.25 for semaglutide)
         viewModel.doseAmount = 0.1
-        #expect(viewModel.canSaveDose == false, "Should not allow dose below therapeutic range")
-
-        // Set dose above maximum (2.4 for semaglutide)
+        #expect(viewModel.canSaveDose == true)
         viewModel.doseAmount = 3.0
-        #expect(viewModel.canSaveDose == false, "Should not allow dose above therapeutic range")
-
-        // Set dose within range
+        #expect(viewModel.canSaveDose == true)
         viewModel.doseAmount = 1.0
-        #expect(viewModel.canSaveDose == true, "Should allow dose within therapeutic range")
+        #expect(viewModel.canSaveDose == true)
+        for invalid in [0, -1, Double.nan, Double.infinity, -Double.infinity] {
+            viewModel.doseAmount = invalid
+            #expect(viewModel.canSaveDose == false)
+        }
     }
 }

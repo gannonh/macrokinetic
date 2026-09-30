@@ -3,7 +3,7 @@ import SwiftUI
 
 @main
 struct JabTrackerApp: App {
-    let dataController = DataController.shared
+    let dataController: DataController
     @StateObject private var authManager = AuthenticationManager()
     /// Biometric authentication manager (shared singleton)
     @StateObject private var biometricManager = BiometricAuthManager.shared
@@ -15,8 +15,12 @@ struct JabTrackerApp: App {
     @State private var isAppLocked = false
 
     init() {
+        Task {
+            await NotificationService.cancelUnavailableTitrationNotifications()
+        }
         let authManager = AuthenticationManager()
         let dataController = DataController.shared
+        self.dataController = dataController
         self._authManager = StateObject(wrappedValue: authManager)
         self._onboardingCoordinator = StateObject(
             wrappedValue: OnboardingCoordinator(

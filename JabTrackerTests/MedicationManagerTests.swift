@@ -85,47 +85,35 @@ struct MedicationManagerTests {
         #expect(profile.currentDose == currentDose)
     }
 
-    @Test("Create profile with invalid dose throws error")
+    @Test("Create records a finite prescribed amount without clinical range judgement")
     @MainActor
-    func createProfileWithInvalidDose() throws {
-        // Given
+    func createProfileWithPrescribedAmount() throws {
         let manager = MedicationManager(modelContext: context)
-        let medication = Medication.semaglutide
-        let invalidDose = 5.0  // Exceeds maximum for semaglutide
-
-        // When/Then
-        #expect(
-            throws: MedicationManager.MedicationError.doseOutOfRange(
-                medication: medication, currentDose: invalidDose)
-        ) {
-            let testUser = try createTestUser()
-            _ = try manager.createProfile(
-                for: testUser,
-                medication: medication,
-                brandName: "Ozempic",
-                currentDose: invalidDose)
-        }
+        let user = try createTestUser()
+        let profile = try manager.createProfile(
+            for: user, medication: .semaglutide, brandName: "Ozempic", currentDose: 5.0
+        )
+        #expect(profile.currentDose == 5.0)
+        #expect(profile.brandName == "Ozempic")
+        #expect((profile.schedules ?? []).count == 0)
+        #expect(try context.fetchCount(FetchDescriptor<DoseSchedule>()) == 0)
     }
 
-    @Test("Create compounded profile with invalid settings throws error")
+    @Test("Compounded recording preserves raw fields without calculator eligibility checks")
     @MainActor
-    func createCompoundedProfileWithInvalidSettings() throws {
-        // Given
+    func createCompoundedProfileStoresRawFields() throws {
         let manager = MedicationManager(modelContext: context)
-        let medication = Medication.semaglutide
-
-        // When/Then: Vial strength less than target dose
-        #expect(throws: MedicationManager.MedicationError.invalidCompoundingSettings) {
-            let testUser = try createTestUser()
-            _ = try manager.createProfile(
-                for: testUser,
-                medication: medication,
-                brandName: "Compounded",
-                currentDose: 2.0,
-                isCompounded: true,
-                vialStrength: 1.0,  // Less than current dose
-                reconstitutionVolume: 2.0)
-        }
+        let user = try createTestUser()
+        let profile = try manager.createProfile(
+            for: user, medication: .semaglutide, brandName: "Compounded", currentDose: 2.0,
+            isCompounded: true, vialStrength: 1.0, reconstitutionVolume: 2.0
+        )
+        #expect(profile.currentDose == 2.0)
+        #expect(profile.isCompounded == true)
+        #expect(profile.vialStrength == 1.0)
+        #expect(profile.reconstitutionVolume == 2.0)
+        #expect(profile.concentration == nil)
+        #expect(profile.unitsPerDose == nil)
     }
 
     @Test("Update medication profile dose")
@@ -170,26 +158,18 @@ struct MedicationManagerTests {
         #expect(profile.displayName == Medication.tirzepatide.displayName)
     }
 
-    @Test("Update profile with invalid dose throws error")
+    @Test("Update records the exact finite prescribed amount without a clinical dose clamp")
     @MainActor
-    func updateProfileWithInvalidDose() throws {
-        // Given
+    func updateProfileWithPrescribedAmount() throws {
         let manager = MedicationManager(modelContext: context)
-        let testUser = try createTestUser()
+        let user = try createTestUser()
         let profile = try manager.createProfile(
-            for: testUser,
-            medication: .semaglutide,
-            brandName: "Ozempic",
-            currentDose: 0.25)
-        let invalidDose = 10.0
-
-        // When/Then
-        #expect(
-            throws: MedicationManager.MedicationError.doseOutOfRange(
-                medication: .semaglutide, currentDose: invalidDose)
-        ) {
-            try manager.updateProfile(profile, currentDose: invalidDose)
-        }
+            for: user, medication: .semaglutide, brandName: "Ozempic", currentDose: 0.25
+        )
+        try manager.updateProfile(profile, currentDose: 10.125)
+        #expect(profile.currentDose == 10.125)
+        let reloaded = try #require(context.fetch(FetchDescriptor<MedicationProfile>()).first)
+        #expect(reloaded.currentDose == 10.125)
     }
 
     @Test("Delete medication profile")

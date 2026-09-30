@@ -38,7 +38,7 @@ struct NotificationServiceActionTests {
         let scheduleService = ScheduleService(context: context)
         let notificationService = NotificationService(
             scheduleService: scheduleService,
-            notificationCenter: UNUserNotificationCenter.current()
+            notificationCenter: MockNotificationCenter()
         )
 
         return (notificationService, scheduleService, context, container)
@@ -125,7 +125,7 @@ struct NotificationServiceActionTests {
         let scheduleService = ScheduleService(context: context)
         _ = NotificationService(
             scheduleService: scheduleService,
-            notificationCenter: UNUserNotificationCenter.current()
+            notificationCenter: MockNotificationCenter()
         )
 
         // Now try to insert
@@ -369,21 +369,6 @@ struct NotificationServiceActionTests {
         }
     }
 
-    // MARK: - UNUserNotificationCenterDelegate Testing Note
-    //
-    // The following 4 tests for handleNotificationResponse cannot be properly unit tested
-    // because UNNotificationResponse cannot be mocked or initialized in tests.
-    //
-    // These behaviors ARE tested through:
-    // 1. The userNotificationCenter delegate method test (line 317-329 in NotificationService.swift)
-    // 2. handleNotificationAction tests (which handleNotificationResponse calls)
-    // 3. E2E/UI tests that trigger actual notification actions
-    //
-    // The delegate method successfully routes all actions (TAKE_DOSE, SKIP_DOSE, SNOOZE)
-    // to handleNotificationAction, which is comprehensively tested in this file.
-    //
-    // Future: Consider E2E tests for end-to-end notification action flow validation.
-
     @Test("handleNotificationAction updates notification queue after action")
     func testHandleActionUpdatesQueue() async throws {
         // Note: Queue refresh behavior is implementation-specific.
@@ -615,149 +600,168 @@ struct NotificationServiceActionTests {
         }
     }
 
-    // MARK: - Titration Action Tests (3 tests - Stream D)
-
-    @Test("Handle COMPLETE_TITRATION action")
-    func testHandleCompleteTitrationAction() async throws {
+    @Test(
+        "Legacy titration actions are unavailable before changing records or notifications",
+        arguments: ["COMPLETE_TITRATION", "RESCHEDULE_TITRATION", "REMIND_LATER_TITRATION"]
+    )
+    func testLegacyTitrationActionsAreUnavailable(actionIdentifier: String) async throws {
         let (service, _, context, container) = try createTestEnvironment()
-        _ = container  // Keep container alive for duration of test
+        _ = container
+        let mockCenter = try #require(service.notificationCenter as? MockNotificationCenter)
+        mockCenter.authorizationStatus = .denied
 
-        // Create medication profile with titration
-        let profile = TestDataSeeding.createTestMedicationProfile()
-        profile.currentDose = 0.5
+        let originalDate = Date(timeIntervalSince1970: 1_800_000_000)
+        let updatedDate = Date(timeIntervalSince1970: 1_700_000_000)
+        let profile = MedicationProfile(genericName: "semaglutide", brandName: "Ozempic", currentDose: 0.5)
+        profile.updatedAt = updatedDate
         context.insert(profile)
-
-        // Create schedule with proper baseSchedule data
         let schedule = DoseSchedule(medicationProfile: profile)
-        let scheduleConfig: [String: Any] = [
-            "doseAmount": 0.5,
-            "pattern": "weekly",
-            "frequency": 1,
-        ]
-        schedule.baseSchedule = try JSONSerialization.data(withJSONObject: scheduleConfig, options: [])
+        let originalSchedule = Data(#"{"doseAmount":0.5,"frequency":1,"pattern":"weekly"}"#.utf8)
+        schedule.baseSchedule = originalSchedule
+        schedule.createdAt = originalDate
+        schedule.updatedAt = updatedDate
         context.insert(schedule)
-
+        let scheduledDose = ScheduledDose(scheduledTime: originalDate, doseAmount: 0.375)
+        scheduledDose.schedule = schedule
+        context.insert(scheduledDose)
         let titration = DoseTitration(
             fromDose: 0.5,
             toDose: 1.0,
-            scheduledDate: Date()
+            scheduledDate: originalDate,
+            notes: "Prescribed plan",
+            medicationProfile: profile
         )
-        titration.medicationProfile = profile
+        titration.updatedAt = updatedDate
         context.insert(titration)
         try context.save()
 
-        // WHEN: Handle COMPLETE_TITRATION action
-        try await service.handleTitrationAction("COMPLETE_TITRATION", for: titration, schedule: schedule)
+        await #expect(throws: NotificationServiceError.medicalCalculatorsUnavailable) {
+            try await service.handleTitrationAction(
+                actionIdentifier,
+                for: titration,
+                schedule: schedule,
+                newDate: Date(timeIntervalSince1970: 1_800_604_800)
+            )
+        }
 
-        // THEN: Titration should be marked complete
-        #expect(titration.isCompleted == true)
-        #expect(titration.completedDate != nil)
-
-        // Verify schedule was updated with new dose
-        let scheduleDict =
-            try JSONSerialization.jsonObject(
-                with: schedule.baseSchedule,
-                options: []
-            ) as? [String: Any]
-        #expect(scheduleDict?["doseAmount"] as? Double == 1.0)
-    }
-
-    @Test("Handle RESCHEDULE_TITRATION action")
-    func testHandleRescheduleTitrationAction() async throws {
-        let (service, _, context, container) = try createTestEnvironment()
-        _ = container  // Keep container alive for duration of test
-
-        // Create medication profile with titration
-        let profile = TestDataSeeding.createTestMedicationProfile()
-        context.insert(profile)
-
-        let originalDate = Date()
-        let titration = DoseTitration(
-            fromDose: 0.5,
-            toDose: 1.0,
-            scheduledDate: originalDate
-        )
-        titration.medicationProfile = profile
-        context.insert(titration)
-        try context.save()
-
-        // New date 7 days from now
-        let newDate = Calendar.current.date(byAdding: .day, value: 7, to: Date())!
-
-        // WHEN: Handle RESCHEDULE_TITRATION action
-        try await service.handleTitrationAction(
-            "RESCHEDULE_TITRATION",
-            for: titration,
-            newDate: newDate
-        )
-
-        // THEN: Titration date should be updated
-        let timeDifference = abs(titration.scheduledDate.timeIntervalSince(newDate))
-        #expect(timeDifference < 60, "Scheduled date should be updated to new date")
-
-        // Titration should still be incomplete
-        #expect(titration.isCompleted == false)
-    }
-
-    @Test("Handle REMIND_LATER_TITRATION action")
-    func testHandleRemindLaterTitrationAction() async throws {
-        let (service, _, context, container) = try createTestEnvironment()
-        _ = container  // Keep container alive for duration of test
-
-        // Create medication profile with titration
-        let profile = TestDataSeeding.createTestMedicationProfile()
-        context.insert(profile)
-
-        let titration = DoseTitration(
-            fromDose: 0.5,
-            toDose: 1.0,
-            scheduledDate: Date()
-        )
-        titration.medicationProfile = profile
-        context.insert(titration)
-        try context.save()
-
-        // WHEN: Handle REMIND_LATER_TITRATION action
-        try await service.handleTitrationAction("REMIND_LATER_TITRATION", for: titration)
-
-        // THEN: Notification should be rescheduled for 1 hour later
-        // Titration should remain incomplete
+        #expect(profile.genericName == "semaglutide")
+        #expect(profile.brandName == "Ozempic")
+        #expect(profile.currentDose == 0.5)
+        #expect(profile.updatedAt == Date(timeIntervalSince1970: 1_700_000_000))
+        #expect(schedule.baseSchedule == originalSchedule)
+        let configuration = try #require(JSONSerialization.jsonObject(with: schedule.baseSchedule) as? [String: Any])
+        #expect(configuration["doseAmount"] as? Double == 0.5)
+        #expect(configuration["pattern"] as? String == "weekly")
+        #expect(schedule.createdAt == Date(timeIntervalSince1970: 1_800_000_000))
+        #expect(schedule.updatedAt == Date(timeIntervalSince1970: 1_700_000_000))
+        #expect(scheduledDose.doseAmount == 0.375)
+        #expect(scheduledDose.scheduledTime == Date(timeIntervalSince1970: 1_800_000_000))
+        #expect(scheduledDose.actualDose == nil)
+        #expect(titration.fromDose == 0.5)
+        #expect(titration.toDose == 1.0)
+        #expect(titration.scheduledDate == Date(timeIntervalSince1970: 1_800_000_000))
+        #expect(titration.updatedAt == Date(timeIntervalSince1970: 1_700_000_000))
+        #expect(titration.notes == "Prescribed plan")
         #expect(titration.isCompleted == false)
         #expect(titration.completedDate == nil)
-
-        // Note: Full validation would check that new notification was scheduled
-        // This is covered by E2E tests
+        #expect(try context.fetchCount(FetchDescriptor<MedicationProfile>()) == 1)
+        #expect(try context.fetchCount(FetchDescriptor<DoseSchedule>()) == 1)
+        #expect(try context.fetchCount(FetchDescriptor<DoseTitration>()) == 1)
+        #expect(try context.fetchCount(FetchDescriptor<ScheduledDose>()) == 1)
+        #expect(context.hasChanges == false)
+        #expect(mockCenter.addCallCount == 0)
+        #expect(mockCenter.addedRequests.isEmpty)
+        #expect(mockCenter.removedIdentifiers.isEmpty)
+        #expect(mockCenter.didRemoveAll == false)
     }
-}
 
-// MARK: - Mock UNNotificationResponse
+    @Test(
+        "Received legacy titration requests reject before ordinary dose routing",
+        arguments: ["category", "payload", "identifier", "complete", "reschedule", "remind"]
+    )
+    func testReceivedTitrationRequestsAreUnavailable(marker: String) async throws {
+        let (service, _, context, container) = try createTestEnvironment()
+        _ = container
+        let mockCenter = try #require(service.notificationCenter as? MockNotificationCenter)
+        let originalDate = Date(timeIntervalSince1970: 1_800_000_000)
+        let scheduledDose = try createTestScheduledDose(context: context, scheduledFor: originalDate)
+        let schedule = try #require(scheduledDose.schedule)
+        let profile = try #require(schedule.medicationProfile)
+        profile.currentDose = 0.625
+        scheduledDose.doseAmount = 0.375
+        let originalSchedule = Data(#"{"doseAmount":0.375,"frequency":1,"pattern":"weekly"}"#.utf8)
+        schedule.baseSchedule = originalSchedule
+        schedule.createdAt = originalDate
+        try context.save()
 
-/// Mock UNNotificationResponse for testing notification actions
-/// Note: This is a simplified mock that bypasses UNNotificationResponse initialization constraints
-private struct MockNotificationResponseData {
-    let actionIdentifier: String
-    let scheduledDoseID: UUID?
-
-    var userInfo: [AnyHashable: Any] {
-        if let id = scheduledDoseID {
-            return ["scheduledDoseID": id.uuidString]
-        }
-        return [:]
-    }
-}
-
-/// Factory for creating mock notification responses
-private final class MockUNNotificationResponse {
-    static func create(actionIdentifier: String, scheduledDoseID: UUID?) -> UNNotificationResponse {
-        // Create notification content with userInfo
+        let mealContent = UNMutableNotificationContent()
+        mealContent.categoryIdentifier = "FOOD_LOG_REMINDER"
+        mealContent.body = "Log your meal"
+        mockCenter.addedRequests = [UNNotificationRequest(identifier: "meal-existing", content: mealContent, trigger: nil)]
         let content = UNMutableNotificationContent()
-        if let id = scheduledDoseID {
-            content.userInfo = ["scheduledDoseID": id.uuidString]
+        content.categoryIdentifier = marker == "category" ? "TITRATION" : "DOSE_REMINDER"
+        content.userInfo = ["scheduledDoseId": scheduledDose.id.uuidString]
+        if marker == "payload" {
+            content.userInfo["titrationId"] = "legacy-plan"
+        }
+        let request = UNNotificationRequest(
+            identifier: marker == "identifier" ? "titration-legacy" : "ordinary-dose",
+            content: content,
+            trigger: nil
+        )
+        let actionIdentifier: String
+        switch marker {
+        case "complete": actionIdentifier = "COMPLETE_TITRATION"
+        case "reschedule": actionIdentifier = "RESCHEDULE_TITRATION"
+        case "remind": actionIdentifier = "REMIND_LATER_TITRATION"
+        default: actionIdentifier = "TAKE_DOSE"
         }
 
-        // This is a workaround for testing - in real scenarios, UNNotificationResponse
-        // is created by the system. For tests, we'll need to refactor NotificationService
-        // to accept a protocol or simpler data structure.
-        fatalError("UNNotificationResponse cannot be properly mocked - NotificationService needs protocol abstraction")
+        await #expect(throws: NotificationServiceError.medicalCalculatorsUnavailable) {
+            try await service.handleNotificationResponse(actionIdentifier: actionIdentifier, request: request)
+        }
+
+        #expect(profile.currentDose == 0.625)
+        #expect(schedule.baseSchedule == originalSchedule)
+        #expect(schedule.createdAt == Date(timeIntervalSince1970: 1_800_000_000))
+        #expect(scheduledDose.doseAmount == 0.375)
+        #expect(scheduledDose.scheduledTime == Date(timeIntervalSince1970: 1_800_000_000))
+        #expect(scheduledDose.actualDose == nil)
+        #expect(scheduledDose.skippedAt == nil)
+        #expect(try context.fetchCount(FetchDescriptor<Dose>()) == 0)
+        #expect(try context.fetchCount(FetchDescriptor<ScheduledDose>()) == 1)
+        #expect(context.hasChanges == false)
+        #expect(mockCenter.addCallCount == 0)
+        #expect(mockCenter.addedRequests.map(\.identifier) == ["meal-existing"])
+        #expect(mockCenter.addedRequests.first?.content.body == "Log your meal")
+        #expect(mockCenter.removedIdentifiers.isEmpty)
+        #expect(mockCenter.didRemoveAll == false)
+    }
+
+    @Test("Received ordinary dose request records its exact prescribed amount")
+    func testReceivedPrescribedDoseRequestStillRecordsExactAmount() async throws {
+        let (service, _, context, container) = try createTestEnvironment()
+        _ = container
+        let originalDate = Date(timeIntervalSince1970: 1_800_000_000)
+        let scheduledDose = try createTestScheduledDose(context: context, scheduledFor: originalDate)
+        let profile = try #require(scheduledDose.schedule?.medicationProfile)
+        profile.currentDose = 0.625
+        scheduledDose.doseAmount = 0.375
+        try context.save()
+        let content = UNMutableNotificationContent()
+        content.categoryIdentifier = "DOSE_REMINDER"
+        content.userInfo = ["scheduledDoseId": scheduledDose.id.uuidString]
+        let request = UNNotificationRequest(identifier: "ordinary-dose", content: content, trigger: nil)
+
+        try await service.handleNotificationResponse(actionIdentifier: "TAKE_DOSE", request: request)
+
+        let doses = try context.fetch(FetchDescriptor<Dose>())
+        #expect(doses.count == 1)
+        #expect(doses.first?.amount == 0.375)
+        #expect(doses.first?.medication === profile)
+        #expect(scheduledDose.actualDose === doses.first)
+        #expect(scheduledDose.scheduledTime == Date(timeIntervalSince1970: 1_800_000_000))
+        #expect(profile.currentDose == 0.625)
+        #expect(context.hasChanges == false)
     }
 }

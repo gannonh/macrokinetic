@@ -42,8 +42,7 @@ struct MedicationProfileSettingsView: View {
                                 .foregroundColor(.secondary)
 
                             Text(
-                                "Add your first medication profile to get started with "
-                                    + "dose tracking and calculations."
+                                "Add your first medication profile to record prescribed doses and schedules."
                             )
                             .font(DesignTokens.Typography.body)
                             .foregroundColor(.secondary)
@@ -219,7 +218,7 @@ struct MedicationProfileRow: View {
                     }
 
                     HStack {
-                        Text("\(String(format: "%.2f", self.profile.currentDose)) mg")
+                        Text("\(RecordedAmountInput.displayText(for: self.profile.currentDose)) mg")
                             .font(DesignTokens.Typography.body)
                             .foregroundColor(.secondary)
 
@@ -262,7 +261,8 @@ struct AddMedicationProfileView: View {
 
     @State private var selectedMedication: Medication = .semaglutide
     @State private var selectedBrand: String = Medication.semaglutide.brands.first ?? ""
-    @State private var selectedDose: Double = Medication.semaglutide.availableDoses.first ?? 0.25
+    @State private var selectedDose: Double = 0.0
+    @State private var prescribedAmountText = ""
     @State private var startDate: Date = .init()
     @State private var preferredInjectionSites: [String] = ["Thigh"]
     @State private var isInitialized = false
@@ -287,11 +287,19 @@ struct AddMedicationProfileView: View {
     }
 
     private var validDose: Double {
+        guard ReleasePolicy.isEnabled(.medicalCalculators) else { return selectedDose }
         if self.selectedMedication.availableDoses.contains(where: { abs($0 - selectedDose) < 0.01 }) {
             return self.selectedDose
         } else {
             return self.selectedMedication.availableDoses.first ?? 0.0
         }
+    }
+
+    private var amountToSave: Double? {
+        if ReleasePolicy.isEnabled(.medicalCalculators) {
+            return self.selectedDose.isFinite && self.selectedDose > 0 ? self.selectedDose : nil
+        }
+        return RecordedAmountInput.parse(self.prescribedAmountText)
     }
 
     var body: some View {
@@ -310,7 +318,9 @@ struct AddMedicationProfileView: View {
                         // Reset brand and dose when medication changes to prevent invalid picker selections
                         DispatchQueue.main.async {
                             self.selectedBrand = newValue.brands.first ?? ""
-                            self.selectedDose = newValue.availableDoses.first ?? 0.0
+                            self.selectedDose = ReleasePolicy.isEnabled(.medicalCalculators)
+                                ? newValue.availableDoses.first ?? 0.0 : 0.0
+                            self.prescribedAmountText = ""
                         }
                     }
                 }
@@ -328,11 +338,13 @@ struct AddMedicationProfileView: View {
                     selectedDose: Binding(
                         get: { self.validDose },
                         set: { self.selectedDose = $0 }),
+                    prescribedAmountText: self.$prescribedAmountText,
                     isCompounded: self.$isCompounded,
                     vialStrength: self.$vialStrength,
                     accessibilityPrefix: "add",
                     onCalculateReconstitution: {
-                        self.showingReconstitutionCalculator = true
+                        guard ReleasePolicy.isEnabled(.medicalCalculators) else { return }
+                        self.showingReconstitutionCalculator = ReleasePolicy.isEnabled(.medicalCalculators)
                     })
 
                 Section("Start Date") {
@@ -381,6 +393,7 @@ struct AddMedicationProfileView: View {
                         self.saveMedicationProfile()
                     }
                     .accessibilityIdentifier("save-medication-profile")
+                    .disabled(self.amountToSave == nil)
                 }
             }
             .alert("Error", isPresented: self.$showingError) {
@@ -394,6 +407,7 @@ struct AddMedicationProfileView: View {
                 targetDose: self.selectedDose,
                 waterVolume: 1.0,
                 onSave: { vialStrength, targetDose, waterVolume in
+                    guard ReleasePolicy.isEnabled(.medicalCalculators) else { return }
                     self.vialStrength = vialStrength
                     self.selectedDose = targetDose
                     self.reconstitutionVolume = waterVolume
@@ -416,6 +430,11 @@ struct AddMedicationProfileView: View {
     }
 
     private func saveMedicationProfile() {
+        guard let amount = self.amountToSave else {
+            self.errorMessage = "Enter an amount greater than zero."
+            self.showingError = true
+            return
+        }
         do {
             // Use "Generic" brand for compounded medications
             let brandName = self.isCompounded ? "Generic" : self.selectedBrand
@@ -424,14 +443,18 @@ struct AddMedicationProfileView: View {
                 for: self.currentUser,
                 medication: self.selectedMedication,
                 brandName: brandName,
-                currentDose: self.selectedDose,
+                currentDose: amount,
                 startDate: self.startDate,
                 preferredInjectionSites: self.preferredInjectionSites,
                 isCompounded: self.isCompounded,
-                vialStrength: self.isCompounded ? self.vialStrength : nil,
-                reconstitutionVolume: self.isCompounded ? self.reconstitutionVolume : nil,
-                concentration: self.isCompounded ? self.concentration : nil,
-                unitsPerDose: self.isCompounded ? self.unitsPerDose : nil,
+                vialStrength: ReleasePolicy.isEnabled(.medicalCalculators) && self.isCompounded
+                    ? self.vialStrength : nil,
+                reconstitutionVolume: ReleasePolicy.isEnabled(.medicalCalculators) && self.isCompounded
+                    ? self.reconstitutionVolume : nil,
+                concentration: ReleasePolicy.isEnabled(.medicalCalculators) && self.isCompounded
+                    ? self.concentration : nil,
+                unitsPerDose: ReleasePolicy.isEnabled(.medicalCalculators) && self.isCompounded
+                    ? self.unitsPerDose : nil,
                 notes: self.notes.isEmpty ? "" : self.notes)
 
             self.dismiss()
@@ -471,11 +494,14 @@ struct MedicationProfileDetailView: View {
             .sheet(isPresented: self.$showingEditSheet) {
                 EditMedicationProfileView(profile: self.profile, medicationManager: self.medicationManager)
             }
-            .sheet(isPresented: self.$showingDoseTitration) {
+            .sheet(isPresented: Binding(
+                get: { showingDoseTitration && ReleasePolicy.isEnabled(.medicalCalculators) },
+                set: { showingDoseTitration = $0 && ReleasePolicy.isEnabled(.medicalCalculators) }
+            )) {
                 DoseTitrationView(profile: self.profile)
             }
             .onChange(of: viewModel?.showDoseTitration) { _, newValue in
-                if let newValue = newValue, newValue {
+                if let newValue = newValue, newValue, ReleasePolicy.isEnabled(.medicalCalculators) {
                     self.showingDoseTitration = true
                     // Reset ViewModel property after triggering navigation
                     viewModel?.showDoseTitration = false
@@ -517,9 +543,9 @@ struct MedicationProfileDetailView: View {
 
     private var calculatorTools: some View {
         Group {
-            if self.profile.isCompounded {
+            if ReleasePolicy.isEnabled(.medicalCalculators), self.profile.isCompounded {
                 Button {
-                    self.showingReconstitutionCalculator = true
+                    self.showingReconstitutionCalculator = ReleasePolicy.isEnabled(.medicalCalculators)
                 } label: {
                     CalculatorCard(
                         title: "Reconstitution Calculator",
@@ -529,15 +555,18 @@ struct MedicationProfileDetailView: View {
                 .accessibilityIdentifier("detail-reconstitution-calculator")
             }
 
-            Button {
-                self.showingDoseTitration = true
-            } label: {
-                CalculatorCard(
-                    title: "Dose Titration Plan",
-                    description: "Schedule and track dose increases",
-                    icon: "chart.line.uptrend.xyaxis")
+            if ReleasePolicy.isEnabled(.medicalCalculators) {
+                Button {
+                    guard ReleasePolicy.isEnabled(.medicalCalculators) else { return }
+                    self.showingDoseTitration = true
+                } label: {
+                    CalculatorCard(
+                        title: "Dose Titration Plan",
+                        description: "Schedule and track dose increases",
+                        icon: "chart.line.uptrend.xyaxis")
+                }
+                .accessibilityIdentifier("dose-escalation-button")
             }
-            .accessibilityIdentifier("dose-escalation-button")
         }
     }
 
@@ -629,6 +658,7 @@ private struct ReconstitutionSheetPresentationModifier: ViewModifier {
                 targetDose: profile.currentDose,
                 waterVolume: profile.reconstitutionVolume ?? 1.0,
                 onSave: { vialStrength, targetDose, waterVolume in
+                    guard ReleasePolicy.isEnabled(.medicalCalculators) else { return }
                     do {
                         let result = try ReconstitutionCalculator.calculate(
                             vialStrength: vialStrength,
@@ -714,6 +744,7 @@ struct EditMedicationProfileView: View {
     @State private var selectedMedication: Medication
     @State private var selectedBrand: String
     @State private var selectedDose: Double
+    @State private var prescribedAmountText: String
     @State private var startDate: Date
     @State private var preferredInjectionSites: [String]
     @State private var isCompounded: Bool
@@ -734,6 +765,7 @@ struct EditMedicationProfileView: View {
             initialValue: Medication(rawValue: profile.medicationType) ?? .semaglutide)
         self._selectedBrand = State(initialValue: profile.brandName)
         self._selectedDose = State(initialValue: profile.currentDose)
+        self._prescribedAmountText = State(initialValue: RecordedAmountInput.text(for: profile.currentDose))
         self._startDate = State(initialValue: profile.startDate)
         self._preferredInjectionSites = State(initialValue: profile.preferredInjectionSites)
         self._isCompounded = State(initialValue: profile.isCompounded)
@@ -742,6 +774,13 @@ struct EditMedicationProfileView: View {
         self._reconstitutionVolume = State(initialValue: profile.reconstitutionVolume ?? 1.0)
         self._concentration = State(initialValue: profile.concentration)
         self._unitsPerDose = State(initialValue: profile.unitsPerDose)
+    }
+
+    private var amountToSave: Double? {
+        if ReleasePolicy.isEnabled(.medicalCalculators) {
+            return self.selectedDose.isFinite && self.selectedDose > 0 ? self.selectedDose : nil
+        }
+        return RecordedAmountInput.parse(self.prescribedAmountText)
     }
 
     var body: some View {
@@ -758,11 +797,13 @@ struct EditMedicationProfileView: View {
                     .onChange(of: self.selectedMedication) { _, newValue in
                         // Reset brand and dose when medication changes to prevent invalid picker selections
                         let newBrand = newValue.brands.first ?? ""
-                        let newDose = newValue.availableDoses.first ?? 0.0
+                        let newDose = ReleasePolicy.isEnabled(.medicalCalculators)
+                            ? newValue.availableDoses.first ?? 0.0 : 0.0
 
                         // Update immediately to prevent console errors
                         self.selectedBrand = newBrand
                         self.selectedDose = newDose
+                        self.prescribedAmountText = ""
                     }
                 }
 
@@ -775,11 +816,13 @@ struct EditMedicationProfileView: View {
                 MedicationDosingSection(
                     selectedMedication: self.selectedMedication,
                     selectedDose: self.$selectedDose,
+                    prescribedAmountText: self.$prescribedAmountText,
                     isCompounded: self.$isCompounded,
                     vialStrength: self.$vialStrength,
                     accessibilityPrefix: "edit",
                     onCalculateReconstitution: {
-                        self.showingReconstitutionCalculator = true
+                        guard ReleasePolicy.isEnabled(.medicalCalculators) else { return }
+                        self.showingReconstitutionCalculator = ReleasePolicy.isEnabled(.medicalCalculators)
                     })
 
                 Section("Start Date") {
@@ -830,6 +873,7 @@ struct EditMedicationProfileView: View {
                         self.updateMedicationProfile()
                     }
                     .accessibilityIdentifier("edit-save-button")
+                    .disabled(self.amountToSave == nil)
                 }
             }
             .alert("Error", isPresented: self.$showingError) {
@@ -843,6 +887,7 @@ struct EditMedicationProfileView: View {
                 targetDose: self.selectedDose,
                 waterVolume: 1.0,
                 onSave: { vialStrength, targetDose, waterVolume in
+                    guard ReleasePolicy.isEnabled(.medicalCalculators) else { return }
                     self.vialStrength = vialStrength
                     self.selectedDose = targetDose
                     self.reconstitutionVolume = waterVolume
@@ -865,6 +910,11 @@ struct EditMedicationProfileView: View {
     }
 
     private func updateMedicationProfile() {
+        guard let amount = self.amountToSave else {
+            self.errorMessage = "Enter an amount greater than zero."
+            self.showingError = true
+            return
+        }
         do {
             // Use "Generic" brand for compounded medications
             let brandName = self.isCompounded ? "Generic" : self.selectedBrand
@@ -873,14 +923,18 @@ struct EditMedicationProfileView: View {
                 self.profile,
                 medication: self.selectedMedication,
                 brandName: brandName,
-                currentDose: self.selectedDose,
+                currentDose: amount,
                 startDate: self.startDate,
                 preferredInjectionSites: self.preferredInjectionSites,
                 isCompounded: self.isCompounded,
-                vialStrength: self.isCompounded ? self.vialStrength : nil,
-                reconstitutionVolume: self.isCompounded ? self.reconstitutionVolume : nil,
-                concentration: self.isCompounded ? self.concentration : nil,
-                unitsPerDose: self.isCompounded ? self.unitsPerDose : nil,
+                vialStrength: ReleasePolicy.isEnabled(.medicalCalculators) && self.isCompounded
+                    ? self.vialStrength : nil,
+                reconstitutionVolume: ReleasePolicy.isEnabled(.medicalCalculators) && self.isCompounded
+                    ? self.reconstitutionVolume : nil,
+                concentration: ReleasePolicy.isEnabled(.medicalCalculators) && self.isCompounded
+                    ? self.concentration : nil,
+                unitsPerDose: ReleasePolicy.isEnabled(.medicalCalculators) && self.isCompounded
+                    ? self.unitsPerDose : nil,
                 notes: self.notes.isEmpty ? "" : self.notes)
 
             self.dismiss()

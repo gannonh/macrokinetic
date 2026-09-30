@@ -100,9 +100,9 @@ struct QuickDoseViewModelTitrationTests {
         #expect(!shouldShow, "Should not show dialog when titration is in the future")
     }
 
-    @Test("shouldShowTitrationDialog returns true when titration date is today")
+    @Test("Launch does not offer today's recorded titration as dosing advice")
     @MainActor
-    func titrationDialogTodayTitration() async throws {
+    func todayTitrationDialogIsUnavailable() async throws {
         let (context, container) = self.createTestContext()
         _ = container  // Keep container alive for duration of test
         let profile = try self.createTestMedicationProfile(
@@ -125,12 +125,16 @@ struct QuickDoseViewModelTitrationTests {
 
         let shouldShow = viewModel.shouldShowTitrationDialog()
 
-        #expect(shouldShow, "Should show dialog when titration date is today")
+        #expect(shouldShow == false)
+        #expect(viewModel.getPendingTitration() == nil)
+        #expect(profile.doseTitrations?.count == 1)
+        #expect(profile.currentDose == 1.0)
+        #expect(context.hasChanges == false)
     }
 
-    @Test("shouldShowTitrationDialog returns true when titration date has passed")
+    @Test("Launch does not offer a past recorded titration as dosing advice")
     @MainActor
-    func titrationDialogPastTitration() async throws {
+    func pastTitrationDialogIsUnavailable() async throws {
         let (context, container) = self.createTestContext()
         _ = container  // Keep container alive for duration of test
         let profile = try self.createTestMedicationProfile(
@@ -153,7 +157,11 @@ struct QuickDoseViewModelTitrationTests {
 
         let shouldShow = viewModel.shouldShowTitrationDialog()
 
-        #expect(shouldShow, "Should show dialog when titration date has passed")
+        #expect(shouldShow == false)
+        #expect(viewModel.getPendingTitration() == nil)
+        #expect(profile.doseTitrations?.count == 1)
+        #expect(profile.currentDose == 1.0)
+        #expect(context.hasChanges == false)
     }
 
     @Test("shouldShowTitrationDialog returns false when titration is already completed")
@@ -216,9 +224,9 @@ struct QuickDoseViewModelTitrationTests {
         #expect(!shouldShow, "Should not show dialog when user selected 'Remind Me Later'")
     }
 
-    @Test("getPendingTitration returns correct titration")
+    @Test("Recorded titration data stays stored without being offered as launch advice")
     @MainActor
-    func getPendingTitrationCorrect() async throws {
+    func recordedTitrationAdviceIsUnavailable() async throws {
         let (context, container) = self.createTestContext()
         _ = container  // Keep container alive for duration of test
         let profile = try self.createTestMedicationProfile(
@@ -241,9 +249,12 @@ struct QuickDoseViewModelTitrationTests {
 
         let pendingTitration = viewModel.getPendingTitration()
 
-        #expect(pendingTitration != nil, "Should return pending titration")
-        #expect(pendingTitration?.fromDose == 1.0)
-        #expect(pendingTitration?.toDose == 2.0)
+        #expect(pendingTitration == nil)
+        #expect(todayTitration.fromDose == 1.0)
+        #expect(todayTitration.toDose == 2.0)
+        #expect(todayTitration.isCompleted == false)
+        #expect(profile.doseTitrations?.count == 1)
+        #expect(context.hasChanges == false)
     }
 
     @Test("getPendingTitration returns nil when no pending titration")
@@ -278,9 +289,9 @@ struct QuickDoseViewModelTitrationTests {
 
     // MARK: - Titration Action Tests (Business Logic)
 
-    @Test("completeTitration marks titration as completed and updates profile")
+    @Test("Disabled completion rejects before changing the recorded titration or profile")
     @MainActor
-    func completeTitrationSuccess() async throws {
+    func completionRejectsBeforeMutation() async throws {
         let (context, container) = self.createTestContext()
         _ = container  // Keep container alive for duration of test
         let profile = try self.createTestMedicationProfile(
@@ -301,25 +312,19 @@ struct QuickDoseViewModelTitrationTests {
         let viewModel = QuickDoseViewModel()
         viewModel.selectedMedicationProfile = profile
 
-        // Complete the titration
-        try viewModel.completeTitration(titration, context: context)
-
-        // Verify titration is marked completed
-        #expect(titration.isCompleted == true, "Titration should be marked as completed")
-        #expect(titration.completedDate != nil, "Titration should have completedDate set")
-
-        // Verify profile dose was updated
-        #expect(profile.currentDose == 2.0, "Profile dose should be updated to new dose")
-
-        // Note: Removed async reload test - testing implementation details.
-        // The direct effects of completeTitration() are verified above.
-        // If async behavior needs testing, it should be in a separate integration test
-        // with proper async/await patterns.
+        #expect(throws: MedicationManager.MedicationError.medicalCalculatorsUnavailable) {
+            try viewModel.completeTitration(titration, context: context)
+        }
+        #expect(titration.isCompleted == false)
+        #expect(titration.completedDate == nil)
+        #expect(profile.currentDose == 1.0)
+        #expect(viewModel.doseAmount == 1.0)
+        #expect(context.hasChanges == false)
     }
 
-    @Test("completeTitration saves changes to context")
+    @Test("Disabled completion leaves persisted titration and prescribed amount unchanged")
     @MainActor
-    func completeTitrationSavesToContext() async throws {
+    func completionPreservesStoredRecords() async throws {
         let (context, container) = self.createTestContext()
         _ = container  // Keep container alive for duration of test
         let profile = try self.createTestMedicationProfile(context: context, currentDose: 1.0)
@@ -336,56 +341,54 @@ struct QuickDoseViewModelTitrationTests {
         let viewModel = QuickDoseViewModel()
         viewModel.selectedMedicationProfile = profile
 
-        // Complete titration
-        try viewModel.completeTitration(titration, context: context)
-
-        // Fetch titration again from context to verify persistence
-        let fetchDescriptor = FetchDescriptor<DoseTitration>()
-        let savedTitrations = try context.fetch(fetchDescriptor)
-        let savedTitration = savedTitrations.first { $0.id == titration.id }
-
-        #expect(savedTitration?.isCompleted == true, "Saved titration should be completed")
-        #expect(savedTitration?.completedDate != nil, "Saved titration should have completedDate")
+        #expect(throws: MedicationManager.MedicationError.medicalCalculatorsUnavailable) {
+            try viewModel.completeTitration(titration, context: context)
+        }
+        let reloadedContext = ModelContext(container)
+        let reloadedTitration = try #require(reloadedContext.fetch(FetchDescriptor<DoseTitration>()).first)
+        let reloadedProfile = try #require(reloadedContext.fetch(FetchDescriptor<MedicationProfile>()).first)
+        #expect(reloadedTitration.isCompleted == false)
+        #expect(reloadedTitration.completedDate == nil)
+        #expect(reloadedTitration.fromDose == 1.0)
+        #expect(reloadedTitration.toDose == 2.0)
+        #expect(reloadedProfile.currentDose == 1.0)
     }
 
-    @Test("rescheduleTitration updates titration date")
+    @Test("Disabled rescheduling preserves the recorded date and audit timestamp")
     @MainActor
-    func rescheduleTitrationSuccess() async throws {
+    func rescheduleRejectsBeforeMutation() async throws {
         let (context, container) = self.createTestContext()
         _ = container  // Keep container alive for duration of test
         let profile = try self.createTestMedicationProfile(context: context, currentDose: 1.0)
 
-        let originalDate = Date()
+        let originalDate = Date(timeIntervalSince1970: 1_780_000_000)
         let titration = DoseTitration(
             fromDose: 1.0,
             toDose: 2.0,
             scheduledDate: originalDate,
             isCompleted: false,
             medicationProfile: profile)
+        titration.updatedAt = Date(timeIntervalSince1970: 1_780_000_001)
         context.insert(titration)
         try context.save()
 
         let viewModel = QuickDoseViewModel()
         viewModel.selectedMedicationProfile = profile
 
-        // Reschedule to 7 days later
-        let newDate = Date().addingTimeInterval(7 * 24 * 60 * 60)
-        try viewModel.rescheduleTitration(titration, to: newDate, context: context)
-
-        // Verify date was updated (using safer 5-second tolerance for CI stability)
-        #expect(
-            abs(titration.scheduledDate.timeIntervalSince(newDate)) < 5,
-            "Titration scheduled date should be updated")
-
-        // Verify updatedAt was set (updatedAt is non-optional, always has a value)
-        #expect(
-            abs(titration.updatedAt.timeIntervalSince(Date())) < 5,
-            "Titration updatedAt should be recent")
+        #expect(throws: MedicationManager.MedicationError.medicalCalculatorsUnavailable) {
+            try viewModel.rescheduleTitration(
+                titration, to: Date(timeIntervalSince1970: 1_780_604_800), context: context
+            )
+        }
+        #expect(titration.scheduledDate == Date(timeIntervalSince1970: 1_780_000_000))
+        #expect(titration.updatedAt == Date(timeIntervalSince1970: 1_780_000_001))
+        #expect(titration.isCompleted == false)
+        #expect(context.hasChanges == false)
     }
 
-    @Test("rescheduleTitration saves changes to context")
+    @Test("Disabled rescheduling leaves the persisted schedule date unchanged")
     @MainActor
-    func rescheduleTitrationSavesToContext() async throws {
+    func reschedulePreservesStoredDate() async throws {
         let (context, container) = self.createTestContext()
         _ = container  // Keep container alive for duration of test
         let profile = try self.createTestMedicationProfile(context: context, currentDose: 1.0)
@@ -393,26 +396,23 @@ struct QuickDoseViewModelTitrationTests {
         let titration = DoseTitration(
             fromDose: 1.0,
             toDose: 2.0,
-            scheduledDate: Date(),
+            scheduledDate: Date(timeIntervalSince1970: 1_780_000_000),
             isCompleted: false,
             medicationProfile: profile)
         context.insert(titration)
         try context.save()
 
         let viewModel = QuickDoseViewModel()
-        let newDate = Date().addingTimeInterval(7 * 24 * 60 * 60)
-
-        // Reschedule titration
-        try viewModel.rescheduleTitration(titration, to: newDate, context: context)
-
-        // Fetch from context to verify persistence
-        let fetchDescriptor = FetchDescriptor<DoseTitration>()
-        let savedTitrations = try context.fetch(fetchDescriptor)
-        let savedTitration = savedTitrations.first { $0.id == titration.id }
-
-        #expect(savedTitration != nil, "Rescheduled titration should be saved")
-        #expect(
-            savedTitration!.scheduledDate.timeIntervalSince(newDate) < 1,
-            "Saved titration should have new scheduled date")
+        viewModel.selectedMedicationProfile = profile
+        #expect(throws: MedicationManager.MedicationError.medicalCalculatorsUnavailable) {
+            try viewModel.rescheduleTitration(
+                titration, to: Date(timeIntervalSince1970: 1_780_604_800), context: context
+            )
+        }
+        let reloadedContext = ModelContext(container)
+        let reloadedTitration = try #require(reloadedContext.fetch(FetchDescriptor<DoseTitration>()).first)
+        #expect(reloadedTitration.scheduledDate == Date(timeIntervalSince1970: 1_780_000_000))
+        #expect(reloadedTitration.isCompleted == false)
+        #expect(reloadedTitration.completedDate == nil)
     }
 }

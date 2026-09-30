@@ -21,6 +21,7 @@ class MedicationManager: ObservableObject {
     /// Error types for medication management
     enum MedicationError: LocalizedError, Equatable {
         case invalidDose
+        case medicalCalculatorsUnavailable
         case doseOutOfRange(medication: Medication, currentDose: Double)
         case profileNotFound
         case invalidCompoundingSettings
@@ -29,7 +30,9 @@ class MedicationManager: ObservableObject {
         var errorDescription: String? {
             switch self {
             case .invalidDose:
-                return "Invalid dose amount"
+                return "Enter a finite prescribed amount greater than zero"
+            case .medicalCalculatorsUnavailable:
+                return "Medical calculators are unavailable in this release"
             case .doseOutOfRange(let medication, let currentDose):
                 let minDose = medication.availableDoses.min() ?? 0.0
                 let maxDose = medication.availableDoses.max() ?? 0.0
@@ -106,14 +109,17 @@ class MedicationManager: ObservableObject {
         unitsPerDose: Double? = nil,
         notes: String = ""
     ) throws -> MedicationProfile {
+        guard currentDose.isFinite, currentDose > 0 else { throw MedicationError.invalidDose }
         // Validate dose is within brand-specific medication range
         let validDoses = medication.availableDoses(for: brandName)
-        guard validDoses.contains(where: { abs($0 - currentDose) < 0.01 }) else {
+        if ReleasePolicy.isEnabled(.medicalCalculators),
+            !validDoses.contains(where: { abs($0 - currentDose) < 0.01 })
+        {
             throw MedicationError.doseOutOfRange(medication: medication, currentDose: currentDose)
         }
 
         // Validate compounding settings if applicable
-        if isCompounded {
+        if ReleasePolicy.isEnabled(.medicalCalculators), isCompounded {
             guard let vialStrength,
                 let reconstitutionVolume,
                 vialStrength >= currentDose,
@@ -173,6 +179,9 @@ class MedicationManager: ObservableObject {
         unitsPerDose: Double? = nil,
         notes: String? = nil
     ) throws {
+        if let currentDose, !currentDose.isFinite || currentDose <= 0 {
+            throw MedicationError.invalidDose
+        }
         // Update medication type if provided
         if let medication {
             profile.medicationType = medication.rawValue
@@ -193,7 +202,9 @@ class MedicationManager: ObservableObject {
         {
             let brandNameForValidation = brandName ?? profile.brandName
             let validDoses = medicationForValidation.availableDoses(for: brandNameForValidation)
-            guard validDoses.contains(where: { abs($0 - currentDose) < 0.01 }) else {
+            if ReleasePolicy.isEnabled(.medicalCalculators),
+                !validDoses.contains(where: { abs($0 - currentDose) < 0.01 })
+            {
                 throw MedicationError.doseOutOfRange(
                     medication: medicationForValidation, currentDose: currentDose)
             }
@@ -238,7 +249,7 @@ class MedicationManager: ObservableObject {
         }
 
         // Validate compounding settings if compounded
-        if profile.isCompounded {
+        if ReleasePolicy.isEnabled(.medicalCalculators), profile.isCompounded {
             guard let vialStrength = profile.vialStrength,
                 let reconstitutionVolume = profile.reconstitutionVolume,
                 vialStrength >= profile.currentDose,
@@ -315,6 +326,7 @@ class MedicationManager: ObservableObject {
     /// - Parameter profile: The medication profile to create a schedule for
     /// - Throws: MedicationError.saveFailed if schedule creation fails
     private func createScheduleForProfile(_ profile: MedicationProfile) throws {
+        guard ReleasePolicy.isEnabled(.medicalCalculators) else { return }
         // Get medication frequency
         guard let medication = profile.medication else {
             throw MedicationError.saveFailed
