@@ -215,6 +215,8 @@ final class FoodSearchV08UITests: XCTestCase {
 
         // Wait for food detail sheet
         let foodDetailSheet = app.otherElements["food-detail-sheet"]
+        TestUtilities.debugScreenshot(app, name: "food-detail-first-presentation")
+        print(app.debugDescription)
         XCTAssertTrue(foodDetailSheet.waitForExistence(timeout: 3), "Food detail sheet should appear")
 
         // Verify universal unit pills exist
@@ -554,46 +556,177 @@ final class FoodSearchV08UITests: XCTestCase {
 
     // MARK: - Add Food Flow
 
-    /// Test complete flow: search -> select -> add food
     func testCompleteAddFoodFlow() throws {
         TestUtilities.openShortcutsSheet(app)
 
         let searchButton = app.buttons["Search"]
+        XCTAssertTrue(searchButton.waitForExistence(timeout: 3))
         searchButton.tap()
 
         let foodSearchSheet = app.otherElements["food-search-sheet"]
-        XCTAssertTrue(foodSearchSheet.waitForExistence(timeout: 3), "Food search sheet should appear")
+        XCTAssertTrue(foodSearchSheet.waitForExistence(timeout: 3))
 
-        // Search for food
         let searchField = app.textFields["food-search-field"]
+        XCTAssertTrue(searchField.waitForExistence(timeout: 3))
         searchField.tap()
         searchField.typeText("salmon")
 
-        // Select first result
         let firstResult = app.buttons.matching(
             NSPredicate(format: "identifier BEGINSWITH 'food-result-'")
         ).element(boundBy: 0)
-        XCTAssertTrue(firstResult.waitForExistence(timeout: 10), "Should have search results for 'salmon'")
+        XCTAssertTrue(firstResult.waitForExistence(timeout: 10))
+        captureFoodState("food-detail-salmon-result")
+        XCTAssertTrue(firstResult.staticTexts["Salmon, Atlantic, raw"].exists)
         firstResult.tap()
 
-        // Wait for food detail sheet
         let foodDetailSheet = app.otherElements["food-detail-sheet"]
-        XCTAssertTrue(foodDetailSheet.waitForExistence(timeout: 3), "Food detail sheet should appear")
-
-        // Verify pill picker is visible - use descendants query
-        let pillPicker = app.descendants(matching: .any)["serving-pill-picker"].firstMatch
-
-        XCTAssertTrue(pillPicker.waitForExistence(timeout: 3), "Pill picker should be visible")
-
-        // Tap Add button
-        let addButton = app.buttons["add-food-button"]
-        XCTAssertTrue(addButton.waitForExistence(timeout: 3), "Add button should exist")
-        addButton.tap()
-
-        // Verify sheets are dismissed (back to food log)
-        XCTAssertFalse(
-            foodDetailSheet.waitForExistence(timeout: 2),
-            "Food detail sheet should be dismissed after adding"
+        assertFoodDetails(
+            name: "Salmon, Atlantic, raw", calories: "208", protein: "20", fat: "13", carbs: "0",
+            screenshot: "food-detail-salmon-first-presentation"
         )
+        let gramsPill = foodDetailSheet.buttons["serving-pill-g"]
+        XCTAssertTrue(gramsPill.exists)
+        XCTAssertTrue(foodDetailSheet.buttons["serving-pill-oz"].exists)
+        gramsPill.tap()
+
+        let quantityInput = foodDetailSheet.textFields["quantity-input"]
+        captureFoodState("food-detail-salmon-grams")
+        XCTAssertEqual(quantityInput.value as? String, "100", "Switching to grams should retain the 100g portion")
+        quantityInput.tap()
+        quantityInput.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 3) + "200")
+        captureFoodState("food-detail-salmon-200g")
+        XCTAssertEqual(quantityInput.value as? String, "200")
+        assertFoodDetails(
+            name: "Salmon, Atlantic, raw", calories: "416", protein: "40", fat: "26", carbs: "0",
+            screenshot: "food-detail-salmon-scaled-nutrition"
+        )
+
+        let addButton = foodDetailSheet.buttons["add-food-button"]
+        XCTAssertTrue(addButton.waitForExistence(timeout: 3))
+        addButton.tap()
+        captureFoodState("food-detail-after-save")
+        XCTAssertTrue(
+            foodDetailSheet.waitForNonExistence(timeout: 3),
+            "Food detail sheet should dismiss after adding"
+        )
+        XCTAssertTrue(foodSearchSheet.waitForNonExistence(timeout: 3), "Search should dismiss after adding")
+        TestUtilities.navigateToTab(app, tabName: "Food Log")
+        assertSingleSalmonEntry(screenshot: "food-detail-saved-log")
+
+        app.terminate()
+        app = TestUtilities.launchAppWithTestMode(resetData: false)
+        TestUtilities.navigateToTab(app, tabName: "Food Log")
+        assertSingleSalmonEntry(screenshot: "food-detail-relaunched-log")
+    }
+
+    func testCancelThenSelectDifferentFoodShowsFreshDetails() throws {
+        TestUtilities.openShortcutsSheet(app)
+        let searchButton = app.buttons["Search"]
+        XCTAssertTrue(searchButton.waitForExistence(timeout: 3))
+        searchButton.tap()
+
+        let foodSearchSheet = app.otherElements["food-search-sheet"]
+        XCTAssertTrue(foodSearchSheet.waitForExistence(timeout: 3))
+        let searchField = app.textFields["food-search-field"]
+        XCTAssertTrue(searchField.waitForExistence(timeout: 3))
+        searchField.tap()
+        searchField.typeText("salmon")
+        let firstResult = app.buttons.matching(
+            NSPredicate(format: "identifier BEGINSWITH 'food-result-'")
+        ).element(boundBy: 0)
+        XCTAssertTrue(firstResult.waitForExistence(timeout: 10))
+        firstResult.tap()
+        assertFoodDetails(
+            name: "Salmon, Atlantic, raw", calories: "208", protein: "20", fat: "13", carbs: "0",
+            screenshot: "food-detail-before-cancel"
+        )
+
+        let detail = app.otherElements["food-detail-sheet"]
+        let cancel = detail.buttons["Cancel"]
+        XCTAssertTrue(cancel.exists)
+        cancel.tap()
+        captureFoodState("food-detail-canceled-search")
+        XCTAssertTrue(detail.waitForNonExistence(timeout: 3))
+        XCTAssertTrue(searchField.exists, "Cancel should return to the existing search")
+        let clearSearch = foodSearchSheet.buttons["clear-search-button"]
+        XCTAssertTrue(clearSearch.exists)
+        clearSearch.tap()
+        searchField.tap()
+        searchField.typeText("chicken breast roasted")
+        XCTAssertTrue(firstResult.waitForExistence(timeout: 10))
+        captureFoodState("food-detail-chicken-result")
+        XCTAssertTrue(firstResult.staticTexts["Chicken breast, roasted"].exists)
+        firstResult.tap()
+        assertFoodDetails(
+            name: "Chicken breast, roasted", calories: "165", protein: "31", fat: "3", carbs: "0",
+            screenshot: "food-detail-different-selection"
+        )
+        XCTAssertFalse(detail.staticTexts["Salmon, Atlantic, raw"].exists, "The previous selection must be absent")
+        let quantity = detail.textFields["quantity-input"]
+        XCTAssertEqual(quantity.value as? String, "1", "The new food should open with its default serving")
+        cancel.tap()
+        captureFoodState("food-detail-second-cancel")
+        XCTAssertTrue(detail.waitForNonExistence(timeout: 3))
+        let closeSearch = foodSearchSheet.buttons["food-search-cancel-button"]
+        XCTAssertTrue(closeSearch.exists)
+        closeSearch.tap()
+        XCTAssertTrue(foodSearchSheet.waitForNonExistence(timeout: 3))
+        TestUtilities.navigateToTab(app, tabName: "Food Log")
+        captureFoodState("food-detail-cancel-empty-log")
+        XCTAssertEqual(app.buttons.matching(identifier: "food-entry-row").count, 0, "Cancel must not log either food")
+        let calories = app.staticTexts.matching(
+            NSPredicate(format: "identifier == 'macro-consumed-cal' AND label == '0/2000'")
+        ).firstMatch
+        XCTAssertTrue(calories.exists, "Cancel must leave consumed calories at zero")
+    }
+
+    private func assertFoodDetails(
+        name: String, calories: String, protein: String, fat: String, carbs: String, screenshot: String,
+        file: StaticString = #filePath, line: UInt = #line
+    ) {
+        let detail = app.otherElements["food-detail-sheet"]
+        captureFoodState(screenshot)
+        XCTAssertTrue(detail.waitForExistence(timeout: 3), file: file, line: line)
+        XCTAssertTrue(detail.staticTexts[name].exists, file: file, line: line)
+        for (identifier, nutrient, value) in [
+            ("food-detail-calories", "Calories", calories),
+            ("food-detail-macro-protein", "Protein", protein),
+            ("food-detail-macro-fat", "Fat", fat),
+            ("food-detail-macro-carbs", "Carbs", carbs),
+        ] {
+            let group = detail.descendants(matching: .any)[identifier].firstMatch
+            XCTAssertTrue(group.exists, file: file, line: line)
+            XCTAssertTrue(group.staticTexts[nutrient].exists, file: file, line: line)
+            XCTAssertTrue(group.staticTexts[value].exists, file: file, line: line)
+        }
+    }
+
+    private func assertSingleSalmonEntry(
+        screenshot: String, file: StaticString = #filePath, line: UInt = #line
+    ) {
+        let log = app.otherElements["food-log-view"]
+        let rows = log.buttons.matching(identifier: "food-entry-row")
+        captureFoodState(screenshot)
+        XCTAssertTrue(rows.firstMatch.waitForExistence(timeout: 3), file: file, line: line)
+        XCTAssertEqual(rows.count, 1, "One Add should create exactly one entry", file: file, line: line)
+        XCTAssertEqual(
+            rows.firstMatch.label, "🐟, Salmon, Atlantic, raw, 40P, 26F, 0C, •, 200g, 416", file: file, line: line
+        )
+        for (identifier, label) in [
+            ("macro-consumed-cal", "416/2000"),
+            ("macro-consumed-protein", "40/150"),
+            ("macro-consumed-fat", "26/65"),
+            ("macro-consumed-carbs", "0/200"),
+        ] {
+            let total = log.staticTexts.matching(
+                NSPredicate(format: "identifier == %@ AND label == %@", identifier, label)
+            ).firstMatch
+            XCTAssertTrue(total.exists, file: file, line: line)
+        }
+    }
+
+    private func captureFoodState(_ name: String) {
+        TestUtilities.debugScreenshot(app, name: name)
+        print(app.debugDescription)
     }
 }

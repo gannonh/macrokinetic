@@ -1,0 +1,19 @@
+{
+  "configuration": "Debug",
+  "scheme": "JabTracker",
+  "fixture": "scripts/create-ci-food-database.py, 22-food CI fixture",
+  "database_sha256": "9934b5294e5b8e476f955c9c4e183a25fe299d9d2f17dda94340feba78422a18",
+  "database_bytes": 53248,
+  "food_rows": 22,
+  "tests": {
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0
+  },
+  "result": "food-detail-regressions.xcresult",
+  "browser_video": "52.1-second continuous excerpt from browser-driven recent-food flow",
+  "limits": [
+    "Barcode/camera scenario not executed",
+    "Not a signed submission candidate or Release harness test"
+  ]
+}
