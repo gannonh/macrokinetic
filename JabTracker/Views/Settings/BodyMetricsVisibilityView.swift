@@ -18,11 +18,15 @@ struct BodyMetricsVisibilityView: View {
         List {
             descriptionSection
             weightSection
-            progressPhotosSection
+            if ReleasePolicy.isEnabled(.progressPhotos) {
+                progressPhotosSection
+            }
             upperBodySection
-            armsSection
-            legsSection
-            ratiosSection
+            if ReleasePolicy.isEnabled(.extendedBodyMetrics) {
+                armsSection
+                legsSection
+                ratiosSection
+            }
         }
         .listStyle(.insetGrouped)
         .navigationTitle("Body Metrics Visibility")
@@ -63,8 +67,10 @@ struct BodyMetricsVisibilityView: View {
     private var upperBodySection: some View {
         Section("Upper Body") {
             metricToggleRow("Neck", key: .neck)
-            metricToggleRow("Shoulders", key: .shoulders)
-            metricToggleRow("Bust", key: .bust)
+            if ReleasePolicy.isEnabled(.extendedBodyMetrics) {
+                metricToggleRow("Shoulders", key: .shoulders)
+                metricToggleRow("Bust", key: .bust)
+            }
             metricToggleRow("Chest", key: .chest)
             metricToggleRow("Waist", key: .waist)
             metricToggleRow("Hips", key: .hip)
@@ -117,7 +123,10 @@ struct BodyMetricsVisibilityView: View {
             key: key.rawValue,
             category: "metric",
             isEnabled: { user?.isMetricEnabled($0) ?? false },
-            toggle: { user?.toggleMetric($0) }
+            toggle: {
+                guard key.isAvailableInRelease else { return }
+                user?.toggleMetric($0)
+            }
         )
     }
 
@@ -127,7 +136,10 @@ struct BodyMetricsVisibilityView: View {
             key: key.rawValue,
             category: "photo",
             isEnabled: { user?.isPhotoTypeEnabled($0) ?? false },
-            toggle: { user?.togglePhotoType($0) }
+            toggle: {
+                guard ReleasePolicy.isEnabled(.progressPhotos) else { return }
+                user?.togglePhotoType($0)
+            }
         )
     }
 

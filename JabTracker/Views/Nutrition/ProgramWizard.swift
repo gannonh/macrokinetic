@@ -981,7 +981,7 @@ struct ProgramWizard: View {
     private var stepContent: some View {
         switch viewModel.currentStep {
         case .programStyle:
-            ProgramStyleStepView(selection: $viewModel.programStyle)
+            ProgramStyleStepView(selection: $viewModel.programStyle, allowedStyles: ProgramStyle.allCases)
                 .accessibilityIdentifier("program-wizard-programStyle-step")
         case .profileCompletion:
             ProfileCompletionStepView(viewModel: viewModel)

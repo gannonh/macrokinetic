@@ -135,6 +135,15 @@ final class OnboardingViewModel {
 
     // MARK: - Computed Properties
 
+    var availableProgramStyles: [ProgramStyle] {
+        ProgramStyle.allCases.filter { style in
+            switch style {
+            case .coached, .collaborative: return true
+            case .manual: return ReleasePolicy.isEnabled(.manualOnboarding)
+            }
+        }
+    }
+
     /// Steps available in the onboarding flow (filters out skippable steps)
     var availableSteps: [OnboardingStep] {
         OnboardingStep.allCases.filter { step in
@@ -191,7 +200,7 @@ final class OnboardingViewModel {
         case .profileCompletion:
             return isProfileDataComplete
         case .programStyle:
-            return programStyle != nil
+            return programStyle.map { availableProgramStyles.contains($0) } ?? false
         case .dietPreference:
             return dietPreference != nil
         case .calorieFloor:
@@ -396,6 +405,9 @@ final class OnboardingViewModel {
 
     /// Calculate TDEE and nutrition targets based on collected data
     func calculateTargets() async throws {
+        guard let programStyle, availableProgramStyles.contains(programStyle) else {
+            throw OnboardingError.unsupportedProgramStyle
+        }
         guard let user = authManager.currentUser else {
             throw OnboardingError.userNotFound
         }
@@ -688,6 +700,10 @@ final class OnboardingViewModel {
     ///
     /// - Returns: Result indicating success, already completed, or failure
     func completeOnboarding() async -> OnboardingCompletionResult {
+        if let programStyle, !availableProgramStyles.contains(programStyle) {
+            errorMessage = OnboardingError.unsupportedProgramStyle.localizedDescription
+            return .failed(OnboardingError.unsupportedProgramStyle)
+        }
         isLoading = true
         defer { isLoading = false }
 
