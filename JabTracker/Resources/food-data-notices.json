@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "sources": [
+    {
+      "id": "usda",
+      "title": "USDA FoodData Central",
+      "notice": "Food data from the U.S. Department of Agriculture, Agricultural Research Service, FoodData Central. USDA publishes these data in the public domain under CC0 1.0 and asks users to credit FoodData Central.",
+      "links": [
+        {"label": "FoodData Central", "url": "https://fdc.nal.usda.gov/"},
+        {"label": "USDA data licensing", "url": "https://fdc.nal.usda.gov/api-guide/"},
+        {"label": "CC0 1.0", "url": "https://creativecommons.org/publicdomain/zero/1.0/"}
+      ]
+    },
+    {
+      "id": "off",
+      "title": "Open Food Facts",
+      "notice": "Contains food data from Open Food Facts, available under the Open Database License (ODbL) 1.0. Individual database contents are available under the Database Contents License (DbCL) 1.0. ODbL includes notice, share-alike, and access requirements for publicly used derivative databases.",
+      "links": [
+        {"label": "Open Food Facts", "url": "https://world.openfoodfacts.org/"},
+        {"label": "Open Database License 1.0", "url": "https://opendatacommons.org/licenses/odbl/1-0/"},
+        {"label": "Database Contents License 1.0", "url": "https://opendatacommons.org/licenses/dbcl/1-0/"},
+        {"label": "Open Food Facts licensing guide", "url": "https://github.com/openfoodfacts/openfoodfacts-server/blob/main/docs/api/tutorials/license-be-on-the-legal-side.md"}
+      ]
+    }
+  ],
+  "image_notice": "The bundled food database contains food records, not Open Food Facts product images. These database licenses do not grant rights to product images or trademarks."
+}

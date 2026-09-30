@@ -40,6 +40,7 @@ logs/
 scripts/usda_data/
 scripts/off_data/
 JabTracker/Resources/usda_foods.sqlite
+JabTracker/Resources/food-db-manifest.json
 
 .coverage/**/*
 
