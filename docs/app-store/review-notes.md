@@ -20,7 +20,7 @@ Replace this section with the confirmed final route. Do not provide fictitious c
 - Open Food Log, search the bundled library, add a food, and confirm the recorded meal and totals: UNVERIFIED, KAT-3587.
 - Open Add (+), choose Metrics, and record a body measurement in Log Metrics: UNVERIFIED, KAT-3595. Confirm exact saved values and relaunch retention; no measurement-history screen is advertised.
 - Optional medication route through More, GLP-1 Programs, and dose history: UNVERIFIED, KAT-3186.
-- Open privacy, terms, support, and food dataset credits: UNVERIFIED, KAT-3592 and KAT-3593.
+- Open privacy, terms, and support: UNVERIFIED, KAT-3592. Open food dataset credits at More → General → Food data (USDA FoodData Central and Open Food Facts notices, license links, bundled database checksum; draft PR #372): UNVERIFIED until KAT-3593 merges and the candidate's manifest matches its database. Add the verified database download or alteration offer only after the owner confirms it.
 - Account deletion route and its HealthKit, local-storage, and sync effects: UNRESOLVED, KAT-3586 and KAT-3584.
 - Offline behavior, upgrade retention, and permission-denial evidence: UNVERIFIED, KAT-3590 and KAT-3588.
 
