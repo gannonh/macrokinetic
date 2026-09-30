@@ -20,7 +20,7 @@ struct ShotsView: View {
     @State private var chartDataProcessor = ChartDataProcessor()
     @State private var analyticsService = AnalyticsService()
     @State private var chartDatasetService: ChartDatasetService
-    @State private var selectedSection: ShotsSection = .concentration
+    @State private var selectedSection: ShotsSection = .history
     @State private var selectedTimePeriod: ChartDataProcessor.TimePeriod = .last30Days
     @State private var selectedHistoryMode: HistoryMode = .list
 
@@ -33,6 +33,17 @@ struct ShotsView: View {
         case concentration = "Concentration"
         case adherence = "Adherence"
         case history = "History"
+
+        var isEnabled: Bool {
+            switch self {
+            case .concentration: return ReleasePolicy.isEnabled(.concentrationEstimates)
+            case .adherence, .history: return true
+            }
+        }
+    }
+
+    private var activeSection: ShotsSection {
+        selectedSection.isEnabled ? selectedSection : .history
     }
 
     init() {
@@ -46,8 +57,11 @@ struct ShotsView: View {
                 PageHeader(title: "Shots")
 
                 // Section picker (always visible, not scrolled)
-                Picker("Section", selection: $selectedSection) {
-                    ForEach(ShotsSection.allCases, id: \.self) { section in
+                Picker("Section", selection: Binding(
+                    get: { activeSection },
+                    set: { selectedSection = $0.isEnabled ? $0 : .history }
+                )) {
+                    ForEach(ShotsSection.allCases.filter { $0.isEnabled }, id: \.self) { section in
                         Text(section.rawValue).tag(section)
                     }
                 }
@@ -60,7 +74,7 @@ struct ShotsView: View {
                 sectionControls
 
                 // Content - History gets full height, others get ScrollView
-                if selectedSection == .history {
+                if activeSection == .history {
                     HistorySection(selectedMode: selectedHistoryMode)
                 } else {
                     ScrollView {
@@ -82,7 +96,7 @@ struct ShotsView: View {
             .toolbar(.hidden, for: .navigationBar)
             .onAppear {
                 loadData()
-                if selectedSection == .concentration {
+                if activeSection == .concentration {
                     refreshChartDataset()
                 }
             }
@@ -94,7 +108,7 @@ struct ShotsView: View {
 
     @ViewBuilder
     private var sectionControls: some View {
-        switch selectedSection {
+        switch activeSection {
         case .concentration:
             TimePeriodSelector(selectedPeriod: $selectedTimePeriod)
                 .padding(.horizontal)
@@ -125,7 +139,7 @@ struct ShotsView: View {
 
     @ViewBuilder
     private var sectionContent: some View {
-        switch selectedSection {
+        switch activeSection {
         case .concentration:
             ConcentrationSection(
                 user: currentUser,
@@ -174,6 +188,7 @@ struct ShotsView: View {
     }
 
     private func refreshChartDataset() {
+        guard ReleasePolicy.isEnabled(.concentrationEstimates) else { return }
         guard let user = currentUser else {
             viewModel.fullChartDataset = nil
             viewModel.chartDataset = nil

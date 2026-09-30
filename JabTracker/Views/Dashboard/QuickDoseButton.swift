@@ -80,7 +80,7 @@ struct QuickDoseButton: View {
         .sheet(
             isPresented: self.$showingTitrationDialog,
             content: {
-                if let titration = pendingTitration {
+                if ReleasePolicy.isEnabled(.medicalCalculators), let titration = pendingTitration {
                     TitrationConfirmationDialog(
                         titration: titration,
                         onComplete: handleTitrationComplete,
@@ -212,6 +212,7 @@ struct QuickDoseSheet: View {
     let onCalculationsUpdated: (() -> Void)?
 
     // Edit mode support
+    let scheduledDoseId: UUID?
     let editingDose: DoseEditData?
     let onSave: ((DoseEditData) -> Void)?
     let onCancel: (() -> Void)?
@@ -222,13 +223,15 @@ struct QuickDoseSheet: View {
         doseService: DoseService,
         showingSuccessMessage: Binding<Bool>,
         onDoseSaved: (() -> Void)? = nil,
-        onCalculationsUpdated: (() -> Void)? = nil
+        onCalculationsUpdated: (() -> Void)? = nil,
+        scheduledDoseId: UUID? = nil
     ) {
         self.viewModel = viewModel
         self.doseService = doseService
         self._showingSuccessMessage = showingSuccessMessage
         self.onDoseSaved = onDoseSaved
         self.onCalculationsUpdated = onCalculationsUpdated
+        self.scheduledDoseId = scheduledDoseId
         self.editingDose = nil
         self.onSave = nil
         self.onCancel = nil
@@ -240,6 +243,7 @@ struct QuickDoseSheet: View {
         onCancel: @escaping () -> Void
     ) {
         self.editingDose = editingDose
+        self.scheduledDoseId = nil
         self.onSave = onSave
         self.onCancel = onCancel
 
@@ -263,28 +267,37 @@ struct QuickDoseSheet: View {
                     // Medication Selection
                     Picker("Medication", selection: self.$viewModel.selectedMedicationProfile) {
                         ForEach(self.viewModel.medicationProfiles, id: \.id) { profile in
-                            Text("\(profile.displayName) (\(profile.currentDose, specifier: "%.2f") mg)")
+                            let amount = RecordedAmountInput.displayText(for: profile.currentDose)
+                            Text("\(profile.displayName) (\(amount) mg)")
                                 .tag(profile as MedicationProfile?)
                         }
                     }
                     .accessibilityIdentifier("quick-dose-medication-picker")
                     .accessibilityLabel("Select medication")
 
-                    // Dose Amount (editable with stepper for per-dose adjustments)
                     HStack {
-                        Text("Dose Amount")
+                        Text("Prescribed Amount")
                         Spacer()
-                        Text("\(self.viewModel.doseAmount, specifier: "%.2f") mg")
-                            .foregroundColor(.secondary)
-                            .accessibilityIdentifier("quick-dose-amount")
-                        Stepper(
-                            "",
-                            value: self.$viewModel.doseAmount,
-                            in: self.viewModel.doseAmountRange,
-                            step: self.viewModel.doseAmountStep
-                        )
-                        .labelsHidden()
-                        .accessibilityIdentifier("quick-dose-amount-stepper")
+                        if ReleasePolicy.isEnabled(.medicalCalculators) {
+                            Text("\(self.viewModel.doseAmount, specifier: "%.2f") mg")
+                                .foregroundColor(.secondary)
+                                .accessibilityIdentifier("quick-dose-amount")
+                            Stepper(
+                                "",
+                                value: self.$viewModel.doseAmount,
+                                in: self.viewModel.doseAmountRange,
+                                step: self.viewModel.doseAmountStep
+                            )
+                            .labelsHidden()
+                            .accessibilityIdentifier("quick-dose-amount-stepper")
+                        } else {
+                            TextField("Amount", text: self.$viewModel.doseAmountText)
+                                .keyboardType(.decimalPad)
+                                .multilineTextAlignment(.trailing)
+                                .accessibilityIdentifier("quick-dose-prescribed-amount-input")
+                            Text("mg")
+                                .foregroundColor(.secondary)
+                        }
                     }
 
                     // Injection Site Selection
@@ -367,6 +380,8 @@ struct QuickDoseSheet: View {
             .onAppear {
                 if self.isEditMode, let editData = editingDose {
                     self.viewModel.loadEditData(editData, context: self.modelContext)
+                } else if let scheduledDoseId {
+                    self.viewModel.prepareForScheduledDose(scheduledDoseId: scheduledDoseId, context: self.modelContext)
                 } else {
                     self.viewModel.loadSmartDefaults(context: self.modelContext)
                 }
@@ -378,6 +393,10 @@ struct QuickDoseSheet: View {
     }
 
     private func handleEditSave() {
+        guard self.viewModel.canSaveDose, let amount = self.viewModel.amountToSave else {
+            self.viewModel.errorMessage = "Enter an amount greater than zero."
+            return
+        }
         guard let editData = editingDose,
             let onSave,
             let selectedProfile = self.viewModel.selectedMedicationProfile
@@ -390,7 +409,7 @@ struct QuickDoseSheet: View {
         // Create updated dose data from current view model state
         let updatedDose = DoseEditData(
             id: editData.id,
-            amount: self.viewModel.doseAmount,
+            amount: amount,
             timestamp: self.viewModel.doseTime,
             site: self.viewModel.selectedInjectionSite.isEmpty
                 ? nil : self.viewModel.selectedInjectionSite,
@@ -404,6 +423,10 @@ struct QuickDoseSheet: View {
 
     @MainActor
     private func saveDose() async {
+        guard self.viewModel.canSaveDose, let amount = self.viewModel.amountToSave else {
+            self.viewModel.errorMessage = "Enter an amount greater than zero."
+            return
+        }
         guard let profile = self.viewModel.selectedMedicationProfile else {
             return
         }
@@ -411,7 +434,7 @@ struct QuickDoseSheet: View {
         do {
             // Save dose through dose service (which handles PK integration)
             _ = try await self.doseService.saveDose(
-                amount: self.viewModel.doseAmount,
+                amount: amount,
                 timestamp: self.viewModel.doseTime,
                 medicationProfile: profile,
                 site: self.viewModel.selectedInjectionSite.isEmpty

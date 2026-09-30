@@ -329,8 +329,8 @@ struct MedicationProfileViewModelScheduleTests {
         #expect(warning == nil, "Should return nil when no upcoming titration exists")
     }
 
-    @Test("Get titration warning returns formatted message for upcoming titration")
-    func testGetTitrationWarning_UpcomingTitration_ReturnsFormattedMessage() async throws {
+    @Test("Launch hides titration dosing warnings while preserving the recorded plan")
+    func upcomingTitrationWarningIsUnavailable() async throws {
         let context = try createTestContext()
         let user = createTestUser(context: context)
         let profile = createTestMedicationProfile(context: context, user: user)
@@ -338,7 +338,7 @@ struct MedicationProfileViewModelScheduleTests {
 
         // Create titration scheduled 15 days from now (within 30-day window)
         let futureDate = Calendar.current.date(byAdding: .day, value: 15, to: Date())!
-        _ = createTestTitration(
+        let titration = createTestTitration(
             context: context,
             profile: profile,
             fromDose: 0.5,
@@ -356,20 +356,13 @@ struct MedicationProfileViewModelScheduleTests {
         await viewModel.loadActiveSchedule()
         let warning = viewModel.getTitrationWarning()
 
-        #expect(warning != nil, "Should return warning for upcoming titration")
-
-        guard let warningMessage = warning else {
-            #expect(Bool(false), "Warning message was nil")
-            return
-        }
-
-        // Verify message contains key elements
-        #expect(warningMessage.contains("1.0mg"), "Message should mention new dose amount")
-        #expect(
-            warningMessage.contains("increase") || warningMessage.contains("change"),
-            "Message should indicate dose change"
-        )
-        #expect(warningMessage.contains("titration plan"), "Message should reference titration plan")
+        #expect(viewModel.activeSchedule != nil)
+        #expect(warning == nil)
+        #expect(titration.fromDose == 0.5)
+        #expect(titration.toDose == 1.0)
+        #expect(titration.scheduledDate == futureDate)
+        #expect(titration.isCompleted == false)
+        #expect(context.hasChanges == false)
     }
 
     @Test("Get titration warning returns nil when titration beyond 30 days")
