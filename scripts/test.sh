@@ -7,6 +7,10 @@ DESTINATION="${JABTRACKER_TEST_DESTINATION:-platform=iOS Simulator,name=iPhone 1
 DEVICE_ID=""
 LOG_DIR=""
 TEST_FILE=""
+SCHEME_OVERRIDE=""
+CONFIGURATION="Debug"
+SUITE_FILE=""
+DERIVED_DATA=""
 ENABLE_COVERAGE=false
 RESET_DEVICE=false
 TEMP_LOGGING=false
@@ -20,6 +24,10 @@ Options:
   --destination VALUE  xcodebuild destination (or JABTRACKER_TEST_DESTINATION)
   --device-id UDID     Select an installed iOS simulator by UDID
   --log-dir PATH       Retain this run's output and artifacts in an empty directory
+  --scheme NAME        JabTracker, JabTrackerUnitTests or JabTrackerReleaseTestHarness
+  --configuration NAME Debug or ReleaseTestHarness (must match the scheme)
+  --suite-file PATH    Versioned exact-method UI allowlist; cannot combine with a suite argument
+  --derived-data PATH  Retain the actual build products in this directory
   --coverage           Save code coverage JSON
   --reset              Erase the explicitly selected simulator (requires --device-id)
   --no-log             Retain artifacts in a temporary directory instead of ./logs
@@ -48,7 +56,7 @@ case "$TEST_TYPE" in unit|ui|all) ;; *) fail_usage "Unknown test type: $TEST_TYP
 DESTINATION_SET=false
 while [ $# -gt 0 ]; do
     case "$1" in
-        --destination|--device-id|--log-dir)
+        --destination|--device-id|--log-dir|--scheme|--configuration|--suite-file|--derived-data)
             option="$1"
             [ $# -ge 2 ] && [ -n "$2" ] && [[ "$2" != --* ]] || fail_usage "$option requires a value."
             case "$option" in
@@ -64,6 +72,10 @@ while [ $# -gt 0 ]; do
                     DESTINATION="platform=iOS Simulator,id=$DEVICE_ID"
                     ;;
                 --log-dir) LOG_DIR="$2" ;;
+                --scheme) SCHEME_OVERRIDE="$2" ;;
+                --configuration) CONFIGURATION="$2" ;;
+                --suite-file) SUITE_FILE="$2" ;;
+                --derived-data) DERIVED_DATA="$2" ;;
             esac
             shift 2
             ;;
@@ -105,6 +117,24 @@ case "$TEST_TYPE" in
     all) TEST_ARGS=("-skip-testing:JabTrackerUITests/ManualAuthenticationUITests") ;;
 esac
 
+SCHEME="${SCHEME_OVERRIDE:-$SCHEME}"
+case "$SCHEME/$CONFIGURATION" in
+    JabTracker/Debug|JabTrackerUnitTests/Debug) ;;
+    JabTrackerReleaseTestHarness/ReleaseTestHarness)
+        [ "$TEST_TYPE" = ui ] || fail_usage "Release harness runs only UI tests."
+        ;;
+    *) fail_usage "Unsupported scheme/configuration pair: $SCHEME/$CONFIGURATION" ;;
+esac
+if [ -n "$SUITE_FILE" ]; then
+    [ "$TEST_TYPE" = ui ] && [ -z "$TEST_FILE" ] || fail_usage "--suite-file requires ui without a positional suite."
+    SELECTORS="$(python3 "$SCRIPT_DIR/ci/launch.py" selectors --suite-file "$SUITE_FILE" \
+        --scheme "$SCHEME" --configuration "$CONFIGURATION")" || exit 2
+    TEST_ARGS=()
+    while IFS= read -r selector; do
+        TEST_ARGS+=("-only-testing:$selector")
+    done <<< "$SELECTORS"
+fi
+
 if [ -n "$LOG_DIR" ]; then
     if [ -e "$LOG_DIR" ] && { [ ! -d "$LOG_DIR" ] || [ -n "$(ls -A "$LOG_DIR")" ]; }; then
         fail_usage "--log-dir must be absent or empty; previous evidence will not be overwritten."
@@ -120,6 +150,9 @@ else
     ln -sfn "$(basename "$LOG_DIR")" "logs/latest_${simulator_name}"
 fi
 LOG_DIR="$(cd "$LOG_DIR" && pwd)"
+if [ -n "$SUITE_FILE" ]; then
+    cp "$SUITE_FILE" "$LOG_DIR/launch-suite.json" || exit 1
+fi
 RAW_LOG_FILE="$LOG_DIR/raw_output.txt"
 LOG_FILE="$LOG_DIR/output.txt"
 XCRESULT_PATH="$LOG_DIR/results.xcresult"
@@ -134,8 +167,15 @@ if [ "$RESET_DEVICE" = true ]; then
 fi
 
 BUILD_ARGS=(test -project "$SCRIPT_DIR/../JabTracker.xcodeproj" -scheme "$SCHEME"
+    -configuration "$CONFIGURATION"
     -destination "$DESTINATION" "${TEST_ARGS[@]}" -resultBundlePath "$XCRESULT_PATH"
     -disable-concurrent-destination-testing -parallel-testing-enabled NO)
+if [ "$CONFIGURATION" = ReleaseTestHarness ]; then
+    BUILD_ARGS+=(CODE_SIGNING_ALLOWED=NO COMPILER_INDEX_STORE_ENABLE=NO SWIFT_ENABLE_EXPLICIT_MODULES=NO)
+fi
+if [ -n "$DERIVED_DATA" ]; then
+    BUILD_ARGS+=(-derivedDataPath "$DERIVED_DATA")
+fi
 if [ "$ENABLE_COVERAGE" = true ]; then
     BUILD_ARGS+=(-enableCodeCoverage YES)
 fi
@@ -162,7 +202,11 @@ else
 fi
 printf '%s\n' "$TEST_EXIT_CODE" > "$LOG_DIR/xcodebuild-status.txt"
 
-python3 "$SCRIPT_DIR/verify-test-results.py" "$LOG_DIR" --expected-test "$EXPECTED_TEST" \
+VERIFY_ARGS=(--expected-test "$EXPECTED_TEST")
+if [ -n "$SUITE_FILE" ]; then
+    VERIFY_ARGS=(--suite-file "$LOG_DIR/launch-suite.json")
+fi
+python3 "$SCRIPT_DIR/verify-test-results.py" "$LOG_DIR" "${VERIFY_ARGS[@]}" \
     > "$LOG_DIR/result-inspection.txt" 2>&1
 RESULT_EXIT_CODE=$?
 FINAL_EXIT_CODE="$TEST_EXIT_CODE"

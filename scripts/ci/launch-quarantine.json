@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {
+      "selector": "JabTrackerUITests/CalendarStatsUITests",
+      "reason": "Direct stub XCTSkip bodies; not launch acceptance.",
+      "issue": "https://linear.app/kata-sh/issue/KAT-3193"
+    },
+    {
+      "selector": "JabTrackerUITests/CalendarPerformanceUITests",
+      "reason": "Direct stub XCTSkip bodies; not launch acceptance.",
+      "issue": "https://linear.app/kata-sh/issue/KAT-3193"
+    },
+    {
+      "selector": "JabTrackerUITests/ProgramStyleUITests",
+      "reason": "Direct stub XCTSkip bodies; not launch acceptance.",
+      "issue": "https://linear.app/kata-sh/issue/KAT-3193"
+    },
+    {
+      "selector": "JabTrackerUITests/CalendarDoseActionsUITests",
+      "reason": "Stub or conditional interactions do not verify the promised saved action/value.",
+      "issue": "https://linear.app/kata-sh/issue/KAT-3186"
+    },
+    {
+      "selector": "JabTrackerUITests/CalendarQuickDoseIntegrationUITests",
+      "reason": "Stub or conditional interactions do not verify the promised saved action/value.",
+      "issue": "https://linear.app/kata-sh/issue/KAT-3186"
+    },
+    {
+      "selector": "JabTrackerUITests/StrategyViewUITests/testWeeklyGridVisibleForManual",
+      "reason": "Direct skip; current setup cannot establish this program/goal contract.",
+      "issue": "https://linear.app/kata-sh/issue/KAT-3588"
+    },
+    {
+      "selector": "JabTrackerUITests/StrategyViewUITests/testWeeklyGridUpdatesAfterEdit",
+      "reason": "Direct skip; current setup cannot establish this program/goal contract.",
+      "issue": "https://linear.app/kata-sh/issue/KAT-3588"
+    },
+    {
+      "selector": "JabTrackerUITests/StrategyViewUITests/testCoachedShiftedShowsVariedValues",
+      "reason": "Direct skip; current setup cannot establish this program/goal contract.",
+      "issue": "https://linear.app/kata-sh/issue/KAT-3588"
+    },
+    {
+      "selector": "JabTrackerUITests/StrategyViewUITests/testNewGoalChainsToProgramWizard",
+      "reason": "Direct skip; current setup cannot establish this program/goal contract.",
+      "issue": "https://linear.app/kata-sh/issue/KAT-3588"
+    },
+    {
+      "selector": "JabTrackerUITests/StrategyViewUITests/testEditGoalShowsProgramSummary",
+      "reason": "Direct skip; current setup cannot establish this program/goal contract.",
+      "issue": "https://linear.app/kata-sh/issue/KAT-3588"
+    },
+    {
+      "selector": "JabTrackerUITests/StrategyViewUITests/testNoUserShowsProfilePrompt",
+      "reason": "Direct skip; current setup cannot establish this program/goal contract.",
+      "issue": "https://linear.app/kata-sh/issue/KAT-3588"
+    },
+    {
+      "selector": "JabTrackerUITests/RolloverCaloriesUITests/testRolloverAddsUnusedCalories",
+      "reason": "Missing named seed infrastructure; implemented rollover functionality is not declared unfinished.",
+      "issue": "https://linear.app/kata-sh/issue/KAT-3587"
+    },
+    {
+      "selector": "JabTrackerUITests/RolloverCaloriesUITests/testRolloverCappedAt200",
+      "reason": "Missing named seed infrastructure; implemented rollover functionality is not declared unfinished.",
+      "issue": "https://linear.app/kata-sh/issue/KAT-3587"
+    },
+    {
+      "selector": "JabTrackerUITests/RolloverCaloriesUITests/testNoRolloverWhenOverBudget",
+      "reason": "Missing named seed infrastructure; implemented rollover functionality is not declared unfinished.",
+      "issue": "https://linear.app/kata-sh/issue/KAT-3587"
+    },
+    {
+      "selector": "JabTrackerUITests/RolloverCaloriesUITests/testRolloverStacksWithBurnedCalories",
+      "reason": "Missing named seed infrastructure; implemented rollover functionality is not declared unfinished.",
+      "issue": "https://linear.app/kata-sh/issue/KAT-3587"
+    },
+    {
+      "selector": "JabTrackerUITests/RolloverCaloriesUITests/testRolloverDisabledShowsBaseTarget",
+      "reason": "Missing named seed infrastructure; implemented rollover functionality is not declared unfinished.",
+      "issue": "https://linear.app/kata-sh/issue/KAT-3587"
+    },
+    {
+      "selector": "JabTrackerUITests/ManualAuthenticationUITests",
+      "reason": "Disabled setup and mock manual authentication do not prove production Apple sign-in.",
+      "issue": "https://linear.app/kata-sh/issue/KAT-3597"
+    },
+    {
+      "selector": "JabTrackerUITests/QuickDoseStepperUITests",
+      "reason": "Dormant medical capability coverage; launch prescribed-value/absence replacements own active acceptance.",
+      "issue": "https://linear.app/kata-sh/issue/KAT-3581"
+    },
+    {
+      "selector": "JabTrackerUITests/DoseButtonUITests",
+      "reason": "Dormant medical capability coverage; launch prescribed-value/absence replacements own active acceptance.",
+      "issue": "https://linear.app/kata-sh/issue/KAT-3581"
+    },
+    {
+      "selector": "JabTrackerUITests/SplitDoseIntegrationUITests",
+      "reason": "Dormant medical capability coverage; launch prescribed-value/absence replacements own active acceptance.",
+      "issue": "https://linear.app/kata-sh/issue/KAT-3581"
+    },
+    {
+      "selector": "JabTrackerUITests/ConcentrationTimelineChartUITests",
+      "reason": "Dormant medical capability coverage; launch prescribed-value/absence replacements own active acceptance.",
+      "issue": "https://linear.app/kata-sh/issue/KAT-3581"
+    },
+    {
+      "selector": "JabTrackerUITests/PKEngineUITests",
+      "reason": "Dormant medical capability coverage; launch prescribed-value/absence replacements own active acceptance.",
+      "issue": "https://linear.app/kata-sh/issue/KAT-3581"
+    },
+    {
+      "selector": "JabTrackerUITests/MoreTabUITests/testNavigateToSubscription",
+      "reason": "Asserts subscription or inert placeholder surfaces deliberately absent in launch.",
+      "issue": "https://linear.app/kata-sh/issue/KAT-3580"
+    },
+    {
+      "selector": "JabTrackerUITests/MoreTabUITests/testInactiveItemsNotTappable",
+      "reason": "Asserts subscription or inert placeholder surfaces deliberately absent in launch.",
+      "issue": "https://linear.app/kata-sh/issue/KAT-3580"
+    },
+    {
+      "selector": "JabTrackerUITests/FoodLibraryUITests/testRecipesAndFavoritesTabsShowComingSoon",
+      "reason": "Asserts deliberately hidden Recipes/Favorites controls.",
+      "issue": "https://linear.app/kata-sh/issue/KAT-3580"
+    },
+    {
+      "selector": "JabTrackerUITests/NutritionFlowUITests/testSearchFoodLogMealViewDailyTotals",
+      "reason": "Presence checks/old selectors do not establish exact nutrition totals and durable records.",
+      "issue": "https://linear.app/kata-sh/issue/KAT-3587"
+    },
+    {
+      "selector": "JabTrackerUITests/AuthenticationUITests/testAuthenticationPersistence",
+      "reason": "Helper resets data on relaunch; not production auth/data-retention evidence.",
+      "issue": "https://linear.app/kata-sh/issue/KAT-3597"
+    },
+    {
+      "selector": "JabTrackerFoodSearchBenchmarkTests/FoodSearchReleaseBenchmarkUITests",
+      "reason": "Separate benchmark target and production database/runtime; not CI fixture performance acceptance.",
+      "issue": "https://linear.app/kata-sh/issue/KAT-3595"
+    }
+  ]
+}
