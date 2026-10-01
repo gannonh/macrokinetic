@@ -6,14 +6,26 @@
   "database_bytes": 53248,
   "food_rows": 22,
   "tests": {
-    "passed": 3,
-    "failed": 0,
-    "skipped": 0
+    "FoodSearchV08UITests": {
+      "passed": 19,
+      "failed": 1,
+      "skipped": 0,
+      "note": "failure testSearchShowsPendingThenFinalState also fails on base 51c9a1a0"
+    },
+    "JabTrackerUnitTests": {
+      "passed": 3065,
+      "failed": 2,
+      "skipped": 1,
+      "note": "2 NotificationServiceActionTests titration failures (notification authorization on cloned simulator)"
+    }
   },
   "result": "food-detail-regressions.xcresult",
   "browser_video": "52.1-second continuous excerpt from browser-driven recent-food flow",
   "limits": [
-    "Barcode/camera scenario not executed",
-    "Not a signed submission candidate or Release harness test"
-  ]
+    "Barcode/camera scenario 6 not executed",
+    "Not a signed submission candidate or Release harness test",
+    "Fixture database only"
+  ],
+  "commit": "45f2654a",
+  "live_simulator": "iPhone 18 Pro iOS 27, Debug, CI fixture, XCUITest-driven"
 }
