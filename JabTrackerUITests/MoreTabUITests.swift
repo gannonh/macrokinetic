@@ -36,23 +36,20 @@ final class MoreTabUITests: XCTestCase {
         XCTAssertTrue(securityView.waitForExistence(timeout: 5), "Security view should appear")
     }
 
-    func testNavigateToSubscription() throws {
+    func testSubscriptionHiddenWhileSecurityRemainsAvailable() throws {
         TestUtilities.navigateToTab(app, tabName: "More")
 
         let moreView = app.descendants(matching: .any)["more-view"].firstMatch
         XCTAssertTrue(moreView.waitForExistence(timeout: 5))
 
-        // Need to scroll to find Subscription in Account Settings section
         app.swipeUp()
-
-        // NavigationLinks in SwiftUI List are exposed as Buttons, not Cells
-        let subscriptionRow = app.buttons["subscription-row"]
-        XCTAssertTrue(subscriptionRow.waitForExistence(timeout: 5))
-        subscriptionRow.tap()
-
-        // SwiftUI List views are exposed as CollectionView, use descendants query
-        let subscriptionView = app.descendants(matching: .any)["subscription-settings-view"].firstMatch
-        XCTAssertTrue(subscriptionView.waitForExistence(timeout: 5))
+        TestUtilities.debugScreenshot(app, name: "release-account-settings")
+        print(app.debugDescription)
+        XCTAssertFalse(app.buttons["subscription-row"].exists)
+        let securityRow = app.buttons["security-privacy-row"]
+        XCTAssertTrue(securityRow.waitForExistence(timeout: 5))
+        securityRow.tap()
+        XCTAssertTrue(app.descendants(matching: .any)["security-privacy-view"].firstMatch.waitForExistence(timeout: 5))
     }
 
     func testNavigateToNotificationSettings() throws {
@@ -193,26 +190,24 @@ final class MoreTabUITests: XCTestCase {
         XCTAssertTrue(foodsTab.waitForExistence(timeout: 3), "Foods tab should exist in library")
     }
 
-    // MARK: - Inactive Placeholder Tests
+    // MARK: - Hidden Placeholder Tests
 
-    func testInactiveItemsNotTappable() throws {
+    func testInactivePlaceholdersAreHiddenInLaunchBuild() throws {
         TestUtilities.navigateToTab(app, tabName: "More")
 
         let moreView = app.descendants(matching: .any)["more-view"].firstMatch
         XCTAssertTrue(moreView.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["metrics-settings-link"].waitForExistence(timeout: 3))
 
-        // Placeholder items exist as StaticText (inactive, grayed out)
-        // In SwiftUI List, Label creates both Image and StaticText with the identifier
-        let foodLogPlaceholder = app.staticTexts["food-log-placeholder"]
-        XCTAssertTrue(foodLogPlaceholder.waitForExistence(timeout: 3), "Food Log placeholder should exist")
+        for identifier in ["dashboard-settings-placeholder", "food-log-placeholder", "shortcuts-placeholder"] {
+            XCTAssertFalse(app.descendants(matching: .any)[identifier].firstMatch.exists, "\(identifier) should be hidden")
+        }
 
-        let shortcutsPlaceholder = app.staticTexts["shortcuts-placeholder"]
-        XCTAssertTrue(shortcutsPlaceholder.waitForExistence(timeout: 3), "Shortcuts placeholder should exist")
-
-        // FAQ placeholder - need to scroll to see it
         app.swipeUp()
-        let faqPlaceholder = app.staticTexts["faq-placeholder"]
-        XCTAssertTrue(faqPlaceholder.waitForExistence(timeout: 3), "FAQ placeholder should exist")
+        XCTAssertTrue(app.buttons["general-link"].waitForExistence(timeout: 3))
+        for identifier in ["faq-placeholder", "help-support-placeholder"] {
+            XCTAssertFalse(app.descendants(matching: .any)[identifier].firstMatch.exists, "\(identifier) should be hidden")
+        }
     }
 
     // MARK: - Security & Privacy Tests

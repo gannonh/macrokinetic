@@ -79,6 +79,7 @@ extension View {
 /// Program style selection step
 struct ProgramStyleStepView: View {
     @Binding var selection: ProgramStyle?
+    let allowedStyles: [ProgramStyle]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -89,7 +90,7 @@ struct ProgramStyleStepView: View {
 
             ScrollView {
                 VStack(spacing: 12) {
-                    ForEach(ProgramStyle.allCases, id: \.self) { style in
+                    ForEach(allowedStyles, id: \.self) { style in
                         SelectionCard(
                             title: style.displayName,
                             description: style.description,

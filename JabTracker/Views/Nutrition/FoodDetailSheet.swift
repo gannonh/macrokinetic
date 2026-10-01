@@ -190,7 +190,6 @@ struct FoodDetailSheet: View {
                     // Large macro display
                     macroDisplay
 
-                    // Action buttons (non-functional placeholders)
                     actionButtons
 
                     // Impact on targets
@@ -392,18 +391,19 @@ struct FoodDetailSheet: View {
             .tint(hasSchedule ? .green : nil)
             .accessibilityIdentifier("schedule-food-button")
 
-            Button {
-                // Placeholder - future feature
-            } label: {
-                VStack(spacing: 4) {
-                    Image(systemName: "heart")
-                        .font(.title3)
-                    Text("Favorite")
-                        .font(.caption)
+            if ReleasePolicy.isEnabled(.foodFavorites) {
+                Button {
+                } label: {
+                    VStack(spacing: 4) {
+                        Image(systemName: "heart")
+                            .font(.title3)
+                        Text("Favorite")
+                            .font(.caption)
+                    }
                 }
+                .buttonStyle(.bordered)
+                .disabled(true)
             }
-            .buttonStyle(.bordered)
-            .disabled(true)
         }
     }
 

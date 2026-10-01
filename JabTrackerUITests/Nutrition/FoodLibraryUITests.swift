@@ -761,36 +761,16 @@ final class FoodLibraryUITests: XCTestCase {
         XCTAssertTrue(helpText.waitForExistence(timeout: 3), "Empty state help text should be visible")
     }
 
-    /// Recipes and Favorites tabs show "Coming Soon"
-    /// Acceptance: Tap Recipes/Favorites, alert shows "Coming Soon"
-    func testRecipesAndFavoritesTabsShowComingSoon() {
-        // Given: User opens Library tab
+    func testRecipesAndFavoritesHiddenWhileScheduledRemainsAvailable() {
         navigateToLibraryTab()
-
-        // When: User taps Recipes tab
-        let recipesTab = app.buttons["food-library-tab-recipes"]
-        XCTAssertTrue(recipesTab.waitForExistence(timeout: 3), "Recipes tab should exist")
-        recipesTab.tap()
-
-        // Then: "Coming Soon" alert should appear
-        let comingSoonAlert = app.alerts["Coming Soon"]
-        XCTAssertTrue(comingSoonAlert.waitForExistence(timeout: 3), "Coming Soon alert should appear for Recipes")
-
-        // Dismiss the alert
-        let okButton = comingSoonAlert.buttons["OK"]
-        XCTAssertTrue(okButton.exists, "OK button should exist in alert")
-        okButton.tap()
-
-        // When: User taps Favorites tab
-        let favoritesTab = app.buttons["food-library-tab-favorites"]
-        XCTAssertTrue(favoritesTab.waitForExistence(timeout: 3), "Favorites tab should exist")
-        favoritesTab.tap()
-
-        // Then: "Coming Soon" alert should appear again
-        let comingSoonAlertAgain = app.alerts["Coming Soon"]
-        XCTAssertTrue(
-            comingSoonAlertAgain.waitForExistence(timeout: 3),
-            "Coming Soon alert should appear for Favorites"
-        )
+        TestUtilities.debugScreenshot(app, name: "release-library-tabs")
+        print(app.debugDescription)
+        XCTAssertFalse(app.buttons["food-library-tab-recipes"].exists)
+        XCTAssertFalse(app.buttons["food-library-tab-favorites"].exists)
+        XCTAssertTrue(app.buttons["food-library-tab-foods"].exists)
+        let scheduledTab = app.buttons["food-library-tab-scheduled"]
+        XCTAssertTrue(scheduledTab.exists)
+        scheduledTab.tap()
+        XCTAssertTrue(app.staticTexts["No scheduled foods"].waitForExistence(timeout: 3))
     }
 }

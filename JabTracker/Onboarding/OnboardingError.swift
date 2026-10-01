@@ -5,6 +5,7 @@ enum OnboardingError: LocalizedError {
     case permissionsDenied
     case dataCreationFailed
     case userNotFound
+    case unsupportedProgramStyle
 
     var errorDescription: String? {
         switch self {
@@ -16,6 +17,8 @@ enum OnboardingError: LocalizedError {
             return "Failed to save onboarding data"
         case .userNotFound:
             return "No authenticated user found"
+        case .unsupportedProgramStyle:
+            return "Choose a supported program style to continue onboarding"
         }
     }
 }

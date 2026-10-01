@@ -104,6 +104,12 @@ struct QuickPhotoSheet: View {
     // MARK: - Body
 
     var body: some View {
+        if ReleasePolicy.isEnabled(.progressPhotos) {
+            photoContent
+        }
+    }
+
+    private var photoContent: some View {
         NavigationStack {
             Form {
                 if hasEnabledPhotoTypes {
@@ -389,6 +395,7 @@ struct QuickPhotoSheet: View {
 
     @MainActor
     private func save() async {
+        guard ReleasePolicy.isEnabled(.progressPhotos) else { return }
         guard let service = photoService else {
             Self.logger.error("ProgressPhotoService not initialized")
             errorMessage = "Unable to save photo. Please restart the app and try again."

@@ -26,7 +26,8 @@ enum LibraryTab: String, CaseIterable {
     var isEnabled: Bool {
         switch self {
         case .foods, .scheduled: return true
-        default: return false
+        case .recipes: return ReleasePolicy.isEnabled(.recipes)
+        case .favorites: return ReleasePolicy.isEnabled(.foodFavorites)
         }
     }
 }
