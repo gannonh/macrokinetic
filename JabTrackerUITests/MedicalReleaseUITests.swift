@@ -65,7 +65,9 @@ final class MedicalReleaseUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts["Split Dose"].exists)
         let daily = app.buttons["Daily"]
         XCTAssertTrue(daily.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["save-schedule-edit"].isEnabled)
         daily.tap()
+        XCTAssertTrue(app.buttons["save-schedule-edit"].isEnabled)
         app.buttons["save-schedule-edit"].tap()
         XCTAssertTrue(app.buttons["edit-schedule-button"].waitForExistence(timeout: 5))
 
