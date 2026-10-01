@@ -14,6 +14,7 @@ KAT-3580 excludes unfinished features from the launch build. `ReleasePolicy` is 
 | `extendedBodyMetrics` | Unsupported shoulders, bust, arm, leg and ratio settings | Weight, body fat, neck, chest, waist and hips |
 | `progressPhotos` | Capture-only photo shortcut, photo settings and directly constructed capture view/save action | Existing photo records and preferences |
 | `manualOnboarding` | Manual option in onboarding; validation rejects direct target calculation or completion requests before writes | Coached/Collaborative onboarding; Manual in the separate Strategy wizard |
+| `barcodeScannerExtras` | Barcode scanner's Label scan type and inert Select from gallery button | Barcode scanning and the torch toggle |
 | `helpCenter` | Inert FAQ and Help & Support rows | General settings and legal navigation |
 | `historicalTDEERecalculation` | Historical backfill branch that copied an estimate into an adaptive snapshot | Holding snapshots; current-day TDEE calculation; burned, predictive and rollover calorie functionality/settings |
 
@@ -31,7 +32,7 @@ Current-day TDEE calculation and implemented calorie adjustment providers stay a
 
 ## Verification
 
-Unit coverage asserts the twelve disabled features, literal supported catalogs, AI request normalization, preserved preferences, and Manual onboarding rejection before persistent writes. UI coverage checks hidden shortcut/search/library/detail/More/metric controls and supported neighbors. Existing onboarding coverage asserts Manual absent while completing Coached onboarding; the Strategy wizard still receives all three styles explicitly.
+Unit coverage asserts the thirteen disabled features, literal supported catalogs, AI request normalization, preserved preferences, and Manual onboarding rejection before persistent writes. UI coverage checks hidden shortcut/search/library/detail/More/metric controls and supported neighbors. Existing onboarding coverage asserts Manual absent while completing Coached onboarding; the Strategy wizard still receives all three styles explicitly.
 
 Recorded on the branch: full Debug unit suite 3,076 tests, 3,073 passed, 1 skipped, 2 failed (`NotificationServiceActionTests` reschedule and remind-later titration cases, which fail on `UNAuthorizationStatus=Denied` and do not touch this diff). `ReleaseSurfaceUITests` runs 8 cases in Debug and in an optimized Release build (`Release-iphonesimulator`, no `debug.dylib`); 7 pass in each. The failing case opens food detail from search and hits the blank-sheet defect that also fails on `main` (`edd81bd7`); it is tracked separately and keeps scenario 8's search-to-detail path open. Quick Add logging, weight logging, the Dashboard to Food Log to More comparison, hostile launch arguments and environment variables, and the hidden Strategy and calorie-settings controls pass.
 
