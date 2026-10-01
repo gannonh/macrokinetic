@@ -293,4 +293,34 @@ struct DataControllerInitializationTests {
         #expect(DataController.preview === DataController.preview)
         #expect(try DataController.preview.container.mainContext.fetch(FetchDescriptor<User>()).count == 1)
     }
+
+    @Test("Invalid, duplicate or bare fixture arguments fail closed without opening any store")
+    func invalidFixtureArgumentsNeverOpenAStore() throws {
+        let valid = "--storage-fixture=\(UUID().uuidString)"
+        let rejected: [[String]] = [
+            ["--storage-fixture=../../patient"],
+            ["--storage-fixture="],
+            ["--storage-fixture"],
+            ["--storage-fixture-extra=1"],
+            [valid, "--storage-fixture=\(UUID().uuidString)"],
+            [valid, valid],
+        ]
+        for arguments in rejected {
+            let controller = try #require(StorageTestFixture.controller(arguments: arguments))
+            #expect(try failedStorage(controller.storageState).attemptCount == 1, "\(arguments)")
+            controller.retryStorage()
+            #expect(try failedStorage(controller.storageState).attemptCount == 2, "\(arguments)")
+        }
+        let rejectedDirectory = URL.applicationSupportDirectory
+            .appendingPathComponent("JabTrackerStorageFixtures", isDirectory: true)
+            .appendingPathComponent("rejected", isDirectory: true)
+        #expect(FileManager.default.fileExists(atPath: rejectedDirectory.path) == false)
+        #expect(StorageTestFixture.controller(arguments: ["--ui-testing", "--storage-always-fail-open"]) == nil)
+        let single = try #require(StorageTestFixture.controller(arguments: [valid]))
+        let directory = URL.applicationSupportDirectory
+            .appendingPathComponent("JabTrackerStorageFixtures", isDirectory: true)
+            .appendingPathComponent(String(valid.dropFirst("--storage-fixture=".count)), isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        _ = try readyContainer(single.storageState)
+    }
 }

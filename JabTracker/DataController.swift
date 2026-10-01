@@ -11,8 +11,8 @@ import SwiftData
 class DataController: ObservableObject {
     static let shared: DataController = {
         #if DEBUG || JABTRACKER_TEST_HARNESS
-        if let fixture = StorageTestFixture.from(arguments: ProcessInfo.processInfo.arguments) {
-            return fixture.makeController()
+        if let controller = StorageTestFixture.controller(arguments: ProcessInfo.processInfo.arguments) {
+            return controller
         }
         #endif
         return DataController()

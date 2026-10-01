@@ -8,7 +8,7 @@ The recovery screen offers Retry and copy/share support metadata. Its report inc
 
 ## Isolated fault fixtures
 
-The fixture implementation and bootstrap reader compile only under `DEBUG || JABTRACKER_TEST_HARNESS`. Launch with `--storage-fixture=<UUID>` to select `Application Support/JabTrackerStorageFixtures/<UUID>/default.store`. Arbitrary paths and duplicate fixture identifiers are rejected. This disk store uses CloudKit `.none`, including when `--cloudkit-testing` or `-inMemory` is supplied.
+The fixture implementation and bootstrap reader compile only under `DEBUG || JABTRACKER_TEST_HARNESS`. Launch with `--storage-fixture=<UUID>` to select `Application Support/JabTrackerStorageFixtures/<UUID>/default.store`. Arbitrary paths, duplicate identifiers, a bare `--storage-fixture` and any other `--storage-fixture*` argument are rejected: Debug and the harness then show the storage-failure screen and never open the ordinary store or any fixture store. This disk store uses CloudKit `.none`, including when `--cloudkit-testing` or `-inMemory` is supplied.
 
 - `--storage-fail-first-open` fails the initial opening operation, then allows Retry.
 - `--storage-always-fail-open` fails each operation, including Retry.
@@ -24,7 +24,7 @@ KAT-3597 supplies the integrated separate harness configuration. Its production 
 
 `DataControllerInitializationTests` now contains eleven behavioral cases: real disk startup/reopen; no emergency memory after failure; preexisting user and `0.75` dose retained across retry; repeated failure; configured/local ordering; unchanged production identities across attempts; real invalid-store bytes retained; strict support fields; intentional memory injection; fixture UUID/disk isolation; fixture fault-mode recovery. Simulated factory ordering does not establish real CloudKit service behavior.
 
-`StorageRecoveryUITests` has ten scenario methods. Successful priming uses the existing guarded dose fixture and the actual food logging UI. Recovery and relaunch use neither reset nor seed inputs. Food display values and the single preexisting `0.75 mg` dose are checked afterward. Unit tests additionally assert unchanged record UUIDs and counts directly from disk.
+`StorageRecoveryUITests` has ten scenario methods plus two fail-closed methods (11 duplicate fixture argument, 12 malformed fixture argument). Successful priming uses the existing guarded dose fixture and the actual food logging UI. Recovery and relaunch use neither reset nor seed inputs. Food display values and the single preexisting `0.75 mg` dose are checked afterward. Unit tests additionally assert unchanged record UUIDs and counts directly from disk.
 
 | # | UI scenario | Remaining live evidence |
 | --- | --- | --- |
@@ -81,3 +81,7 @@ Code under test: this branch with the support-action reorder (`JabTracker/Views/
 - Live run on iPhone 18 Pro recorded with `simctl io recordVideo`; scenario screenshots are in `docs/launch-evidence/KAT-3583/live-iphone-18-pro/`.
 - Scenario 10 first failed on iPhone 18 Pro ("Copy should be reachable"). Screenshot and hierarchy showed Copy below several screens of accessibility-size monospaced text. The layout fix made Copy and Share reachable without scrolling; no selector or timeout changed.
 - Full suites on this branch's final code (`final-unit-tests-summary.json`, `final-integration-tests-summary.json`): `JabTrackerIntegrationTests` 190 passed, 0 failed, 0 skipped (it includes the 11 storage cases). `JabTrackerUnitTests` 3065 passed, 2 failed, 1 skipped. The two failures are `NotificationServiceActionTests` titration cases that need the real notification permission (`Source is not authorized`); they fail identically at the base commit and are addressed in KAT-3581. An earlier integration run failed one StoreKit product-loading test and passed on rerun.
+
+## Fail-closed fixture arguments
+
+Review found that an invalid or duplicate `--storage-fixture` made `StorageTestFixture.from` return nil and `DataController.shared` fell through to the ordinary store. `StorageTestFixture.selection(arguments:)` now returns absent, rejected or fixture. Rejected requests create a controller whose factory always throws, so the recovery screen appears, retry stays failed, and no store file or directory is created. The live methods 11 and 12 failed before the change and pass after it. On the final code the full suites show known environmental failures only: `JabTrackerUnitTests` 3063 passed, 4 failed (two titration notification-permission cases and two date-boundary streak/weight cases), `JabTrackerIntegrationTests` 190 of 191 with one StoreKit product-loading failure that passed on rerun (24 passed in the targeted rerun).
