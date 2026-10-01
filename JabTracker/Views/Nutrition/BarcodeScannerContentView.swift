@@ -33,7 +33,7 @@ enum ScanType: String, CaseIterable, Identifiable {
     var isEnabled: Bool {
         switch self {
         case .barcode: return true
-        case .label: return false  // Coming in future phase
+        case .label: return ReleasePolicy.isEnabled(.barcodeScannerExtras)
         }
     }
 }
@@ -124,23 +124,25 @@ struct BarcodeScannerContentView: View {
     private var subToggleRow: some View {
         HStack(spacing: 8) {
             // Scan type pills
-            ForEach(ScanType.allCases) { scanType in
+            ForEach(ScanType.allCases.filter { $0.isEnabled }) { scanType in
                 scanTypePill(scanType)
             }
 
             Spacer()
 
-            // Gallery button (disabled)
-            Button {
-                // Coming in future phase
-            } label: {
-                Image(systemName: "photo.badge.plus")
-                    .font(.system(size: 18))
-                    .foregroundColor(.secondary)
+            if ReleasePolicy.isEnabled(.barcodeScannerExtras) {
+                // Gallery button (disabled)
+                Button {
+                    // Coming in future phase
+                } label: {
+                    Image(systemName: "photo.badge.plus")
+                        .font(.system(size: 18))
+                        .foregroundColor(.secondary)
+                }
+                .disabled(true)
+                .accessibilityIdentifier(Self.galleryButtonIdentifier)
+                .accessibilityLabel("Select from gallery")
             }
-            .disabled(true)
-            .accessibilityIdentifier(Self.galleryButtonIdentifier)
-            .accessibilityLabel("Select from gallery")
 
             // Torch button
             Button {
