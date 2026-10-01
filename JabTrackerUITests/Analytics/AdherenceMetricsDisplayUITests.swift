@@ -360,10 +360,10 @@ class AdherenceMetricsDisplayUITests: XCTestCase {
         let accessibleTextCount = allTexts.filter { $0.isHittable }.count
         XCTAssertTrue(accessibleTextCount >= 3, "Multiple text elements should be accessible to VoiceOver")
 
-        // Verify segmented control accessibility in Shots view
-        let segmentedControl = app.segmentedControls["shots-section-picker"]
-        XCTAssertTrue(segmentedControl.exists, "Shots segmented control should be present")
-        XCTAssertTrue(segmentedControl.isHittable, "Shots segmented control should be VoiceOver accessible")
+        // Verify segmented control accessibility in GLP-1 analytics
+        let segmentedControl = app.segmentedControls["analytics-section-picker"]
+        XCTAssertTrue(segmentedControl.exists, "Analytics segmented control should be present")
+        XCTAssertTrue(segmentedControl.isHittable, "Analytics segmented control should be VoiceOver accessible")
 
         // 📸 PHASE 1: Capture final VoiceOver verification state
         screenshotCapture.capture(
