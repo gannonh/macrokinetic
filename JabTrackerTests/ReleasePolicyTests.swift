@@ -7,7 +7,7 @@ import Testing
 struct ReleasePolicyTests {
     @Test("Every unfinished release feature is disabled")
     func unfinishedFeaturesAreDisabled() {
-        #expect(ReleaseFeature.allCases.count == 12)
+        #expect(ReleaseFeature.allCases.count == 13)
         #expect(ReleasePolicy.isEnabled(.subscriptions) == false)
         #expect(ReleasePolicy.isEnabled(.aiFoodCapture) == false)
         #expect(ReleasePolicy.isEnabled(.recipes) == false)
@@ -20,6 +20,8 @@ struct ReleasePolicyTests {
         #expect(ReleasePolicy.isEnabled(.manualOnboarding) == false)
         #expect(ReleasePolicy.isEnabled(.helpCenter) == false)
         #expect(ReleasePolicy.isEnabled(.historicalTDEERecalculation) == false)
+        #expect(ReleasePolicy.isEnabled(.barcodeScannerExtras) == false)
+        #expect(ScanType.allCases.filter(\.isEnabled) == [.barcode])
     }
 
     @Test("Filtering supported metrics preserves hidden preferences and calorie settings")
