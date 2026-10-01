@@ -16,6 +16,31 @@ The actual accessibility tree contains the four scoped nutrient groups. `verific
 
 Browser-driven checks reopened the persisted 200g entry, selected Recent Salmon into a populated 100g detail, saved a fictional library copy through To Custom, and selected that library copy into populated details. Both source displays showed 208 calories, 20P, 13F and 0C. `browser-recent-review.mp4` is a continuous 52.1-second excerpt of the real browser-driven recent-food recording; it is a Human Review video, not an App Store preview or final candidate asset.
 
-## Pending acceptance
+## Final-commit verification (45f2654a, 2026-09-30 to 2026-10-01)
 
-The positive barcode/camera scenario needs a deterministic available barcode and camera/device execution. The full ten-scenario browser matrix and integrated Release harness must be verified before leaving draft. This branch is not the combined launch candidate; flags, medical controls, privacy and signed-device gates have separate work. No production-database, signed-device or submission acceptance is inferred from the CI fixture.
+Fixture: the 22-food CI database (`scripts/create-ci-food-database.py`, sha256 `9934b529...8422a18`). Nothing here is production-database acceptance.
+
+Automated, Debug, clone simulator (iOS 27), commit 45f2654a:
+
+- `FoodSearchV08UITests` (full class, 20 tests): 19 passed, 1 failed, 0 skipped. The failure is `testSearchShowsPendingThenFinalState`, which expects a visible loading state; with the 22-row fixture the search returns before the state is observable. It fails the same way on the pre-fix base (51c9a1a0). The new `testRecentAndLibrarySelectionsOpenPopulatedDetails` passes.
+- `JabTrackerUnitTests` (full suite): 3065 passed, 2 failed, 1 skipped. Both failures are `NotificationServiceActionTests` titration cases (`UNErrorDomain 2003`, notification authorization on a cloned simulator), outside this diff. The skip is the existing "Check authentication status with UI testing environment".
+- Base 51c9a1a0 for comparison: `testServingPillPickerShowsUniversalUnits` and `testCompleteAddFoodFlow` fail with "Food detail sheet should appear" (blank sheet); `BarcodeScanningUITests` is unstable in the simulator on both base and branch (camera-dependent, 6 to 8 of 8 failing depending on run), so no barcode result is claimed.
+
+## Ten live scenarios on the integrated simulator (iPhone 18 Pro, iOS 27)
+
+All are XCUITest-driven from the Debug build with the CI fixture; videos are screenshots stitched at the real run speed because the simulator's host recorder was busy.
+
+| # | Scenario | Result | Evidence |
+| --- | --- | --- | --- |
+| 1 | First result, main vs branch | main: blank sheet, test fails; branch: populated | `live-main-first-result-blank.png`, `live-main-add-flow-failure.mp4`; `live-s1-first-result-detail.png` |
+| 2 | Fresh search result opens populated detail | pass (Salmon 208/20/13/0) | `live-s2-fresh-search-detail.png` |
+| 3 | Different result after dismiss | pass (Chicken 165/31/3/0, no Salmon values) | `live-s3-different-result-chicken.png`, `live-branch-cancel-then-different-food.mp4` |
+| 4 | Library result | pass (fictional "Library Salmon" 208/20/13/0) | `live-s4-library-detail.png`, `live-branch-recent-and-library.mp4` |
+| 5 | Recent-food result | pass | `live-s5-recent-detail.png` |
+| 6 | Barcode result | NOT RUN: the scanner needs a camera; the simulator offers no deterministic barcode input and adding a test-only hook to production is out of scope. Source-only: the barcode callbacks now set `selectedFood`, the same `sheet(item:)` contract. | none |
+| 7 | Gram amount changes visible values | pass (100g 208 to 200g 416/40/26/0) | `live-s7-200g-values.png` |
+| 8 | Save yields one matching log row | pass (one row, 416/2000 cal) | `live-s8-saved-one-row.png` |
+| 9 | Cancel adds no row | pass (0 rows, 0/2000) | `live-s9-cancel-no-row.png` |
+| 10 | Relaunch retains record and totals | pass (no reset, same row and totals) | `live-s10-relaunch-retained.png`, `live-branch-add-flow-review.mp4` |
+
+`live-branch-add-flow-review.mp4` is a 51-second review video of scenarios 2, 7, 8 and 10. Scenario 6 stays open; it is the only unmet verification item.
