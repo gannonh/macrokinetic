@@ -41,6 +41,9 @@ targets:
       - path: JabTracker/AppIcon.icon
         optional: true
       - path: JabTracker/Resources/usda_foods.sqlite
+      - path: JabTracker/Resources/food-data-notices.json
+      - path: JabTracker/Resources/food-db-manifest.json
+        optional: true
       - path: JabTrackerStoreKit.storekit
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.gannonhall.JabTracker
