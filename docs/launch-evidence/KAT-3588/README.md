@@ -1,6 +1,6 @@
 # KAT-3588 verification evidence
 
-Branch commit under test: the commit that adds this file on top of `8cfe1eb2`. Debug build, Xcode 27.0, iOS 27.0 simulators with the full local food database. Authentication is the test-mode fictional user (`--ui-testing`); it does not prove Apple sign-in.
+Branch commit under test: the commit that adds this file on top of the "deny HealthKit and notification system prompts" test commit (tests ran at its pre-rebase form `8cfe1eb2`; the rebase onto the KAT-3580 branch changed no code). Debug build, Xcode 27.0, iOS 27.0 simulators with the full local food database. Authentication is the test-mode fictional user (`--ui-testing`); it does not prove Apple sign-in.
 
 ## Tests
 
