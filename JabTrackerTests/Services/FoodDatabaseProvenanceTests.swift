@@ -25,6 +25,9 @@ final class FoodDatabaseProvenanceTests: XCTestCase {
             XCTAssertEqual(provenance.databaseSHA256, abcSHA)
             XCTAssertEqual(provenance.createdAt, "2026-09-30T20:00:00Z")
             XCTAssertEqual(provenance.workflowRunID, "123")
+            XCTAssertEqual(provenance.usdaReleaseDate(for: "foundation"), "2024-04-18")
+            XCTAssertEqual(provenance.usdaReleaseDate(for: "sr_legacy"), "2018-04")
+            XCTAssertEqual(provenance.openFoodFactsSnapshotDate, "2026-08-21")
         }
     }
 
@@ -61,9 +64,12 @@ final class FoodDatabaseProvenanceTests: XCTestCase {
             "schema_version": schema, "database_sha256": abcSHA, "database_bytes": 3,
             "created_at": "2026-09-30T20:00:00Z", "commit_sha": String(repeating: "a", count: 40),
             "workflow_run_id": "123", "total_rows": 3, "build_mode": "full",
-            "usda_urls": ["foundation": "https://fdc.nal.usda.gov/foundation.zip", "sr_legacy": "https://fdc.nal.usda.gov/sr.zip"],
+            "usda_urls": [
+                "foundation": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_foundation_food_json_2024-04-18.zip",
+                "sr_legacy": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_json_2018-04.zip"
+            ],
             "off_full_export_url": "https://static.openfoodfacts.org/data/en.openfoodfacts.org.products.csv.gz",
-            "marketing_version": "1.0.0", "build_number": "18"
+            "off_cursor": 1_787_292_818, "marketing_version": "1.0.0", "build_number": "18"
         ]
         try JSONSerialization.data(withJSONObject: manifest).write(to: url)
     }

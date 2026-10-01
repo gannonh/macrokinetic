@@ -23,7 +23,7 @@ python3 scripts/release/verify-food-data-bundle.py \
   --expected-database-sha THE_EXACT_CANDIDATE_SHA256
 ```
 
-The app streams the bundled database checksum in a background task when Food data opens. It displays source dates, source URLs, commit, run, and checksum only when the manifest matches the database and app version/build. A missing or mismatched local manifest displays unverified provenance and the actual checksum. The development manifest is ignored by Git and remains optional for local project generation; it is mandatory for release archive validation.
+The app streams the bundled database checksum in a background task when Food data opens. It displays the USDA release dates (read from the dataset file names in the manifest), the Open Food Facts data date (the manifest's `off_cursor`, as a UTC date), the build time labelled as not a source date, source URLs, commit, run, and checksum only when the manifest matches the database and app version/build. A missing or mismatched local manifest displays unverified provenance and the actual checksum. The development manifest is ignored by Git and remains optional for local project generation; it is mandatory for release archive validation.
 
 The launch audit found local SHA-256 `b2c637b3cd700350cca0399c7be9456185ce23b4d2fcb55ef0e4b7f2dcc5c5c4`. Published snapshot `food-db-1787353695-41e46303fe82` instead records `58dc3ca8ae9682d298777db62843d40a4317e74f511c018a0ca6eba26b020d26`. Its manifest must not be attached to the local database as matching provenance. No matching public download is asserted for the local database.
 

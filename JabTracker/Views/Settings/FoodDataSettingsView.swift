@@ -31,7 +31,14 @@ struct FoodDataSettingsView: View {
                     case .matched(let manifest):
                         Text("The database checksum matches the bundled build manifest.")
                             .accessibilityIdentifier("food-data-provenance-status")
-                        detail("Dataset built", manifest.createdAt)
+                        ForEach(["foundation", "sr_legacy"], id: \.self) { source in
+                            if let date = manifest.usdaReleaseDate(for: source) {
+                                let name = source == "sr_legacy" ? "SR Legacy" : "Foundation"
+                                detail("USDA \(name) release", date)
+                            }
+                        }
+                        detail("Open Food Facts data as of", manifest.openFoodFactsSnapshotDate)
+                        detail("Database built (not a source date)", manifest.createdAt)
                         detail("Build mode", manifest.buildMode)
                         detail("Food records", String(manifest.totalRows))
                         detail("Source commit", manifest.commitSHA)
