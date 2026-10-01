@@ -1,6 +1,6 @@
 # Onboarding launch verification
 
-[KAT-3588](https://linear.app/kata-sh/issue/KAT-3588/prove-first-run-onboarding-and-denied-permissions-leave-a-usable-app) adds two unit contracts and four UI journeys. Existing onboarding suites and helpers remain unchanged. No production code, permission implementation, release policy or authentication behavior changes. The branch is stacked on the KAT-3580 release-flag branch, so Manual onboarding is hidden here.
+[KAT-3588](https://linear.app/kata-sh/issue/KAT-3588/prove-first-run-onboarding-and-denied-permissions-leave-a-usable-app) adds two unit contracts and five UI journeys. Existing onboarding suites and helpers remain unchanged. No production code, permission implementation, release policy or authentication behavior changes. The branch is stacked on the KAT-3580 release-flag branch, so Manual onboarding is hidden here.
 
 ## Authentication and isolation
 
@@ -20,6 +20,7 @@ Run on an explicitly owned ephemeral simulator with a fresh app container. These
 - Explicitly confirm skip; reach Strategy's `No Active Goal` and Create Goal action; retain that state and one manual entry across relaunch.
 - Cancel the skip confirmation; remain on goal setup with legacy medication/paywall screens absent.
 - Complete with permissions skipped; reach Health and notification settings, then return to manual food logging. Reaching settings is not evidence of actual permission recovery or authorization.
+- Turn on the Health and Notifications toggles, answer the real system prompts with Don't Allow, finish setup, log manually and relaunch. This test needs an erased simulator.
 
 Each failed assertion captures `TestUtilities.debugScreenshot`, prints the element hierarchy and attaches the screenshot before reporting failure. Named checkpoints also preserve welcome, skip, permission, completion, profile, goal and relaunch screenshots. Selectors follow source declarations; live trees must confirm them before any selector repair.
 
@@ -61,4 +62,4 @@ This branch has no `ReleaseTestHarness` configuration (KAT-3597 owns it), so the
 
 ## Recorded results
 
-Run on Xcode 27.0 with iOS 27.0 simulators with the full local food database. Debug unit contracts: 2 of 2 passed. Debug UI class: 4 of 4 passed on the final commit. The same UI flow on `main` (`edd81bd7`) stops at the Program Style step because Manual is offered there; the screenshot is the main/branch comparison for scenario 1. Skipped permissions do not satisfy the OS-denial or signed-device gates; scenarios 4, 5, 7 and 10 stay open.
+Durable evidence, screenshots and a timelapse are in `docs/launch-evidence/KAT-3588/`. Debug unit contracts: 2 of 2 passed. Debug UI class: 5 of 5 passed on the final commit, including real Health and notification system-prompt denial on an erased simulator. The same flow on `main` (`edd81bd7`) stops at Program Style because Manual is offered there. Scenario 7 is only partly covered (settings routes reachable after denial) and scenario 10 needs a signed device; neither is simulated.
