@@ -364,14 +364,17 @@ enum TestUtilities {
         let sectionPicker = app.segmentedControls["glp1-programs-view"]
         if !sectionPicker.exists {
             navigateToTab(app, tabName: "More", timeout: timeout)
-            let glp1Row = app.buttons["glp1-programs-row"]
-            if !glp1Row.waitForExistence(timeout: timeout) {
-                debugScreenshot(app, name: "more-menu-before-glp1")
-                print(app.debugDescription)
-                XCTFail("GLP-1 Programs row should exist in More menu")
-                return
+            // The More tab keeps its navigation stack, so GLP-1 Programs may already be open.
+            if !sectionPicker.waitForExistence(timeout: 2) {
+                let glp1Row = app.buttons["glp1-programs-row"]
+                if !glp1Row.waitForExistence(timeout: timeout) {
+                    debugScreenshot(app, name: "more-menu-before-glp1")
+                    print(app.debugDescription)
+                    XCTFail("GLP-1 Programs row should exist in More menu")
+                    return
+                }
+                glp1Row.tap()
             }
-            glp1Row.tap()
         }
 
         if !sectionPicker.waitForExistence(timeout: timeout) {
