@@ -8,4 +8,12 @@ The two committed PNGs show actual failed UI readback before that fix: an attemp
 
 The follow-up retains raw text and parses the complete finite positive amount for Save eligibility and at the save boundary. Empty/malformed text cannot save a previous valid value; zero is permitted only for an explicitly skipped dose. Readback retains precision, preserving existing two-decimal labels when exact. Actual Foundation source passed 87 literal parser/formatter checks. Eight new app-unit methods and the corrected UI replacement/relaunch journeys await execution on this source. Compound switches target the observed inner native switch, and History navigation handles the observed retained profile stack.
 
-Pending: app compilation and units after the text fix, the integrated optimized harness, exact profile/dose/schedule disk readback, all ten browser scenarios/main comparison, 30–60 second review video, real notification delivery and signed-device acceptance. Keep the PR draft until its build gates are met.
+## Final verification (commit d77775a5 and later documentation commit)
+
+- Full Debug unit target plus MedicalReleaseUITests on one run: 3096 passed, 0 failed, 1 skipped (the pre-existing disabled authentication test). Result bundle: `/tmp/jab-coord/medical/final.xcresult`. The three earlier UI failures are resolved: the compound switch is targeted through its inner native switch, History navigation handles the retained profile stack, and numeric replacement reads back exactly (2.125, 0.375, 0.625; never 2.1251).
+- An empty numeric field reports its placeholder as its value, so the UI helper asserts `value == placeholderValue` ("Amount") and a disabled Save before typing the replacement.
+- Live checks on the integrated simulator caught two rounding defects the unit tests did not: the medication list row showed 1.375 mg as 1.38 mg and the calendar day detail showed 0.375 mg as 0.4 mg (`live/before-fix-*.png`). Both and the dose action sheet now use `RecordedAmountInput.displayText`.
+- Ten scenarios, main vs branch for scenario 1, are in `live/`. Scenario 7 has no live route: the legacy onboarding dose setup view is not referenced from any presented flow, and the add-medication sheet is the only creation path.
+- `kat-3581-branch-review-3x.mp4` is a 58 s review video (3.1x speed of the 179 s session).
+
+Not covered: older UI classes that start from a stale "Settings" button in More (MedicationProfileCRUD, Settings, Schedule, DailyMedicationProfileSchedule, Advanced and Calculator UI tests) fail at that navigation step before reaching medical code; they are not changed by this PR. Real notification delivery and signed-device acceptance remain outside this PR.
