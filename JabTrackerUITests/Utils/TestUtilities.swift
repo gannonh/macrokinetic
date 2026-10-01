@@ -139,12 +139,9 @@ enum TestUtilities {
                 let adherence,
                 let variability
             ):
-                // Calculate days to create exact dose count for weekly medication
-                // For N doses: days = (N-1) * 7 (doses at day 0, 7, 14, ..., (N-1)*7)
-                let days = max(0, (doseCount - 1) * 7)
                 return [
                     "TEST_DATA_SEED": "true",
-                    "TEST_DATA_DAYS": String(days),
+                    "TEST_DATA_DAYS": String(daysOfHistory),
                     "TEST_DATA_DOSE_COUNT": String(doseCount),
                     "TEST_DATA_PROFILES": String(medicationProfiles),
                     "TEST_DATA_MEDICATION": medication,
@@ -166,8 +163,7 @@ enum TestUtilities {
             case .twoYears: return 730
             case .newUser: return 1
             case .custom(let doseCount, _, _, _, _, _, _):
-                // Weekly medication: (doseCount - 1) * 7 days to get exact dose count
-                return max(0, (doseCount - 1) * 7)
+                return doseCount > 0 ? max(1, (doseCount - 1) * 7) : 0
             }
         }
 
@@ -328,131 +324,69 @@ enum TestUtilities {
 
         // Tap Settings in the More menu
         let settingsButton = app.buttons["Settings"]
+        debugScreenshot(app, name: "before-missing-settings")
+        print(app.debugDescription)
         XCTAssertTrue(
             settingsButton.waitForExistence(timeout: timeout),
             "Settings button should exist in More menu")
         settingsButton.tap()
     }
 
-    /// Navigate to History view (via More tab -> GLP-1 Programs -> Analytics -> History)
-    /// - Parameters:
-    ///   - app: The XCUIApplication instance
-    ///   - timeout: Maximum time to wait for elements (default: 5 seconds)
+    /// Navigate to History through More > GLP-1 Programs > Analytics.
     static func navigateToHistory(_ app: XCUIApplication, timeout: TimeInterval = 5) {
-        self.navigateToTab(app, tabName: "More")
-
-        let glp1Row = app.buttons["glp1-programs-row"].firstMatch
-        XCTAssertTrue(
-            glp1Row.waitForExistence(timeout: timeout),
-            "GLP-1 Programs row should exist in More menu")
-        glp1Row.tap()
-
-        let glp1View = app.descendants(matching: .any)["glp1-programs-view"].firstMatch
-        XCTAssertTrue(
-            glp1View.waitForExistence(timeout: timeout),
-            "GLP-1 Programs view should appear")
-
-        // SwiftUI segmented pickers expose segment buttons by label, not picker identifier
-        let analyticsButton = app.buttons["Analytics"]
-        if analyticsButton.waitForExistence(timeout: 2), !analyticsButton.isSelected {
-            analyticsButton.tap()
-        }
-
-        let historySegment = app.buttons["History"]
-        XCTAssertTrue(historySegment.waitForExistence(timeout: timeout), "History segment should exist")
-        historySegment.tap()
+        navigateToGLP1Analytics(app, timeout: timeout)
+        let history = app.segmentedControls["analytics-section-picker"].buttons["History"]
+        XCTAssertTrue(history.waitForExistence(timeout: timeout), "History segment should exist")
+        history.tap()
+        XCTAssertTrue(history.isSelected)
     }
 
-    /// Navigate to Concentration view (via Shots tab -> Concentration segment)
-    /// - Parameters:
-    ///   - app: The XCUIApplication instance
-    ///   - timeout: Maximum time to wait for elements (default: 5 seconds)
+    /// Navigate to Concentration through More > GLP-1 Programs > Analytics.
     static func navigateToConcentration(_ app: XCUIApplication, timeout: TimeInterval = 5) {
-        // Navigate to Shots tab
-        self.navigateToTab(app, tabName: "Shots")
-
-        // Wait for Shots view to load
-        let shotsView = app.scrollViews["shots-scroll-view"]
-        _ = shotsView.waitForExistence(timeout: timeout)
-
-        // Tap Concentration segment
-        let segmentedControl = app.segmentedControls["shots-section-picker"]
-        XCTAssertTrue(
-            segmentedControl.waitForExistence(timeout: timeout),
-            "Shots segmented control should exist")
-
-        let concentrationSegment = segmentedControl.buttons["Concentration"]
-        XCTAssertTrue(concentrationSegment.exists, "Concentration segment should exist")
-        concentrationSegment.tap()
+        navigateToGLP1Analytics(app, timeout: timeout)
+        let concentration = app.segmentedControls["analytics-section-picker"].buttons["Concentration"]
+        XCTAssertTrue(concentration.waitForExistence(timeout: timeout), "Concentration segment should exist")
+        concentration.tap()
+        XCTAssertTrue(concentration.isSelected)
     }
 
-    /// Navigate to Adherence view (via Shots tab -> Adherence segment)
-    /// - Parameters:
-    ///   - app: The XCUIApplication instance
-    ///   - timeout: Maximum time to wait for elements (default: 5 seconds)
+    /// Navigate to Adherence through More > GLP-1 Programs > Analytics.
     static func navigateToAdherence(_ app: XCUIApplication, timeout: TimeInterval = 5) {
-        // Navigate to Shots tab
-        self.navigateToTab(app, tabName: "Shots")
-
-        // Wait for Shots view to load
-        let shotsView = app.scrollViews["shots-scroll-view"]
-        _ = shotsView.waitForExistence(timeout: timeout)
-
-        // Tap Adherence segment
-        let segmentedControl = app.segmentedControls["shots-section-picker"]
-        XCTAssertTrue(
-            segmentedControl.waitForExistence(timeout: timeout),
-            "Shots segmented control should exist")
-
-        let adherenceSegment = segmentedControl.buttons["Adherence"]
-        XCTAssertTrue(adherenceSegment.exists, "Adherence segment should exist")
-        adherenceSegment.tap()
+        navigateToGLP1Analytics(app, timeout: timeout)
+        let adherence = app.segmentedControls["analytics-section-picker"].buttons["Adherence"]
+        XCTAssertTrue(adherence.waitForExistence(timeout: timeout), "Adherence segment should exist")
+        adherence.tap()
+        XCTAssertTrue(adherence.isSelected)
     }
 
-    /// Navigate to GLP-1 Analytics (via More tab -> GLP-1 Programs -> Analytics)
-    /// - Parameters:
-    ///   - app: The XCUIApplication instance
-    ///   - timeout: Maximum time to wait for elements (default: 5 seconds)
+    /// Open the Analytics section, retaining the current subsection when already open.
     static func navigateToGLP1Analytics(_ app: XCUIApplication, timeout: TimeInterval = 5) {
-        // Navigate to More tab
-        self.navigateToTab(app, tabName: "More")
-
-        // Tap GLP-1 Programs row (NavigationLink exposes as Button in List)
-        let glp1Row = app.buttons["glp1-programs-row"].firstMatch
-        if !glp1Row.waitForExistence(timeout: 3) {
-            // Debug: capture screenshot if element not found
-            debugScreenshot(app, name: "more-menu-before-glp1")
-            print(app.debugDescription)
+        let sectionPicker = app.segmentedControls["glp1-programs-view"]
+        if !sectionPicker.exists {
+            navigateToTab(app, tabName: "More", timeout: timeout)
+            let glp1Row = app.buttons["glp1-programs-row"]
+            if !glp1Row.waitForExistence(timeout: timeout) {
+                debugScreenshot(app, name: "more-menu-before-glp1")
+                print(app.debugDescription)
+                XCTFail("GLP-1 Programs row should exist in More menu")
+                return
+            }
+            glp1Row.tap()
         }
-        XCTAssertTrue(
-            glp1Row.waitForExistence(timeout: timeout),
-            "GLP-1 Programs row should exist in More menu")
-        glp1Row.tap()
 
-        // Wait for GLP-1 Programs view to load
-        // The segmented control has identifier 'glp1-programs-view'
-        let sectionPicker = app.segmentedControls["glp1-programs-view"].firstMatch
-        if !sectionPicker.waitForExistence(timeout: 3) {
-            // Debug: capture screenshot if picker not found
+        if !sectionPicker.waitForExistence(timeout: timeout) {
             debugScreenshot(app, name: "glp1-programs-before-picker")
             print(app.debugDescription)
+            XCTFail("GLP-1 section picker should exist")
+            return
         }
-        XCTAssertTrue(
-            sectionPicker.waitForExistence(timeout: timeout),
-            "GLP-1 section picker should exist")
-
-        // Select Analytics if not already selected
-        let analyticsButton = sectionPicker.buttons["Analytics"]
-        if analyticsButton.exists && !analyticsButton.isSelected {
-            analyticsButton.tap()
+        let analytics = sectionPicker.buttons["Analytics"]
+        XCTAssertTrue(analytics.exists)
+        if !analytics.isSelected {
+            analytics.tap()
         }
-
-        // Wait for concentration section to load
-        let concentrationSection = app.otherElements["concentration-section"].firstMatch
-        _ = concentrationSection.waitForExistence(timeout: 5)
+        XCTAssertTrue(app.segmentedControls["analytics-section-picker"].waitForExistence(timeout: timeout))
     }
-
-    // MARK: - ShortcutsSheet Helpers
 
     /// Open ShortcutsSheet by tapping the floating Add button
     /// - Parameters:

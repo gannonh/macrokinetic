@@ -29,8 +29,6 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
         let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // WHEN: User navigates to concentration timeline chart
-        let analyticsTab = app.tabBars.buttons["Shots"]
-        XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5), "Shots tab should exist")
 
         // 📸 PHASE 1: Capture baseline before navigation
         screenshotCapture.capture(
@@ -41,10 +39,10 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
 
         // Measure analytics navigation performance
         let navStart = Date()
-        analyticsTab.tap()
+        TestUtilities.navigateToConcentration(app)
 
         // Wait for Analytics view to load
-        let analyticsView = app.scrollViews["shots-scroll-view"]
+        let analyticsView = app.scrollViews["analytics-scroll-view"]
         _ = analyticsView.waitForExistence(timeout: 10)
         let navEnd = Date()
         let navTime = navEnd.timeIntervalSince(navStart) * 1000  // ms
@@ -83,10 +81,8 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
         let preset = TestUtilities.TestDataPreset.thirtyDays
         let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
-        // Navigate to Analytics tab
-        let analyticsTab = app.tabBars.buttons["Shots"]
-        XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5), "Shots tab should exist")
-        analyticsTab.tap()
+        // Navigate to GLP-1 concentration analytics
+        TestUtilities.navigateToConcentration(app)
 
         // Wait for chart to load
 
@@ -124,10 +120,8 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
         let preset = TestUtilities.TestDataPreset.thirtyDays
         let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
-        // Navigate to Analytics tab
-        let analyticsTab = app.tabBars.buttons["Shots"]
-        XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5), "Shots tab should exist")
-        analyticsTab.tap()
+        // Navigate to GLP-1 concentration analytics
+        TestUtilities.navigateToConcentration(app)
 
         // Wait for chart to load
 
@@ -180,10 +174,8 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
         let preset = TestUtilities.TestDataPreset.thirtyDays
         let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
-        // Navigate to Analytics tab
-        let analyticsTab = app.tabBars.buttons["Shots"]
-        XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5), "Shots tab should exist")
-        analyticsTab.tap()
+        // Navigate to GLP-1 concentration analytics
+        TestUtilities.navigateToConcentration(app)
 
         // Wait for chart to load
 
@@ -238,12 +230,10 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
         let app = TestUtilities.launchAppWithSeededData(preset: preset)
 
         // WHEN: ConcentrationTimelineChart loads with full dataset
-        let analyticsTab = app.tabBars.buttons["Shots"]
-        XCTAssertTrue(analyticsTab.waitForExistence(timeout: 5), "Shots tab should exist")
 
         // Measure load time for large dataset
         let startTime = Date()
-        analyticsTab.tap()
+        TestUtilities.navigateToConcentration(app)
 
         // Wait for chart to load
         let chartElement = app.otherElements["concentration-section"].firstMatch
