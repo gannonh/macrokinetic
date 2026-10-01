@@ -1,0 +1,16 @@
+{
+ "passedTests": 3069,
+ "failedTests": 2,
+ "skippedTests": 1,
+ "totalTestCount": 3072,
+ "result": "Failed",
+ "finishTime": 1790813302.961,
+ "failures": [
+  "Handle REMIND_LATER_TITRATION action",
+  "Handle RESCHEDULE_TITRATION action"
+ ],
+ "device": [
+  "jab-resources iOS 27.0"
+ ],
+ "note": "Full JabTrackerUnitTests suite on cloned iOS 27 simulator. The two NotificationServiceActionTests failures are identical on the KAT-3585 branch (no shared code) and report UNAuthorizationStatus=Denied: simulator notification permission state, not this change. Includes 4 passing FoodDatabaseProvenanceTests."
+}

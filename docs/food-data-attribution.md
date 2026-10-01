@@ -33,19 +33,8 @@ Before submission, verify the exact candidate's unrestricted public database or 
 
 Food-source credits and offline license notices are available at More > General > Food data. This screen identifies USDA FoodData Central and Open Food Facts, with license links and the bundled database checksum. The candidate's manifest and database must match before this statement is accepted. Add the verified unrestricted download/alteration offer only after its exact bytes and public accessibility have been checked.
 
-## Pending live acceptance
+## Live acceptance
 
-The issue remains In Progress until the parent verifies these ten scenarios and records main/branch comparison, screenshots, and a 30–60 second video:
+Scenarios 1 to 10 were exercised on September 30, 2026 on the iOS 27 simulator. Screenshots, the review video and per-scenario notes are in [launch-evidence/KAT-3593](launch-evidence/KAT-3593/README.md). Not performed: a blocked-network run, a spoken VoiceOver pass, and any check against a signed candidate. Unit fixtures and Python checks prove the matching and rejection logic, not license compliance.
 
-1. Compare About on main and the branch.
-2. Reach Food data from More > General.
-3. Read USDA credit offline.
-4. Read OFF and its license notices offline.
-5. Open source and license links with a connection.
-6. Confirm the screen claims no product-image or trademark license.
-7. Read the full notices and checksum at accessibility text sizes.
-8. Confirm VoiceOver labels and link names are clear.
-9. Verify the exact candidate manifest, archive, IPA, and resource checksum; confirm a missing/mismatched development manifest displays unverified provenance.
-10. Make the App Review notes point to these same disclosures and the verified offer.
-
-Python fixture checks prove the validator's rejection behavior. Four Swift provenance tests and the actual Debug app build passed on September 30, 2026. Browser route and local unverified-manifest behavior are recorded in launch-evidence/KAT-3593. These checks do not establish the complete live matrix, signed-candidate or legal acceptance.
+Remaining before submission: the exact candidate's manifest, archive and IPA verification; a verified unrestricted public database or alteration offer; and owner-approved distribution terms.
