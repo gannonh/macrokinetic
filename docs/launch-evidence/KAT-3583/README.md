@@ -22,3 +22,7 @@ All ten ReleaseTestHarness `StorageRecoveryUITests` methods pass on the final co
 - Fictional fixture data only. No report was sent from the share sheet.
 
 Not covered: real system URL delivery while failed, VoiceOver, a physical device and CloudKit behavior. See `../../operations/storage-recovery-verification.md`.
+
+## Fail-closed fixture arguments (review fix)
+
+A malformed or duplicate `--storage-fixture` argument used to make the fixture parser return nil, so Debug and the harness silently opened the ordinary store. They now show the storage-failure screen and open no store. Methods 11 (duplicate) and 12 (malformed) failed against the old code (the normal app opened) and pass now: `fail-closed-harness-ui-summary.json` (9 harness methods, 0 failed: 01, 03-07, 10, 11, 12). `fail-closed-integration-summary.json`: 24 passed, 0 failed (12 storage cases including the new literal fail-closed test, plus the StoreKit suite). Release ignores these arguments entirely (KAT-3597).

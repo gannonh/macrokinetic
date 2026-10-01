@@ -257,4 +257,21 @@ final class StorageRecoveryUITests: XCTestCase {
         app.buttons["storage-support-done"].tap()
         waitForRecovery()
     }
+
+    func test11DuplicateFixtureArgumentsFailClosedInsteadOfOpeningTheOrdinaryStore() {
+        launch(additional: ["--storage-fixture=\(UUID().uuidString)"])
+        waitForRecovery()
+        checkLoggingIsUnavailable()
+        capture("11-storage-duplicate-fixture-fails-closed")
+    }
+
+    func test12MalformedFixtureArgumentFailsClosedInsteadOfOpeningTheOrdinaryStore() {
+        app = XCUIApplication()
+        app.launchArguments = ["--storage-fixture=../../patient", "--ui-testing", "--bypass-onboarding"]
+        app.launchEnvironment = ["UI_TESTING": "true"]
+        app.launch()
+        waitForRecovery()
+        checkLoggingIsUnavailable()
+        capture("12-storage-malformed-fixture-fails-closed")
+    }
 }

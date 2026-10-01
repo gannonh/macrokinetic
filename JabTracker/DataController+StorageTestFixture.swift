@@ -12,11 +12,52 @@ struct StorageTestFixture {
     let storeURL: URL
     let failureMode: FailureMode
 
+    enum Selection {
+        case absent
+        case rejected
+        case fixture(StorageTestFixture)
+    }
+
+    /// Any argument that starts with --storage-fixture selects the fixture path. Exactly one valid UUID
+    /// selects a fixture; anything else (malformed, duplicate, bare flag) is rejected, never ignored.
+    static func selection(arguments: [String]) -> Selection {
+        let requests = arguments.filter { $0.hasPrefix("--storage-fixture") }
+        guard !requests.isEmpty else { return .absent }
+        guard requests.count == 1, requests[0].hasPrefix("--storage-fixture="),
+            let identifier = UUID(uuidString: String(requests[0].dropFirst("--storage-fixture=".count)))
+        else { return .rejected }
+        return .fixture(fixture(identifier: identifier, arguments: arguments))
+    }
+
     static func from(arguments: [String]) -> StorageTestFixture? {
-        let identifiers = arguments.filter { $0.hasPrefix("--storage-fixture=") }
-        guard identifiers.count == 1,
-            let identifier = UUID(uuidString: String(identifiers[0].dropFirst("--storage-fixture=".count)))
-        else { return nil }
+        if case let .fixture(fixture) = selection(arguments: arguments) { return fixture }
+        return nil
+    }
+
+    /// A controller for a rejected fixture request. It never opens a store, so the recovery screen
+    /// appears and no ordinary or fixture file is touched.
+    @MainActor
+    static func makeRejectedController() -> DataController {
+        let unused = URL.applicationSupportDirectory
+            .appendingPathComponent("JabTrackerStorageFixtures", isDirectory: true)
+            .appendingPathComponent("rejected", isDirectory: true)
+            .appendingPathComponent("default.store")
+        return DataController(storeURL: unused) { _, _ in
+            throw NSError(domain: NSCocoaErrorDomain, code: NSFileReadUnknownError)
+        }
+    }
+
+    /// Returns nil when no fixture is requested, so the ordinary controller is used.
+    @MainActor
+    static func controller(arguments: [String]) -> DataController? {
+        switch selection(arguments: arguments) {
+        case .absent: nil
+        case .rejected: makeRejectedController()
+        case let .fixture(fixture): fixture.makeController()
+        }
+    }
+
+    private static func fixture(identifier: UUID, arguments: [String]) -> StorageTestFixture {
         let directory = URL.applicationSupportDirectory
             .appendingPathComponent("JabTrackerStorageFixtures", isDirectory: true)
             .appendingPathComponent(identifier.uuidString, isDirectory: true)
