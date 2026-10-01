@@ -1,6 +1,11 @@
 import XCTest
 
 final class OnboardingLaunchUITests: XCTestCase {
+    private enum PermissionChoice {
+        case skip
+        case denyAtSystemPrompt
+    }
+
     private var app: XCUIApplication!
 
     override func setUpWithError() throws {
@@ -71,6 +76,25 @@ final class OnboardingLaunchUITests: XCTestCase {
         logManualCalories()
     }
 
+    func testDeniedSystemPromptsForHealthKitAndNotificationsLeaveNutritionUsable() {
+        launchFirstRunWithTestAuthentication()
+        completeNutritionSetupWithSkippedPermissions(healthKit: .denyAtSystemPrompt, notifications: .denyAtSystemPrompt)
+        verifyNutritionGoal()
+        logManualCalories()
+
+        tab("More")
+        tap("notifications-row")
+        check(element("notification-settings-view").waitForExistence(timeout: 5), "Notification settings should open after denial")
+        capture("onboarding-notifications-denied-settings")
+        // After a real denial the status row reads "Not Configured" in this test-authenticated launch, so the
+        // system Settings button is not asserted here; re-grant through iOS Settings stays an open gap.
+        check(app.switches["weigh-in-daily-toggle"].exists, "Manual weigh-in reminders should remain configurable")
+
+        relaunchWithoutResetSeedOrOnboardingOverrides()
+        verifyNutritionGoal()
+        verifyManualCalories()
+    }
+
     private func launchFirstRunWithTestAuthentication() {
         app = XCUIApplication()
         app.launchArguments = ["--ui-testing", "--reset-app-data", "--force-onboarding", "--disable-cloudkit"]
@@ -91,19 +115,24 @@ final class OnboardingLaunchUITests: XCTestCase {
         check(!app.buttons["sign-in-with-apple-button"].exists, "This saved fictional account should restore")
     }
 
-    private func advanceToGoalTypeWithoutHealthKit() {
+    private func advanceToGoalTypeWithoutHealthKit(healthKit: PermissionChoice = .skip) {
         tap("onboarding-continue-button")
         step("onboarding-usp-showcase-step")
         tap("onboarding-continue-button")
         step("onboarding-healthkit-step")
+        if healthKit == .denyAtSystemPrompt {
+            denyAtSystemPrompt(toggle: "healthkit-toggle", name: "healthkit")
+        }
         verifyPermissionIsOffOrUnavailable("healthkit-toggle", unavailable: "Apple Health Not Available")
         capture("onboarding-healthkit-skipped")
         tap("onboarding-continue-button")
         step("onboarding-goalType-step")
     }
 
-    private func completeNutritionSetupWithSkippedPermissions() {
-        advanceToGoalTypeWithoutHealthKit()
+    private func completeNutritionSetupWithSkippedPermissions(
+        healthKit: PermissionChoice = .skip, notifications: PermissionChoice = .skip
+    ) {
+        advanceToGoalTypeWithoutHealthKit(healthKit: healthKit)
         tap("goal-wizard-goalType-maintenance")
         tap("onboarding-continue-button")
         step("onboarding-targetWeight-step")
@@ -142,6 +171,9 @@ final class OnboardingLaunchUITests: XCTestCase {
         capture("onboarding-biometrics-skipped")
         tap("onboarding-continue-button")
         step("onboarding-notifications-step")
+        if notifications == .denyAtSystemPrompt {
+            denyAtSystemPrompt(toggle: "notifications-toggle", name: "notifications")
+        }
         verifyPermissionIsOffOrUnavailable("notifications-toggle", unavailable: nil)
         capture("onboarding-notifications-skipped")
         tap("onboarding-continue-button")
@@ -164,6 +196,51 @@ final class OnboardingLaunchUITests: XCTestCase {
         capture("onboarding-explicit-skip")
         confirmation.buttons["Skip for Now"].tap()
         waitForNutritionApp()
+    }
+
+    /// Turns a permission toggle on and answers the real system prompt with Don't Allow.
+    /// Skips nothing: a missing prompt fails with both hierarchies printed.
+    private func denyAtSystemPrompt(toggle identifier: String, name: String) {
+        let toggle = app.switches[identifier]
+        guard toggle.waitForExistence(timeout: 5) else {
+            if app.staticTexts["Apple Health Not Available"].exists {
+                capture("onboarding-\(name)-unavailable-no-prompt")
+            }
+            check(false, "\(identifier) should exist to request the system prompt")
+            return
+        }
+        toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        let denial = NSPredicate(format: "label BEGINSWITH[c] 'Don' AND label CONTAINS[c] 'Allow'")
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let deadline = Date().addingTimeInterval(45)
+        while Date() < deadline {
+            for host in [springboard, app!] {
+                let button = host.buttons.matching(denial).firstMatch
+                if button.exists {
+                    capture("onboarding-\(name)-system-prompt")
+                    // The Health Access sheet lists its Don't Allow button below the topic toggles.
+                    for _ in 0..<8 where !button.isHittable {
+                        host.swipeUp()
+                    }
+                    capture("onboarding-\(name)-system-prompt-denial")
+                    button.tap()
+                    // Health confirms a denial with "You can turn on health data categories later".
+                    let acknowledge = host.alerts.buttons["OK"]
+                    if acknowledge.waitForExistence(timeout: 3) {
+                        capture("onboarding-\(name)-denial-acknowledged")
+                        acknowledge.tap()
+                    }
+                    check(
+                        toggle.waitForExistence(timeout: 5),
+                        "\(identifier) should return after the system prompt is denied"
+                    )
+                    return
+                }
+            }
+            usleep(500_000)
+        }
+        print("SPRINGBOARD:", springboard.debugDescription)
+        check(false, "No system permission prompt appeared for \(identifier)")
     }
 
     private func verifyPermissionIsOffOrUnavailable(_ identifier: String, unavailable: String?) {
@@ -277,8 +354,10 @@ final class OnboardingLaunchUITests: XCTestCase {
         if button.isHittable {
             button.tap()
         } else {
-            // The captured tree shows this enabled, on-screen SwiftUI button reporting isHittable == false
-            // only on some launches; tap its center instead of failing on the accessibility flag.
+            // Intermittent: on the Choose Your Goal step "onboarding-skip-button" reports isHittable == false
+            // in roughly 1 of 3 runs while idle, enabled and unobstructed (no keyboard, sheet or animation in
+            // the captured screenshot and tree, even after a 3 s hittable wait). It passes on rerun with no
+            // code change. Tap the on-screen center instead of failing on the accessibility flag.
             check(app.windows.firstMatch.frame.contains(button.frame), "Button \(name) should be on screen")
             button.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         }
