@@ -26,154 +26,118 @@ final class DoseHistoryStatesUITests: XCTestCase {
         TestUtilities.navigateToHistoryView(in: app)
 
         // THEN: Empty state is displayed with helpful message
-        let emptyStateView = app.staticTexts["empty-state-message"]
-        let emptyStateTitle = app.staticTexts["No Doses Yet"]
-        let emptyStateDescription = app.staticTexts.matching(
-            NSPredicate(format: "label CONTAINS 'Start tracking'")
-        ).firstMatch
-
-        // Check for empty state elements independently with proper waits
-        let emptyStateExists = emptyStateView.waitForExistence(timeout: 1)
-        let titleExists = emptyStateTitle.waitForExistence(timeout: 1)
-        let descriptionExists = emptyStateDescription.waitForExistence(timeout: 1)
-
-        // Verify at least one empty state element exists
-        let hasEmptyStateElement = emptyStateExists || titleExists || descriptionExists
-        XCTAssertTrue(hasEmptyStateElement, "At least one empty state element should be displayed")
+        XCTAssertTrue(app.staticTexts["No doses logged yet"].waitForExistence(timeout: 5))
+        XCTAssertTrue(
+            app.staticTexts["Start tracking your medication doses to see your history here."].exists)
+        XCTAssertTrue(app.buttons["Log Your First Dose"].exists)
 
         // Verify no dose rows exist separately
         let doseRows = app.buttons.matching(identifier: "dose-history-row")
         XCTAssertEqual(doseRows.count, 0, "No dose rows should exist in empty state")
 
-        // Verify we're still on the History view
-        // The container is "dose-history-container" (from ShotsView) and the view is "dose-history-view"
-        let historyContainer = app.descendants(matching: .any)["dose-history-container"]
-        let historyView = app.descendants(matching: .any)["dose-history-view"]
-        XCTAssertTrue(
-            historyContainer.exists || historyView.exists,
-            "Should be on history view (dose-history-container or dose-history-view)")
+        XCTAssertTrue(app.segmentedControls["analytics-section-picker"].buttons["History"].isSelected)
+        XCTAssertTrue(app.segmentedControls["history-view-mode-picker"].buttons["List"].isSelected)
     }
 
     func test_doseHistory_addFirstDose() throws {
-        // GIVEN: No doses exist (fresh app state from reset-app-data)
-        let app = TestUtilities.launchAppWithTestMode()
-
-        // Create a medication profile but no doses - we want to test adding the first dose
-        TestUtilities.navigateToSettings(app)
-        TestUtilities.navigateToMedicationProfiles(app)
-        TestUtilities.createMedicationProfile(
-            app, genericName: "semaglutide", brandName: "Ozempic", dose: "0.25")
-
-        // Navigate to History tab to see empty state
+        var environment = TestUtilities.TestDataPreset.custom(doseCount: 0).launchEnvironment
+        environment["TEST_DATA_DAYS"] = "1" // Seed the medication profile without any doses.
+        let app = TestUtilities.launchAppWithConfiguration(
+            testMode: true,
+            resetData: true,
+            additionalArguments: ["--bypass-onboarding"],
+            additionalEnvironment: environment)
         TestUtilities.navigateToHistoryView(in: app)
-
-        // THEN: Empty state is displayed - check elements we know exist
-        let emptyStateTitle = app.staticTexts["No doses logged yet"]
-        XCTAssertTrue(emptyStateTitle.exists, "Empty state title should be displayed")
-
-        let emptyStateDescription = app.staticTexts.matching(
-            NSPredicate(format: "label CONTAINS 'Start tracking'")
-        ).firstMatch
-        XCTAssertTrue(emptyStateDescription.exists, "Empty state description should be displayed")
-
-        // Verify no dose rows exist
-        let initialDoseRows = app.buttons.matching(identifier: "dose-history-row")
-        XCTAssertEqual(initialDoseRows.count, 0, "No dose rows should exist in empty state")
-
-        // WHEN: User adds a new dose using the "Log Your First Dose" button
-        let logFirstDoseButton = app.buttons["Log Your First Dose"]
-        XCTAssertTrue(logFirstDoseButton.exists, "Log Your First Dose button should be visible")
-
-        // Tap the button to open quick dose sheet
-        logFirstDoseButton.tap()
-
-        // Wait for the quick dose sheet to appear
-        let quickDoseSheet = app.navigationBars.matching(
-            NSPredicate(format: "identifier CONTAINS 'Dose' OR label CONTAINS 'Dose'")
-        ).firstMatch
+        XCTAssertTrue(app.staticTexts["No doses logged yet"].exists)
         XCTAssertTrue(
-            quickDoseSheet.waitForExistence(timeout: 5),
-            "Quick dose sheet should appear after tapping Log Your First Dose")
+            app.staticTexts["Start tracking your medication doses to see your history here."].exists)
+        XCTAssertEqual(app.buttons.matching(identifier: "dose-history-row").count, 0)
 
-        // Fill in the dose information (use existing medication profile)
-        let medicationPicker = app.buttons["quick-dose-medication-picker"]
-        if medicationPicker.waitForExistence(timeout: 3) {
-            // Medication should be pre-selected from the profile we created
-            XCTAssertTrue(medicationPicker.exists, "Medication picker should be available")
-        }
+        app.buttons["Log Your First Dose"].tap()
+        let sheet = app.navigationBars["Quick Add Dose"]
+        let sheetAppeared = sheet.waitForExistence(timeout: 5)
+        TestUtilities.debugScreenshot(app, name: "history-first-dose-form")
+        print(app.debugDescription)
+        XCTAssertTrue(sheetAppeared)
+        XCTAssertTrue(app.buttons["quick-dose-medication-picker"].staticTexts["Ozempic (0.25 mg)"].exists)
+        let amount = app.textFields["quick-dose-prescribed-amount-input"]
+        XCTAssertTrue(amount.exists)
+        XCTAssertEqual(amount.value as? String, "0.25")
+        XCTAssertTrue(app.buttons["quick-dose-site-picker"].staticTexts["Thigh"].exists)
+        let datePicker = app.datePickers["quick-dose-datetime-picker"]
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        let expectedDate = formatter.string(from: Date())
+        XCTAssertTrue(datePicker.buttons[expectedDate].exists)
+        let expectedTime = datePicker.buttons["Date and Time Picker"].buttons.element(boundBy: 1).label
+        XCTAssertFalse(expectedTime.isEmpty)
 
-        // Save the dose
-        let saveButton = app.buttons["quick-dose-save-button"]
-        XCTAssertTrue(
-            saveButton.waitForExistence(timeout: 3),
-            "Save button should be available in dose sheet")
-        saveButton.tap()
+        let save = app.buttons["quick-dose-save-button"]
+        TestUtilities.replaceHistoryPrescribedAmount(
+            in: app, with: "0.25", evidenceName: "history-first-prescribed-amount")
+        XCTAssertTrue(save.isEnabled)
+        save.tap()
+        XCTAssertTrue(sheet.waitForNonExistence(timeout: 5))
+        TestUtilities.debugScreenshot(app, name: "history-first-dose-saved")
+        print(app.debugDescription)
+        XCTAssertTrue(app.segmentedControls["analytics-section-picker"].buttons["History"].isSelected)
+        XCTAssertTrue(app.staticTexts["1 of 1 doses shown"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["No doses logged yet"].exists)
+        let expectedLabel = "0.25 milligrams, Ozempic, at \(expectedTime), injection site Thigh"
+        let rows = TestUtilities.getDoseRows(from: app)
+        XCTAssertEqual(rows.count, 1)
+        XCTAssertEqual(rows.firstMatch.label, expectedLabel)
+        XCTAssertEqual(rows.firstMatch.staticTexts["dose-amount"].label, "0.25 mg")
+        XCTAssertEqual(rows.firstMatch.staticTexts["dose-medication"].label, "Ozempic")
+        XCTAssertEqual(rows.firstMatch.staticTexts["dose-timestamp"].label, expectedTime)
+        XCTAssertTrue(app.staticTexts[expectedDate].exists)
 
-        // Wait for sheet to dismiss and return to history
-        let sheetDismissed = !quickDoseSheet.waitForExistence(timeout: 5)
-        XCTAssertTrue(sheetDismissed, "Quick dose sheet should dismiss after saving")
-
-        // THEN: Dose should be displayed in history
-        // Verify we're back on history view (dose-history-container or dose-history-view)
-        let historyContainer = app.descendants(matching: .any)["dose-history-container"]
-        let historyView = app.descendants(matching: .any)["dose-history-view"]
-        XCTAssertTrue(
-            historyContainer.waitForExistence(timeout: 3) || historyView.waitForExistence(timeout: 3),
-            "Should return to history view after adding dose")
-
-        // Verify the dose is now displayed (no more empty state)
-        let doseRows = app.buttons.matching(identifier: "dose-history-row")
-        XCTAssertEqual(doseRows.count, 1, "Should have exactly 1 dose after adding first dose")
-
-        // Verify the dose row exists and is accessible
-        let firstDoseRow = doseRows.element(boundBy: 0)
-        XCTAssertTrue(firstDoseRow.exists, "First dose should be displayed in history")
-
-        // Verify empty state is no longer shown
-        let emptyStateAfterAdd = app.staticTexts["empty-state-message"]
-        XCTAssertFalse(
-            emptyStateAfterAdd.exists,
-            "Empty state should not be visible after adding first dose")
+        app.terminate()
+        let relaunched = TestUtilities.launchAppWithTestMode(resetData: false)
+        TestUtilities.navigateToHistoryView(in: relaunched)
+        let persisted = TestUtilities.getDoseRows(from: relaunched)
+        XCTAssertEqual(persisted.count, 1)
+        XCTAssertEqual(persisted.firstMatch.label, expectedLabel)
+        XCTAssertEqual(persisted.firstMatch.staticTexts["dose-amount"].label, "0.25 mg")
+        XCTAssertEqual(persisted.firstMatch.staticTexts["dose-timestamp"].label, expectedTime)
+        XCTAssertTrue(relaunched.staticTexts[expectedDate].exists)
     }
 
     func test_doseHistory_groupsDosesByDateSections() throws {
-        // GIVEN: Doses from multiple dates exist
-
-        // Create doses across multiple dates
+        let today = Date()
         let app = TestUtilities.setupDoseHistoryTest(app: XCUIApplication(), doseCount: 5)
-
-        // Navigate to History tab
         TestUtilities.navigateToHistoryView(in: app)
+        XCTAssertTrue(app.staticTexts["5 of 5 doses shown"].waitForExistence(timeout: 5))
 
-        // WHEN: User views history list
-        // Wait for list to load by checking for dose rows
-        // let listLoaded = XCTNSPredicateExpectation(
-        //     predicate: NSPredicate(format: "count >= 5"),
-        //     object: app.buttons.matching(identifier: "dose-history-row"))
-        // wait(for: [listLoaded], timeout: 10)
-
-        // THEN: Doses are grouped by date with section headers
-        // Look for date section headers
-        let sectionHeaders = app.staticTexts.matching(
-            NSPredicate(
-                format: "label CONTAINS 'Today' OR label CONTAINS 'Yesterday' OR label CONTAINS '2025'")
-        )
-
-        // Verify we have dose rows
-        let doseRows = TestUtilities.getDoseRows(from: app, minimumCount: 4)
-        XCTAssertGreaterThan(doseRows.count, 3, "Should have 4+ doses displayed")
-
-        // Check if section headers exist (implementation may vary)
-        if sectionHeaders.count > 0 {
-            XCTAssertGreaterThan(sectionHeaders.count, 0, "Should have date section headers")
-        } else {
-            // Alternative: verify doses are ordered chronologically
-            // This is a fallback test if section headers aren't implemented
-            XCTAssertTrue(doseRows.element(boundBy: 0).exists, "First dose should exist")
-            XCTAssertTrue(doseRows.element(boundBy: 4).exists, "Last dose should exist")
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        let expectedDates = [0, 7, 14, 21, 28].map { daysAgo in
+            formatter.string(from: Calendar.current.date(byAdding: .day, value: -daysAgo, to: today)!)
         }
+        let sectionHeaders = app.staticTexts.matching(identifier: "dose-date-section-header")
+        XCTAssertEqual(sectionHeaders.allElementsBoundByIndex.map(\.label), expectedDates)
 
-        // Note: This test may need adjustment based on actual sectioning implementation
+        let firstDose = TestUtilities.getDoseRows(from: app, minimumCount: 4).firstMatch
+        XCTAssertEqual(firstDose.staticTexts["dose-amount"].label, "0.25 mg")
+        XCTAssertEqual(firstDose.staticTexts["dose-medication"].label, "Ozempic")
+        XCTAssertEqual(firstDose.staticTexts["injection-site"].label, "Abdomen")
+
+        let list = app.collectionViews["history-section"]
+        list.swipeUp()
+        let visibleRows = list.buttons.matching(identifier: "dose-history-row")
+        let lastDose = visibleRows.element(boundBy: visibleRows.count - 1)
+        if !lastDose.waitForExistence(timeout: 5) {
+            TestUtilities.debugScreenshot(app, name: "before-missing-last-dose")
+            print(app.debugDescription)
+            XCTFail("Fifth dose should appear after scrolling")
+        }
+        XCTAssertTrue(lastDose.isHittable)
+        XCTAssertEqual(lastDose.staticTexts["dose-amount"].label, "0.25 mg")
+        XCTAssertEqual(lastDose.staticTexts["dose-medication"].label, "Ozempic")
+        XCTAssertEqual(lastDose.staticTexts["injection-site"].label, "Abdomen")
+        let lastHeader = list.staticTexts[expectedDates[4]]
+        XCTAssertTrue(lastHeader.isHittable)
+        XCTAssertGreaterThanOrEqual(lastDose.frame.minY, lastHeader.frame.maxY)
     }
 
     func test_doseHistory_voiceOverAccessibility() throws {
@@ -193,26 +157,15 @@ final class DoseHistoryStatesUITests: XCTestCase {
         let firstDoseRow = doseRows.element(boundBy: 0)
         XCTAssertTrue(firstDoseRow.exists, "First dose row should exist")
 
-        // Verify accessibility elements within dose rows
-        let doseAmount = app.staticTexts.matching(identifier: "dose-amount").firstMatch
-        let doseTimestamp = app.staticTexts.matching(identifier: "dose-timestamp").firstMatch
-        let doseMedication = app.staticTexts.matching(identifier: "dose-medication").firstMatch
-
-        // Check that accessibility identifiers exist (these should be readable by VoiceOver)
-        if doseAmount.exists {
-            XCTAssertTrue(doseAmount.exists, "Dose amount should have accessibility identifier")
-        }
-        if doseTimestamp.exists {
-            XCTAssertTrue(doseTimestamp.exists, "Dose timestamp should have accessibility identifier")
-        }
-        if doseMedication.exists {
-            XCTAssertTrue(doseMedication.exists, "Dose medication should have accessibility identifier")
-        }
-
-        // Verify the dose row itself has an accessibility label
-        let accessibilityLabel = firstDoseRow.label
-        XCTAssertGreaterThan(
-            accessibilityLabel.count, 0, "Dose row should have accessibility label for VoiceOver")
+        XCTAssertEqual(firstDoseRow.staticTexts["dose-amount"].label, "0.25 mg")
+        XCTAssertEqual(firstDoseRow.staticTexts["dose-medication"].label, "Ozempic")
+        XCTAssertEqual(firstDoseRow.staticTexts["injection-site"].label, "Thigh")
+        let timestamp = firstDoseRow.staticTexts["dose-timestamp"]
+        XCTAssertTrue(timestamp.exists)
+        XCTAssertFalse(timestamp.label.isEmpty)
+        XCTAssertEqual(
+            firstDoseRow.label,
+            "0.25 milligrams, Ozempic, at \(timestamp.label), injection site Thigh")
 
         // Note: Full VoiceOver testing requires device testing, this verifies accessibility setup
     }
@@ -229,6 +182,9 @@ final class DoseHistoryStatesUITests: XCTestCase {
         // Find the dose row
         let doseRows = TestUtilities.getDoseRows(from: app, minimumCount: 1)
         let firstDoseRow = doseRows.element(boundBy: 0)
+        let originalLabel = firstDoseRow.label
+        let originalTime = firstDoseRow.staticTexts["dose-timestamp"].label
+        let originalDate = app.staticTexts.matching(identifier: "dose-date-section-header").firstMatch.label
 
         // WHEN: User edits the dose
         firstDoseRow.swipeLeft()
@@ -242,18 +198,24 @@ final class DoseHistoryStatesUITests: XCTestCase {
 
         // Wait for edit sheet to appear
         let editSheet = app.navigationBars["Edit Dose"]
+        let editSheetAppeared = editSheet.waitForExistence(timeout: 5)
+        TestUtilities.debugScreenshot(app, name: "edit-dose-prepopulation")
+        print(app.debugDescription)
         XCTAssertTrue(
-            editSheet.waitForExistence(timeout: 5),
+            editSheetAppeared,
             "Edit dose sheet should appear")
 
-        // THEN: Dose entry form is pre-populated with existing data
-        // Verify medication picker shows current selection
         let medicationPicker = app.buttons["quick-dose-medication-picker"]
-        XCTAssertTrue(medicationPicker.exists, "Medication picker should be pre-populated")
+        XCTAssertTrue(medicationPicker.staticTexts["Ozempic (0.25 mg)"].exists)
+        let amount = app.textFields["quick-dose-prescribed-amount-input"]
+        XCTAssertTrue(amount.exists)
+        XCTAssertEqual(amount.value as? String, "0.25")
+        XCTAssertTrue(app.buttons["quick-dose-site-picker"].staticTexts["Abdomen"].exists)
 
         // Verify date/time picker shows current values
         let dateTimePicker = app.datePickers["quick-dose-datetime-picker"]
-        XCTAssertTrue(dateTimePicker.exists, "Date/time picker should be pre-populated")
+        XCTAssertTrue(dateTimePicker.buttons[originalDate].exists)
+        XCTAssertTrue(dateTimePicker.buttons[originalTime].exists)
 
         // Verify save and cancel buttons are available
         let saveButton = app.buttons["quick-dose-save-button"]
@@ -262,15 +224,15 @@ final class DoseHistoryStatesUITests: XCTestCase {
         XCTAssertTrue(saveButton.exists, "Save button should be present in edit form")
         XCTAssertTrue(cancelButton.exists, "Cancel button should be present in edit form")
 
-        // Cancel the edit to close the sheet
+        TestUtilities.replaceHistoryPrescribedAmount(
+            in: app, with: "0.50", evidenceName: "history-cancel-prescribed-amount-edit")
         cancelButton.tap()
-
-        // Verify we're back on the History view (dose-history-container or dose-history-view)
-        let historyContainer = app.descendants(matching: .any)["dose-history-container"]
-        let historyView = app.descendants(matching: .any)["dose-history-view"]
-        XCTAssertTrue(
-            historyContainer.waitForExistence(timeout: 3) || historyView.waitForExistence(timeout: 3),
-            "Should return to history view after canceling edit")
+        XCTAssertTrue(editSheet.waitForNonExistence(timeout: 3))
+        XCTAssertTrue(app.segmentedControls["analytics-section-picker"].buttons["History"].isSelected)
+        let unchanged = TestUtilities.getDoseRows(from: app)
+        XCTAssertEqual(unchanged.count, 1)
+        XCTAssertEqual(unchanged.firstMatch.label, originalLabel)
+        XCTAssertEqual(unchanged.firstMatch.staticTexts["dose-amount"].label, "0.25 mg")
     }
 
     func test_doseHistory_visualIndicatorsForSkippedDoses() throws {
@@ -290,21 +252,11 @@ final class DoseHistoryStatesUITests: XCTestCase {
         firstDoseRow.swipeRight()
 
         let skipButton = app.buttons["Mark as Skipped"]
-        if skipButton.waitForExistence(timeout: 3) {
-            skipButton.tap()
-
-            // Wait for skip status to update by checking for skipped indicator
-            let skipStatusUpdated = XCTNSPredicateExpectation(
-                predicate: NSPredicate(format: "exists == true"),
-                object: app.images["skipped-dose-indicator"])
-            wait(for: [skipStatusUpdated], timeout: 5)
-
-            // THEN: Skipped dose styling is applied appropriately
-            let skippedIndicator = app.images["skipped-dose-indicator"]
-            XCTAssertTrue(
-                skippedIndicator.waitForExistence(timeout: 3),
-                "Skipped dose should show orange X mark indicator")
-        }
-
+        XCTAssertTrue(skipButton.waitForExistence(timeout: 3))
+        skipButton.tap()
+        let skippedIndicator = app.images["skipped-dose-indicator"]
+        XCTAssertTrue(
+            skippedIndicator.waitForExistence(timeout: 5),
+            "Skipped dose should show orange X mark indicator")
     }
 }
