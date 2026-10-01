@@ -29,6 +29,10 @@ class DoseCalendarViewModel: ObservableObject {
         }
     }
 
+    /// Clock and calendar used for every "today" and month calculation. Injected so tests can pin the date.
+    private let now: () -> Date
+    private let calendar: Calendar
+
     /// Currently displayed month
     @Published var currentMonth: Date = .init() {
         didSet {
@@ -55,17 +59,17 @@ class DoseCalendarViewModel: ObservableObject {
 
     /// Start of the current month
     var monthStart: Date {
-        Calendar.current.dateInterval(of: .month, for: self.currentMonth)?.start ?? self.currentMonth
+        self.calendar.dateInterval(of: .month, for: self.currentMonth)?.start ?? self.currentMonth
     }
 
     /// End of the current month
     var monthEnd: Date {
-        Calendar.current.dateInterval(of: .month, for: self.currentMonth)?.end ?? self.currentMonth
+        self.calendar.dateInterval(of: .month, for: self.currentMonth)?.end ?? self.currentMonth
     }
 
     /// Days in the current month
     var daysInMonth: [Date] {
-        guard let monthInterval = Calendar.current.dateInterval(of: .month, for: currentMonth) else {
+        guard let monthInterval = self.calendar.dateInterval(of: .month, for: currentMonth) else {
             return []
         }
 
@@ -74,7 +78,7 @@ class DoseCalendarViewModel: ObservableObject {
 
         while date < monthInterval.end {
             days.append(date)
-            date = Calendar.current.date(byAdding: .day, value: 1, to: date) ?? date
+            date = self.calendar.date(byAdding: .day, value: 1, to: date) ?? date
         }
 
         return days
@@ -88,13 +92,18 @@ class DoseCalendarViewModel: ObservableObject {
     /// Current month display string
     var currentMonthTitle: String {
         let formatter = DateFormatter()
+        formatter.calendar = self.calendar
+        formatter.timeZone = self.calendar.timeZone
         formatter.dateFormat = "MMMM yyyy"
         return formatter.string(from: self.currentMonth)
     }
 
     // MARK: - Initialization
 
-    init() {
+    init(now: @escaping () -> Date = Date.init, calendar: Calendar = .current) {
+        self.now = now
+        self.calendar = calendar
+        self.currentMonth = now()
         self.updateCalendarData()
     }
 
@@ -132,21 +141,21 @@ class DoseCalendarViewModel: ObservableObject {
 
     /// Navigate to previous month
     func navigateToPreviousMonth() {
-        if let previousMonth = Calendar.current.date(byAdding: .month, value: -1, to: currentMonth) {
+        if let previousMonth = self.calendar.date(byAdding: .month, value: -1, to: currentMonth) {
             self.currentMonth = previousMonth
         }
     }
 
     /// Navigate to next month
     func navigateToNextMonth() {
-        if let nextMonth = Calendar.current.date(byAdding: .month, value: 1, to: currentMonth) {
+        if let nextMonth = self.calendar.date(byAdding: .month, value: 1, to: currentMonth) {
             self.currentMonth = nextMonth
         }
     }
 
     /// Navigate to current month (today)
     func navigateToCurrentMonth() {
-        self.currentMonth = Date()
+        self.currentMonth = self.now()
     }
 
     /// Navigate to specific month
@@ -158,8 +167,8 @@ class DoseCalendarViewModel: ObservableObject {
 
     /// Get doses for a specific date
     func doses(for date: Date) -> [Dose] {
-        let dayStart = Calendar.current.startOfDay(for: date)
-        _ = Calendar.current.date(byAdding: .day, value: 1, to: dayStart) ?? dayStart
+        let dayStart = self.calendar.startOfDay(for: date)
+        _ = self.calendar.date(byAdding: .day, value: 1, to: dayStart) ?? dayStart
 
         return self.dosesByDate[dayStart] ?? []
     }
@@ -193,24 +202,24 @@ class DoseCalendarViewModel: ObservableObject {
 
     /// Check if date is today
     func isToday(_ date: Date) -> Bool {
-        Calendar.current.isDateInToday(date)
+        self.calendar.isDate(date, inSameDayAs: self.now())
     }
 
     /// Check if date is in the past
     func isPastDate(_ date: Date) -> Bool {
-        Calendar.current.compare(date, to: Date(), toGranularity: .day) == .orderedAscending
+        self.calendar.compare(date, to: self.now(), toGranularity: .day) == .orderedAscending
     }
 
     /// Check if date is in the future
     func isFutureDate(_ date: Date) -> Bool {
-        Calendar.current.compare(date, to: Date(), toGranularity: .day) == .orderedDescending
+        self.calendar.compare(date, to: self.now(), toGranularity: .day) == .orderedDescending
     }
 
     // MARK: - Statistics
 
     /// Calculate statistics for a specific month
     func calculateStatistics(for month: Date) -> AdherenceStatistics {
-        guard let monthInterval = Calendar.current.dateInterval(of: .month, for: month) else {
+        guard let monthInterval = self.calendar.dateInterval(of: .month, for: month) else {
             return .empty(periodStart: month, periodEnd: month)
         }
 
@@ -225,7 +234,8 @@ class DoseCalendarViewModel: ObservableObject {
             periodEnd: monthInterval.end,
             medicationFrequency: .weekly,
             scheduleService: self.scheduleService,
-            schedule: self.activeSchedule
+            schedule: self.activeSchedule,
+            streakContext: StreakContext(history: self.allDoses, now: self.now(), calendar: self.calendar)
         )
     }
 
@@ -256,7 +266,7 @@ class DoseCalendarViewModel: ObservableObject {
 
     /// Filter doses to current month
     private func updateMonthlyDoses() {
-        guard let monthInterval = Calendar.current.dateInterval(of: .month, for: currentMonth) else {
+        guard let monthInterval = self.calendar.dateInterval(of: .month, for: currentMonth) else {
             self.monthlyDoses = []
             return
         }
@@ -268,7 +278,7 @@ class DoseCalendarViewModel: ObservableObject {
 
     /// Group doses by date for calendar display
     private func updateDosesByDate() {
-        let calendar = Calendar.current
+        let calendar = self.calendar
         self.dosesByDate = Dictionary(grouping: self.monthlyDoses) { dose in
             calendar.startOfDay(for: dose.timestamp)
         }

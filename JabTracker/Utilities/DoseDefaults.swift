@@ -203,6 +203,7 @@ enum DoseDefaults {
     static func calculateDoseStreak(
         for profile: MedicationProfile,
         currentDate: Date = Date(),
+        calendar: Calendar = .current,
         doses: [Dose]? = nil
     ) -> Int {
         guard let medication = profile.medication else { return 0 }
@@ -210,7 +211,6 @@ enum DoseDefaults {
         let dosesArray = doses ?? (profile.doses ?? [])
         let sortedDoses = dosesArray.sorted(by: { $0.timestamp > $1.timestamp })
 
-        let calendar = Calendar.current
         let frequency = medication.frequency
 
         var streak = 0
@@ -254,9 +254,10 @@ enum DoseDefaults {
             guard let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) else {
                 return false
             }
-            let dateRange = DateInterval(start: startOfDay, end: endOfDay)
+            // Half-open: DateInterval.contains includes its end, which would count a dose logged at
+            // exactly 00:00 for the previous day as well.
             return sortedDoses.contains { dose in
-                dateRange.contains(dose.timestamp) && !dose.skipped
+                dose.timestamp >= startOfDay && dose.timestamp < endOfDay && !dose.skipped
             }
 
         case .weekly:
@@ -264,7 +265,7 @@ enum DoseDefaults {
                 return false
             }
             return sortedDoses.contains { dose in
-                weekInterval.contains(dose.timestamp) && !dose.skipped
+                dose.timestamp >= weekInterval.start && dose.timestamp < weekInterval.end && !dose.skipped
             }
         }
     }

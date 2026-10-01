@@ -330,82 +330,94 @@ struct DoseDefaultsTests {
 
     @Test("Dose streak calculation weekly medication")
     func doseStreakWeeklyMedication() throws {
+        let now = FixedClock.date(2026, 10, 1, hour: 0, minute: 1)
         let profile = self.createTestMedicationProfile(
-            medication: .semaglutide,
-            startDate: Date().addingTimeInterval(-1_814_400)  // 3 weeks ago
-        )
+            medication: .semaglutide, startDate: FixedClock.date(2026, 9, 10))
 
-        let calendar = Calendar.current
-        let now = Date()
+        // One dose in each of the three most recent weeks; the middle one is in September
+        let dose1 = Dose(amount: 1.0, timestamp: FixedClock.date(2026, 9, 18))
+        let dose2 = Dose(amount: 1.0, timestamp: FixedClock.date(2026, 9, 25))
+        let dose3 = Dose(amount: 1.0, timestamp: FixedClock.date(2026, 10, 1, hour: 0, minute: 0))
 
-        // Create weekly doses for 3 weeks (perfect streak)
-        let dose1 = Dose(
-            amount: 1.0, timestamp: calendar.date(byAdding: .weekOfYear, value: -2, to: now)!)  // 2 weeks ago
-        let dose2 = Dose(
-            amount: 1.0, timestamp: calendar.date(byAdding: .weekOfYear, value: -1, to: now)!)  // 1 week ago
-        let dose3 = Dose(amount: 1.0, timestamp: calendar.date(byAdding: .hour, value: -2, to: now)!)  // A few hours ago (current week)
-
-        let streak = DoseDefaults.calculateDoseStreak(for: profile, doses: [dose1, dose2, dose3])
+        let streak = DoseDefaults.calculateDoseStreak(
+            for: profile, currentDate: now, calendar: FixedClock.calendar, doses: [dose1, dose2, dose3])
         #expect(streak == 3)  // 3-week streak
     }
 
     @Test("Dose streak calculation daily medication")
     func doseStreakDailyMedication() throws {
+        // 00:01 UTC on Oct 1: "two hours ago" must not be the property under test
+        let now = FixedClock.date(2026, 10, 1, hour: 0, minute: 1)
         let profile = self.createTestMedicationProfile(
-            medication: .liraglutide,
-            startDate: Date().addingTimeInterval(-259_200)  // 3 days ago
-        )
+            medication: .liraglutide, startDate: FixedClock.date(2026, 9, 28))
 
-        let calendar = Calendar.current
-        let now = Date()
+        let dose1 = Dose(amount: 1.2, timestamp: FixedClock.date(2026, 9, 29, hour: 8))
+        let dose2 = Dose(amount: 1.2, timestamp: FixedClock.date(2026, 9, 30, hour: 8))
+        let dose3 = Dose(amount: 1.2, timestamp: FixedClock.date(2026, 10, 1, hour: 0, minute: 0))
 
-        // Create daily doses for 3 days
-        let dose1 = Dose(amount: 1.2, timestamp: calendar.date(byAdding: .day, value: -2, to: now)!)  // 2 days ago
-        let dose2 = Dose(amount: 1.2, timestamp: calendar.date(byAdding: .day, value: -1, to: now)!)  // Yesterday
-        let dose3 = Dose(amount: 1.2, timestamp: calendar.date(byAdding: .hour, value: -2, to: now)!)  // Today
+        let streak = DoseDefaults.calculateDoseStreak(
+            for: profile, currentDate: now, calendar: FixedClock.calendar, doses: [dose1, dose2, dose3])
+        #expect(streak == 3)  // Sep 29, Sep 30, Oct 1 across the month boundary
+    }
 
-        let streak = DoseDefaults.calculateDoseStreak(for: profile, doses: [dose1, dose2, dose3])
-        #expect(streak == 3)  // 3-day streak
+    @Test("A dose at exactly midnight belongs to the new day only")
+    func doseStreakMidnightDoseCountsOnce() throws {
+        let now = FixedClock.date(2026, 10, 1, hour: 12)
+        let profile = self.createTestMedicationProfile(
+            medication: .liraglutide, startDate: FixedClock.date(2026, 9, 28))
+
+        let midnight = Dose(amount: 1.2, timestamp: FixedClock.date(2026, 10, 1, hour: 0, minute: 0))
+
+        let streak = DoseDefaults.calculateDoseStreak(
+            for: profile, currentDate: now, calendar: FixedClock.calendar, doses: [midnight])
+        #expect(streak == 1)  // Oct 1 only; Sep 30 has no dose
+    }
+
+    @Test("Dose streak counts across a year boundary")
+    func doseStreakAcrossYearBoundary() throws {
+        let now = FixedClock.date(2027, 1, 1, hour: 23, minute: 59)
+        let profile = self.createTestMedicationProfile(
+            medication: .liraglutide, startDate: FixedClock.date(2026, 12, 29))
+
+        let doses = [
+            Dose(amount: 1.2, timestamp: FixedClock.date(2026, 12, 30, hour: 9)),
+            Dose(amount: 1.2, timestamp: FixedClock.date(2026, 12, 31, hour: 23, minute: 59)),
+            Dose(amount: 1.2, timestamp: FixedClock.date(2027, 1, 1, hour: 0, minute: 1)),
+        ]
+
+        let streak = DoseDefaults.calculateDoseStreak(
+            for: profile, currentDate: now, calendar: FixedClock.calendar, doses: doses)
+        #expect(streak == 3)  // Dec 30, Dec 31, Jan 1
     }
 
     @Test("Dose streak with missed dose")
     func doseStreakWithMissedDose() throws {
+        let now = FixedClock.date(2026, 10, 1, hour: 0, minute: 1)
         let profile = self.createTestMedicationProfile(
-            medication: .semaglutide,
-            startDate: Date().addingTimeInterval(-1_814_400)  // 3 weeks ago
-        )
+            medication: .semaglutide, startDate: FixedClock.date(2026, 9, 10))
 
-        let calendar = Calendar.current
-        let now = Date()
+        // Doses with a gap (nothing in the week of Sep 20 - 26)
+        let dose1 = Dose(amount: 1.0, timestamp: FixedClock.date(2026, 9, 18))
+        let dose2 = Dose(amount: 1.0, timestamp: FixedClock.date(2026, 10, 1, hour: 0, minute: 0))
 
-        // Create doses with a gap (missed week)
-        let dose1 = Dose(
-            amount: 1.0, timestamp: calendar.date(byAdding: .weekOfYear, value: -2, to: now)!)  // 2 weeks ago
-        // Missing: 1 week ago
-        let dose2 = Dose(amount: 1.0, timestamp: calendar.date(byAdding: .hour, value: -2, to: now)!)  // A few hours ago (current week)
-
-        let streak = DoseDefaults.calculateDoseStreak(for: profile, doses: [dose1, dose2])
+        let streak = DoseDefaults.calculateDoseStreak(
+            for: profile, currentDate: now, calendar: FixedClock.calendar, doses: [dose1, dose2])
         #expect(streak == 1)  // Only current week counts
     }
 
     @Test("Dose streak with skipped doses")
     func doseStreakWithSkippedDoses() throws {
+        let now = FixedClock.date(2026, 10, 1, hour: 0, minute: 1)
         let profile = self.createTestMedicationProfile(
-            medication: .liraglutide,
-            startDate: Date().addingTimeInterval(-259_200)  // 3 days ago
-        )
+            medication: .liraglutide, startDate: FixedClock.date(2026, 9, 28))
 
-        let calendar = Calendar.current
-        let now = Date()
+        let dose1 = Dose(amount: 1.2, timestamp: FixedClock.date(2026, 9, 29, hour: 8))
+        let dose2 = Dose(amount: 0.0, timestamp: FixedClock.date(2026, 9, 30, hour: 8), skipped: true)
+        let dose3 = Dose(amount: 1.2, timestamp: FixedClock.date(2026, 10, 1, hour: 0, minute: 0))
 
-        // Create doses including skipped one
-        let dose1 = Dose(amount: 1.2, timestamp: calendar.date(byAdding: .day, value: -2, to: now)!)  // 2 days ago
-        let dose2 = Dose(
-            amount: 0.0, timestamp: calendar.date(byAdding: .day, value: -1, to: now)!, skipped: true)  // Yesterday (skipped)
-        let dose3 = Dose(amount: 1.2, timestamp: calendar.date(byAdding: .hour, value: -2, to: now)!)  // Today
-
-        let streak = DoseDefaults.calculateDoseStreak(for: profile, doses: [dose1, dose2, dose3])
-        #expect(streak == 1)  // Only today counts, yesterday was skipped
+        let streak = DoseDefaults.calculateDoseStreak(
+            for: profile, currentDate: now, calendar: FixedClock.calendar, doses: [dose1, dose2, dose3])
+        #expect(streak == 1)  // Only Oct 1 counts, Sep 30 was skipped
     }
 
     @Test("Dose streak with no doses")
