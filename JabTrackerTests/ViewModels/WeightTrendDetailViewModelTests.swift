@@ -726,4 +726,44 @@ struct WeightTrendDetailViewModelTests {
             DetailTimePeriod.oneMonth.startDate(now: now, calendar: FixedClock.calendar)
                 == FixedClock.date(2026, 2, 28, hour: 0, minute: 0))
     }
+
+    @Test("1W is seven calendar dates: today plus the previous 6 days")
+    func oneWeekStartDateIsSevenDates() {
+        let now = FixedClock.date(2026, 10, 1, hour: 0, minute: 1)
+        #expect(
+            DetailTimePeriod.oneWeek.startDate(now: now, calendar: FixedClock.calendar)
+                == FixedClock.date(2026, 9, 25, hour: 0, minute: 0))
+
+        // Across a month and a year boundary: Jan 1 reaches back to Dec 26
+        let newYear = FixedClock.date(2027, 1, 1, hour: 23, minute: 59)
+        #expect(
+            DetailTimePeriod.oneWeek.startDate(now: newYear, calendar: FixedClock.calendar)
+                == FixedClock.date(2026, 12, 26, hour: 0, minute: 0))
+    }
+
+    @Test("1W loads Sep 25 through Oct 1 and excludes Sep 24")
+    func oneWeekWindowExcludesEighthDate() async throws {
+        let now = FixedClock.date(2026, 10, 1, hour: 0, minute: 1)
+        let (context, container) = createTestContext()
+        _ = container
+        _ = createTestUser(in: context, weightUnit: "kg")
+        for (date, kg) in [
+            (FixedClock.date(2026, 9, 24, hour: 23, minute: 59), 90.0),
+            (FixedClock.date(2026, 9, 25, hour: 0, minute: 1), 88.0),
+            (now, 85.0),
+        ] {
+            context.insert(WeightEntry(timestamp: date, weightKg: kg))
+        }
+        try context.save()
+
+        let viewModel = WeightTrendDetailViewModel(
+            metricsService: MetricsService(context: context),
+            context: context,
+            now: { now },
+            calendar: FixedClock.calendar)
+        viewModel.selectedPeriod = .oneWeek
+        await viewModel.loadData()
+
+        #expect(viewModel.difference == -3.0)  // Oct 1 (85) minus Sep 25 (88); Sep 24 excluded
+    }
 }

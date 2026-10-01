@@ -43,13 +43,14 @@ enum DetailTimePeriod: String, CaseIterable, Identifiable {
         self.startDate(now: Date(), calendar: .current)
     }
 
-    /// Window contract: calendar units back from `now` (one month before Mar 1 is Feb 1, not 30 days),
-    /// anchored to the start of that day, so an entry exactly one period old is always inside the window.
+    /// Window contract: anchored to the start of a calendar day, so a boundary entry is always inside.
+    /// 1W is today plus the previous 6 days (7 dates). 1M/3M/6M/1Y go back that many calendar units
+    /// (one month before Mar 1 is Feb 1, not 30 days) and include the entry exactly one period old.
     func startDate(now: Date, calendar: Calendar) -> Date? {
         let start: Date?
         switch self {
         case .oneWeek:
-            start = calendar.date(byAdding: .day, value: -7, to: now)
+            start = calendar.date(byAdding: .day, value: -6, to: now)
         case .oneMonth:
             start = calendar.date(byAdding: .month, value: -1, to: now)
         case .threeMonths:

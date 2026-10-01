@@ -13,7 +13,7 @@ Weight shots: `--seed-test-1y-high` (seed 789, one weigh-in per day for 365 days
 
 ## Window contract
 
-`DetailTimePeriod.startDate(now:calendar:)`: calendar units back from `now` (1M on Mar 1 starts Feb 1, not 30 days back), anchored to the start of that day, so an entry exactly one period old is always inside the window. Applies to 1W to 1Y.
+`DetailTimePeriod.startDate(now:calendar:)`: calendar units back from `now` (1M on Mar 1 starts Feb 1, not 30 days back), anchored to the start of that day, so an entry exactly one period old is always inside the window. Applies to 1M to 1Y; 1W is today plus the previous 6 days (7 dates).
 
 ## Live scenarios (10)
 
@@ -26,7 +26,7 @@ Weight shots: `--seed-test-1y-high` (seed 789, one weigh-in per day for 365 days
 | 5 | branch | weekly semaglutide, 3 doses | 1 day (day-streak semantics unchanged) | s05-branch-weekly-3-doses.png |
 | 6 | branch | weight 1M | Sep 1 - Oct 1, difference -0.8 lbs (Sep 1 entry included) | s06-branch-weight-1M.png |
 | 7 | main | weight 1M, same seed | Sep 2 - Oct 1, difference -2.2 lbs (Sep 1 entry dropped) | s07-main-weight-1M.png |
-| 8 | main and branch | weight 1W | main Sep 25 - Oct 1; branch Sep 24 - Oct 1 | s08-*-weight-1W.png |
+| 8 | main and branch | weight 1W | main Sep 25 - Oct 1; branch Sep 24 - Oct 1 (captured at 0f41b13d, before the 1W fix below; 1W now starts Sep 25 on both) | s08-*-weight-1W.png |
 | 9 | main and branch | weight 3M | main Jul 2 - Oct 1; branch Jul 1 - Oct 1 | s09-*-weight-3M.png |
 | 10 | branch | weight 6M | Apr 1 - Oct 1, difference -5.8 lbs | s10-branch-weight-6M.png |
 
