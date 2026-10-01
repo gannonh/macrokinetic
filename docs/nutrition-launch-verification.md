@@ -61,8 +61,12 @@ Keep a main/branch comparison, all ten results, screenshots, and a 30–60 secon
 | 7. Cancel deletion preserves the record | Same UUID, fields, row/count, and totals before/after Cancel. |
 | 8. Delete/clear-day preserves other dates | Only the selected UUID/date set is removed; yesterday's original UUID/fields and totals remain. |
 | 9. Relaunch preserves the original record | No reset/reseed inputs; exact before/after UUID/field snapshots plus repeated literal UI checks. |
-| 10. Production database works offline | Exact full database artifact and selected production row, verified unavailable network, local search/save/edit/delete and relaunch durability on the required candidate/device. |
+| 10. Production database works offline (recorded as: production-database journey with observed zero network use) | Exact full database artifact and selected production row, verified unavailable network, local search/save/edit/delete and relaunch durability on the required candidate/device. |
 
 The offline production-database scenario is a named gate, not a consequence of passing the fixture tests. Use an isolated test device with Wi-Fi and cellular unavailable, or a separately verified app-specific network isolation method. Keep evidence of that isolation. Do not interrupt the host's network or agent services. Record the production row's actual literals, search results, saved UUID, and no-reset relaunch values; if its data differs from the CI fixture, use separately stated expectations. UI-testing mode, a local SQLite file, or absence of observed network traffic alone does not prove an unavailable network.
 
 Fixture UI automation does not establish real Apple sign-in, HealthKit/notification permission behavior, approved health-sync policy, production account ownership, signed upgrade retention, or final submission readiness. Those owner/device gates remain explicit under KAT-3582, KAT-3584, KAT-3588, KAT-3590, and KAT-3595.
+
+## Production-database run with network observation
+
+`testProductionDatabaseJourneyWithDatabaseValues` is skipped with an explicit message unless the host passes `TEST_RUNNER_PROD_FOOD1_*` and `PROD_FOOD2_*` variables (NAME, QUERY, GRAMS, KCAL, P, C, F per 100 g read from the bundled production database with `sqlite3`). Pick foods whose scaled values have fractional parts below .5, which the test checks, so truncating and rounding screens agree, and grams values where a gram pill exists (production foods often list many household units; the test swipes the pill row to reach grams). Run it with the full database in `JabTracker/Resources/usda_foods.sqlite` and, in parallel, sample the app's sockets with `lsof -nP -i -a -p <pid>` every 0.5 s. Results and limits: [launch evidence](launch-evidence/KAT-3587/README.md).

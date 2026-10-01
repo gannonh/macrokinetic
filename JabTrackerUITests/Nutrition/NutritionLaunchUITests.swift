@@ -119,6 +119,135 @@ final class NutritionLaunchUITests: XCTestCase {
         capture("nutrition-clear-day-no-medication-after-relaunch")
     }
 
+    /// Scenario 10 evidence run: the same journey against the production food database. The host script
+    /// queries the bundled database and passes two named foods through TEST_RUNNER_PROD_FOOD{1,2}_* variables
+    /// (NAME, QUERY, GRAMS, KCAL, P, C, F per 100 g). Without them the test is skipped with an explicit message.
+    func testProductionDatabaseJourneyWithDatabaseValues() throws {
+        let env = ProcessInfo.processInfo.environment
+        guard env["PROD_FOOD1_NAME"] != nil else {
+            throw XCTSkip("Production-database run: set TEST_RUNNER_PROD_FOOD1_* and PROD_FOOD2_* (see docs/nutrition-launch-verification.md)")
+        }
+        let foods = try [1, 2].map { try ProductionFood(index: $0, environment: env) }
+        let first = foods[0], second = foods[1]
+        let totals = ProductionFood.totals(foods)
+
+        addProductionFood(first, meal: "Breakfast")
+        expectProductionRows([first])
+        expectLogTotals(first.totals)
+        addProductionFood(second, meal: "Lunch")
+        expectProductionRows([first, second])
+        expectDayCount(2)
+        expectLogTotals(totals)
+        expectDashboard(totals)
+        capture("production-before-relaunch")
+
+        relaunchWithoutReset()
+        expectNoMedicationProfiles()
+        selectDay(offset: 0)
+        expectProductionRows([first, second])
+        expectDayCount(2)
+        expectLogTotals(totals)
+        expectDashboard(totals)
+        capture("production-after-relaunch")
+    }
+
+    private struct ProductionFood {
+        let name: String
+        let query: String
+        let grams: Int
+        let kcal: Double, protein: Double, carbs: Double, fat: Double
+
+        init(index: Int, environment env: [String: String]) throws {
+            func value(_ key: String) throws -> String {
+                try XCTUnwrap(env["PROD_FOOD\(index)_\(key)"], "PROD_FOOD\(index)_\(key) is required")
+            }
+            name = try value("NAME")
+            query = try value("QUERY")
+            grams = try XCTUnwrap(Int(value("GRAMS")))
+            kcal = try XCTUnwrap(Double(value("KCAL")))
+            protein = try XCTUnwrap(Double(value("P")))
+            carbs = try XCTUnwrap(Double(value("C")))
+            fat = try XCTUnwrap(Double(value("F")))
+        }
+
+        var identifier: String { "food-result-" + name.lowercased().replacingOccurrences(of: " ", with: "-") }
+        var totals: ProductionTotals { ProductionTotals(kcal: scaled(kcal), protein: scaled(protein), carbs: scaled(carbs), fat: scaled(fat)) }
+        private func scaled(_ per100: Double) -> Double { per100 * Double(grams) / 100 }
+
+        static func totals(_ foods: [ProductionFood]) -> ProductionTotals {
+            foods.map(\.totals).reduce(ProductionTotals(kcal: 0, protein: 0, carbs: 0, fat: 0)) {
+                ProductionTotals(kcal: $0.kcal + $1.kcal, protein: $0.protein + $1.protein, carbs: $0.carbs + $1.carbs, fat: $0.fat + $1.fat)
+            }
+        }
+    }
+
+    private func addProductionFood(_ food: ProductionFood, meal: String) {
+        let totals = food.totals
+        expect(totals.isUnambiguous, "\(food.name) at \(food.grams) g has values whose display rounding is unambiguous")
+        tap(app.otherElements["food-log-view"].buttons["add-food-button"], "Search on the selected log date")
+        let search = app.otherElements["food-search-sheet"]
+        expect(search.waitForExistence(timeout: 5), "The food search opens")
+        let field = search.textFields["food-search-field"]
+        tap(field, "Search for \(food.name)")
+        field.typeText(food.query)
+        let swipeTip = app.buttons["Continue"]
+        if swipeTip.waitForExistence(timeout: 2) {
+            swipeTip.tap()  // iOS keyboard "slide to type" tip on a fresh simulator
+        }
+        let result = search.buttons[food.identifier].firstMatch
+        expect(result.waitForExistence(timeout: 15), "The production database returns \(food.name)")
+        for _ in 0..<4 where !result.isHittable {
+            search.swipeUp()
+        }
+        tap(result, "Select \(food.name)")
+        let detail = app.otherElements["food-detail-sheet"]
+        expect(detail.waitForExistence(timeout: 5), "The selected food's details open")
+        expect(detail.staticTexts[food.name].exists, "The detail names \(food.name)")
+        // Production foods list many household units; the gram pill can sit past the right edge.
+        let gramPill = detail.buttons["serving-pill-g"]
+        for _ in 0..<8 where !gramPill.isHittable {
+            detail.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'serving-pill-'")).firstMatch.swipeLeft()
+        }
+        tap(gramPill, "Choose grams")
+        setQuantity(String(food.grams), in: detail)
+        let shown = totals.shown
+        expectDetail(calories: shown.kcal, protein: shown.protein, fat: shown.fat, carbs: shown.carbs)
+        let picker = detail.buttons.matching(NSPredicate(
+            format: "label == 'Meal' OR label BEGINSWITH 'Meal,' OR label IN %@",
+            ["Breakfast", "Lunch", "Dinner", "Snacks"]
+        )).firstMatch
+        tap(picker, "Choose the meal")
+        tap(app.buttons[meal].firstMatch, "Select \(meal)")
+        tap(detail.buttons["add-food-button"], "Log \(food.name)")
+        expect(detail.waitForNonExistence(timeout: 5), "Food details close after logging")
+        expect(search.waitForNonExistence(timeout: 5), "Food search closes after logging")
+    }
+
+    private func expectProductionRows(_ foods: [ProductionFood]) {
+        let rows = app.otherElements["food-log-view"].buttons.matching(identifier: "food-entry-row")
+        waitUntil("Food Log has exactly the \(foods.count) production rows with literal values") {
+            let labels = rows.allElementsBoundByIndex.map(\.label)
+            guard labels.count == foods.count else { return false }
+            return foods.allSatisfy { food in
+                let shown = food.totals.shown
+                return labels.contains { label in
+                    [food.name, "\(shown.protein)P", "\(shown.fat)F", "\(shown.carbs)C", "\(food.grams)g", shown.kcal]
+                        .allSatisfy(label.contains)
+                }
+            }
+        }
+    }
+
+    private func expectLogTotals(_ totals: ProductionTotals) {
+        let shown = totals.shown
+        expectLogTotals(calories: "\(shown.kcal)/2000", protein: "\(shown.protein)/150", fat: "\(shown.fat)/65", carbs: "\(shown.carbs)/200")
+    }
+
+    private func expectDashboard(_ totals: ProductionTotals) {
+        let shown = totals.shown
+        expectDashboard(calories: shown.kcal, protein: shown.protein, fat: shown.fat, carbs: shown.carbs)
+    }
+
     private func launch(resetData: Bool) -> XCUIApplication {
         TestUtilities.launchAppWithConfiguration(
             testMode: true,
@@ -258,9 +387,10 @@ final class NutritionLaunchUITests: XCTestCase {
             ("macro-consumed-cal", calories), ("macro-consumed-protein", protein),
             ("macro-consumed-fat", fat), ("macro-consumed-carbs", carbs),
         ] {
-            waitUntil("Food Log \(identifier) is exactly \(label)") {
-                self.app.staticTexts.matching(identifier: identifier).allElementsBoundByIndex.contains { $0.label == label }
-            }
+            let total = app.staticTexts.matching(
+                NSPredicate(format: "identifier == %@ AND label == %@", identifier, label)
+            ).firstMatch
+            expect(total.waitForExistence(timeout: 10), "Food Log \(identifier) is exactly \(label)")
         }
     }
 
@@ -277,10 +407,10 @@ final class NutritionLaunchUITests: XCTestCase {
             ("progress-ring-calories", calories), ("progress-ring-protein", protein),
             ("progress-ring-fat", fat), ("progress-ring-carbs", carbs),
         ] {
-            waitUntil("Dashboard \(identifier) is exactly \(label)") {
-                card.descendants(matching: .any).matching(identifier: identifier).allElementsBoundByIndex
-                    .contains { $0.label == label }
-            }
+            let ring = card.descendants(matching: .any).matching(
+                NSPredicate(format: "identifier == %@ AND label == %@", identifier, label)
+            ).firstMatch
+            expect(ring.waitForExistence(timeout: 10), "Dashboard \(identifier) is exactly \(label)")
         }
     }
 
@@ -349,7 +479,8 @@ final class NutritionLaunchUITests: XCTestCase {
 
     private func waitUntil(_ message: String, condition: @escaping () -> Bool) {
         let expectation = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in condition() }, object: app)
-        expect(XCTWaiter.wait(for: [expectation], timeout: 5) == .completed, message)
+        // 15 s: single accessibility queries took more than 4 s each while the shared host was heavily loaded.
+        expect(XCTWaiter.wait(for: [expectation], timeout: 15) == .completed, message)
     }
 
     private func expect(
@@ -373,4 +504,20 @@ final class NutritionLaunchUITests: XCTestCase {
         add(attachment)
         print(app.debugDescription)
     }
+}
+
+/// Displayed integers for a production-food run. The caller guarantees no value has a fractional part of .5 or
+/// more, so truncating and rounding surfaces agree.
+private struct ProductionTotals {
+    var kcal: Double, protein: Double, carbs: Double, fat: Double
+
+    struct Shown {
+        let kcal: String, protein: String, carbs: String, fat: String
+    }
+
+    var shown: Shown {
+        Shown(kcal: String(Int(kcal)), protein: String(Int(protein)), carbs: String(Int(carbs)), fat: String(Int(fat)))
+    }
+
+    var isUnambiguous: Bool { [kcal, protein, carbs, fat].allSatisfy { $0 - $0.rounded(.down) < 0.5 } }
 }
