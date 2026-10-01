@@ -4,7 +4,9 @@ Contract found in the code: a profile's `currentDose` is the weekly total (the s
 
 Chosen path: fix (the contract is unambiguous and the change touches two production files plus a test seed switch). The launch build already cannot switch a weekly schedule to split (KAT-3581 closes the picker and save path while `medicalCalculators` is off); the fix makes the split branch correct for when it is reopened and makes recorded split schedules state their amounts and return to weekly at the weekly total.
 
-Tests (Debug, iOS 27.0 simulator): `SplitDoseWeeklyTotalTests` 6 of 6 pass (literal 2.5 per administration, 5.0 per week, 84-hour spacing, revert to 5.0); `SplitDoseTotalsUITests` 2 of 2 pass.
+The branch is stacked on the KAT-3581 head `c299e9ae` (explicit schedule pattern, editor saves the displayed dose). That commit landed after the first live pass, so the ten branch scenarios were run again on the rebased head; every value below is identical in both passes. `live/branch-results.txt` is from the second pass; the screenshots and video are from the first pass (the screens are unchanged). Switching a recorded split schedule to weekly now saves the profile dose, which is the weekly total.
+
+Tests (Debug, iOS 27.0 simulator, on the rebased head): `SplitDoseWeeklyTotalTests` 6 of 6 pass (literal 2.5 per administration, 5.0 per week, 84-hour spacing, revert to 5.0); `SplitDoseTotalsUITests` 2 of 2 pass.
 
 ## Live scenarios (integrated "iPhone 18 Pro", fictional seeded data: Ozempic 5 mg weekly)
 
