@@ -1,0 +1,4 @@
+S01 main: Split Dose is offered for the weekly 5 mg profile
+S01 main: split amounts section present = false
+s01-after-split calendar day elements=31 labels=[]
+s01-after-split scheduled-dose amounts: ["calendar-day-5:5.00 mg", "calendar-day-8:5.00 mg", "calendar-day-12:5.00 mg", "calendar-day-15:5.00 mg", "calendar-day-19:5.00 mg", "calendar-day-22:5.00 mg", "calendar-day-26:5.00 mg", "calendar-day-29:5.00 mg"]
