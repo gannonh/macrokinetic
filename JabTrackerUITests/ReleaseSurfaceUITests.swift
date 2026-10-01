@@ -192,12 +192,13 @@ final class ReleaseSurfaceUITests: XCTestCase {
     func testBarcodeScannerHidesGalleryAndLabelWhileTorchAndBarcodeRemain() {
         TestUtilities.openShortcutsSheet(app)
         app.buttons["shortcut-button-barcode"].tap()
-        let torch = app.buttons["torch-toggle-button"]
-        XCTAssertTrue(torch.waitForExistence(timeout: 8), "Scanner controls should open")
+        // The scanner container identifier overrides its children, so controls are matched by label.
+        let torch = app.buttons["Turn on flash"]
+        _ = torch.waitForExistence(timeout: 8)
         TestUtilities.debugScreenshot(app, name: "release-barcode-scanner")
         print(app.debugDescription)
-        XCTAssertFalse(app.buttons["gallery-button"].exists, "Inert gallery import should be hidden")
-        XCTAssertFalse(app.buttons["Select from gallery"].exists)
+        XCTAssertTrue(torch.exists, "Scanner controls should open")
+        XCTAssertFalse(app.buttons["Select from gallery"].exists, "Inert gallery import should be hidden")
         XCTAssertFalse(app.buttons["Label"].exists, "Unfinished Label scan type should be hidden")
         XCTAssertTrue(app.buttons["Barcode"].exists, "Supported Barcode scan type should remain")
     }
