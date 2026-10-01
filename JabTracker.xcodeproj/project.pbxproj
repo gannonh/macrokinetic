@@ -332,6 +332,7 @@
 		82F2C55F36CDCDD620F34A02 /* ScheduleServiceTitrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCA736FED86EAA65C843009E /* ScheduleServiceTitrationTests.swift */; };
 		83307A77A4269AAB52B57092 /* CustomFoodService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69F35D81E5C7FD2D03D95D30 /* CustomFoodService.swift */; };
 		8388C3B6CCF8915B93565B83 /* SettingsViewNotificationIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F70B4425884ACD872183473F /* SettingsViewNotificationIntegrationTests.swift */; };
+		83B3ECCD4D13C3A3B73BF5D5 /* PrivacyManifestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14383A594AF2C11E48E45D5F /* PrivacyManifestTests.swift */; };
 		84B006875EF5E8E69AB9F7BC /* ProgressPhotoServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AC5A4AC6357B513329A5A63 /* ProgressPhotoServiceTests.swift */; };
 		8549311FA2F1C2366F061581 /* SubscriptionManagerRestoreIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 424211E18A1C53CD1D5791D8 /* SubscriptionManagerRestoreIntegrationTests.swift */; };
 		857D9E2C0D6399A70E5FAC20 /* AdherenceProgressIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C45AF287FCA564EF5A70F3D /* AdherenceProgressIndicator.swift */; };
@@ -706,6 +707,7 @@
 		12EC9A418E69173C7ABC304C /* SubscriptionUIStateConsistencyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionUIStateConsistencyTests.swift; sourceTree = "<group>"; };
 		13564236920B6E14A4C69066 /* QuickAddContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickAddContentView.swift; sourceTree = "<group>"; };
 		1406B2D7A7339461ABC9F4BF /* MissedDosePatternViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissedDosePatternViewTests.swift; sourceTree = "<group>"; };
+		14383A594AF2C11E48E45D5F /* PrivacyManifestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyManifestTests.swift; sourceTree = "<group>"; };
 		14B382F118842ADDDC5ACAE4 /* FoodSearchSheetViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodSearchSheetViewModelTests.swift; sourceTree = "<group>"; };
 		157A9DA1B2243A8A149DF479 /* ProgramWizard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramWizard.swift; sourceTree = "<group>"; };
 		158E7348E026DE970A4A022A /* FoodEntryCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodEntryCardView.swift; sourceTree = "<group>"; };
@@ -2236,6 +2238,7 @@
 			isa = PBXGroup;
 			children = (
 				028D798135616E1802D9F628 /* AppServicesTests.swift */,
+				14383A594AF2C11E48E45D5F /* PrivacyManifestTests.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -3204,6 +3207,7 @@
 				E60DE3D5A06DC3BC93A66160 /* PharmacokineticsEngineTests.swift in Sources */,
 				C0F52175B22DC0F2A33BCF9A /* PredictiveActivityProviderTests.swift in Sources */,
 				112D3DBDA73287EAF908E78C /* PricingCalculatorTests.swift in Sources */,
+				83B3ECCD4D13C3A3B73BF5D5 /* PrivacyManifestTests.swift in Sources */,
 				6326087D7583A73387D14F1C /* ProfileFieldTests.swift in Sources */,
 				428A01E33EB1A49C1EF3DB03 /* ProfileValidationTests.swift in Sources */,
 				26E1B1310AFF98CAD3AE1FF2 /* ProgramConfigurationTests.swift in Sources */,
