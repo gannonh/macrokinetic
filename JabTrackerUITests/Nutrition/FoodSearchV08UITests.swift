@@ -680,6 +680,82 @@ final class FoodSearchV08UITests: XCTestCase {
         XCTAssertTrue(calories.exists, "Cancel must leave consumed calories at zero")
     }
 
+    /// Recent-food and Library rows use the same selection contract as search results.
+    func testRecentAndLibrarySelectionsOpenPopulatedDetails() throws {
+        openSearchSheet()
+        let foodSearchSheet = app.otherElements["food-search-sheet"]
+        let searchField = app.textFields["food-search-field"]
+        XCTAssertTrue(searchField.waitForExistence(timeout: 3))
+        searchField.tap()
+        searchField.typeText("salmon")
+        let firstResult = app.buttons.matching(
+            NSPredicate(format: "identifier BEGINSWITH 'food-result-'")
+        ).element(boundBy: 0)
+        XCTAssertTrue(firstResult.waitForExistence(timeout: 10))
+        firstResult.tap()
+        let detail = app.otherElements["food-detail-sheet"]
+        let logButton = detail.buttons["add-food-button"]
+        XCTAssertTrue(logButton.waitForExistence(timeout: 3))
+        logButton.tap()
+        XCTAssertTrue(detail.waitForNonExistence(timeout: 3))
+        XCTAssertTrue(foodSearchSheet.waitForNonExistence(timeout: 3))
+
+        // Recent: reopen search with an empty query and select the logged food.
+        openSearchSheet()
+        let recentRow = foodSearchSheet.buttons.matching(
+            NSPredicate(format: "label CONTAINS 'Salmon, Atlantic, raw'")
+        ).firstMatch
+        captureFoodState("food-detail-recent-list")
+        XCTAssertTrue(recentRow.waitForExistence(timeout: 5), "The logged salmon appears under Recent")
+        recentRow.tap()
+        assertFoodDetails(
+            name: "Salmon, Atlantic, raw", calories: "208", protein: "20", fat: "13", carbs: "0",
+            screenshot: "food-detail-recent-populated"
+        )
+
+        // Library: save a fictional custom copy, then select it from the Library tab.
+        let toCustom = detail.buttons["to-custom-button"]
+        XCTAssertTrue(toCustom.exists)
+        toCustom.tap()
+        let createSheet = app.otherElements["create-food-sheet"]
+        XCTAssertTrue(createSheet.waitForExistence(timeout: 5))
+        let nameField = createSheet.textFields["food-name-input"]
+        XCTAssertTrue(nameField.waitForExistence(timeout: 3))
+        nameField.tap()
+        let existingName = (nameField.value as? String) ?? ""
+        nameField.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: existingName.count) + "Library Salmon")
+        captureFoodState("food-detail-library-copy-form")
+        let save = app.buttons["create-food-save"]
+        XCTAssertTrue(save.waitForExistence(timeout: 3) && save.isEnabled)
+        save.tap()
+        XCTAssertTrue(createSheet.waitForNonExistence(timeout: 5))
+        XCTAssertTrue(detail.waitForNonExistence(timeout: 5))
+        XCTAssertTrue(foodSearchSheet.waitForNonExistence(timeout: 5), "Saving the custom copy closes search")
+
+        openSearchSheet()
+        let libraryTab = app.buttons["method-tab-library"]
+        XCTAssertTrue(libraryTab.waitForExistence(timeout: 5))
+        libraryTab.tap()
+        let libraryRow = app.buttons.matching(
+            NSPredicate(format: "label CONTAINS 'Library Salmon'")
+        ).firstMatch
+        captureFoodState("food-detail-library-list")
+        XCTAssertTrue(libraryRow.waitForExistence(timeout: 5), "The custom copy appears in the Library")
+        libraryRow.tap()
+        assertFoodDetails(
+            name: "Library Salmon", calories: "208", protein: "20", fat: "13", carbs: "0",
+            screenshot: "food-detail-library-populated"
+        )
+    }
+
+    private func openSearchSheet() {
+        TestUtilities.openShortcutsSheet(app)
+        let searchButton = app.buttons["Search"]
+        XCTAssertTrue(searchButton.waitForExistence(timeout: 3))
+        searchButton.tap()
+        XCTAssertTrue(app.otherElements["food-search-sheet"].waitForExistence(timeout: 3))
+    }
+
     private func assertFoodDetails(
         name: String, calories: String, protein: String, fat: String, carbs: String, screenshot: String,
         file: StaticString = #filePath, line: UInt = #line
