@@ -130,6 +130,13 @@ final class MedicalReleaseUITests: XCTestCase {
         replaceAmount(in: amount, with: "1.375", saveButton: app.buttons["save-medication-profile"])
         app.buttons["save-medication-profile"].tap()
         XCTAssertTrue(amount.waitForNonExistence(timeout: 5))
+        let savedRow = app.buttons.matching(NSPredicate(
+            format: "identifier BEGINSWITH 'medication-profile-semaglutide-generic-'"
+        )).firstMatch
+        XCTAssertTrue(savedRow.waitForExistence(timeout: 5))
+        recordEvidence("medical-release-profile-row-exact-amount")
+        XCTAssertTrue(savedRow.staticTexts["1.375 mg"].exists)
+        XCTAssertTrue(savedRow.label.contains("1.375 mg"))
     }
 
     private func navigateToMedications() {
@@ -162,7 +169,9 @@ final class MedicalReleaseUITests: XCTestCase {
         let previous = field.value as? String ?? ""
         field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: previous.count))
         recordEvidence("medical-release-cleared-amount")
-        XCTAssertEqual(field.value as? String, "")
+        // An empty text field reports its placeholder ("Amount") as its value.
+        XCTAssertEqual(field.value as? String, field.placeholderValue)
+        XCTAssertEqual(field.placeholderValue, "Amount")
         XCTAssertFalse(saveButton.isEnabled)
         field.typeText(value)
         recordEvidence("medical-release-entered-exact-amount")

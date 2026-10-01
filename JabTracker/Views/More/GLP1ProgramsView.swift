@@ -514,7 +514,7 @@ private struct MedicationProfileRowContent: View {
                 }
 
                 HStack {
-                    Text("\(String(format: "%.2f", profile.currentDose)) mg")
+                    Text("\(RecordedAmountInput.displayText(for: profile.currentDose)) mg")
                         .font(DesignTokens.Typography.body)
                         .foregroundColor(.secondary)
 
