@@ -103,6 +103,60 @@ extension ScheduleConfiguration {
             customRecurrence: nil
         )
     }
+
+    /// Creates a twice-weekly split configuration from a weekly total.
+    ///
+    /// A profile's `currentDose` is the weekly total. A split schedule stores the amount of ONE administration in
+    /// `doseAmount`, so the two administrations add back up to exactly `weeklyTotal`.
+    static func splitDose(
+        weeklyTotal: Double,
+        timeOfDay: TimeComponents,
+        windowMinutesBefore: Int,
+        windowMinutesAfter: Int
+    ) -> ScheduleConfiguration {
+        ScheduleConfiguration(
+            dayOfWeek: nil,
+            timeOfDay: timeOfDay,
+            secondTimeOfDay: nil,
+            interval: 7,
+            doseAmount: weeklyTotal / Double(Self.splitAdministrationsPerWeek),
+            windowMinutesBefore: windowMinutesBefore,
+            windowMinutesAfter: windowMinutesAfter,
+            splitDoseCount: Self.splitAdministrationsPerWeek,
+            splitIntervalMinutes: TimeConstants.splitDoseInterval,
+            customRecurrence: nil
+        )
+    }
+
+    static let splitAdministrationsPerWeek = 2
+
+    /// Administration amount, administration count and weekly total of a split configuration, read literally from
+    /// the recorded values. Nil when the configuration is not a split schedule.
+    var splitSummary: SplitDoseSummary? {
+        guard let splitIntervalMinutes, splitIntervalMinutes > 0 else { return nil }
+        let administrations = splitDoseCount ?? max(1, 7 * 24 * 60 / splitIntervalMinutes)
+        return SplitDoseSummary(
+            perAdministration: doseAmount,
+            administrations: administrations,
+            weeklyTotal: doseAmount * Double(administrations)
+        )
+    }
+}
+
+/// What a split schedule records per administration and per week.
+struct SplitDoseSummary: Equatable {
+    let perAdministration: Double
+    let administrations: Int
+    let weeklyTotal: Double
+
+    func administrationText(locale: Locale = .current) -> String {
+        let amount = RecordedAmountInput.displayText(for: perAdministration, locale: locale)
+        return "\(administrations) administrations of \(amount) mg"
+    }
+
+    func weeklyTotalText(locale: Locale = .current) -> String {
+        "\(RecordedAmountInput.displayText(for: weeklyTotal, locale: locale)) mg per week"
+    }
 }
 
 // MARK: - Service Errors
