@@ -139,6 +139,7 @@ targets:
       - path: JabTrackerUITests
         excludes:
           - Nutrition/FoodSearchReleaseBenchmarkUITests.swift
+      - path: JabTracker/App/ReleasePolicy.swift
     resources:
       - path: JabTrackerStoreKit.storekit
     settings:
