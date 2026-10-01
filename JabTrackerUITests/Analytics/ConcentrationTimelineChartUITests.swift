@@ -22,25 +22,14 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
         screenshotCapture = ScreenshotCapture(app: app, testCase: self, phase: "baseline")
     }
 
-    /// Launch policy: `concentrationEstimates` is fixed off, so the Analytics picker offers
-    /// Adherence and History only and requests for Concentration are normalized to History.
-    func testConcentrationSegmentIsAbsentUnderLaunchPolicy() throws {
-        let app = TestUtilities.launchAppWithSeededData(preset: .thirtyDays)
-        TestUtilities.navigateToGLP1Analytics(app)
-
-        let picker = app.segmentedControls["analytics-section-picker"]
-        TestUtilities.debugScreenshot(app, name: "concentration-absent-under-launch-policy")
-        print(app.debugDescription)
-        XCTAssertTrue(picker.waitForExistence(timeout: 5))
-        XCTAssertEqual(picker.buttons.allElementsBoundByIndex.map(\.label), ["Adherence", "History"])
-        XCTAssertFalse(picker.buttons["Concentration"].exists)
-        XCTAssertFalse(app.otherElements["concentration-section"].exists)
-        XCTAssertTrue(picker.buttons["History"].isSelected)
+    /// The chart tests below run only while `ReleasePolicy` enables concentration estimates.
+    /// `ConcentrationLaunchPolicyUITests` covers the disabled state; exactly one of the two
+    /// classes contributes tests, selected by the same `ReleasePolicy` source the app uses.
+    override static var defaultTestSuite: XCTestSuite {
+        ReleasePolicy.isEnabled(.concentrationEstimates)
+            ? super.defaultTestSuite : XCTestSuite(name: "ConcentrationTimelineChartUITests (policy off)")
     }
 
-    // The chart tests below require `concentrationEstimates` to be enabled in ReleasePolicy.
-    // They compile only with the CONCENTRATION_ESTIMATES_ENABLED build setting.
-#if CONCENTRATION_ESTIMATES_ENABLED
     // MARK: - ACCEPTANCE CRITERION: Chart displays concentration timeline correctly
     func testConcentrationTimelineDisplaysCorrectly() throws {
         // GIVEN: App launched with 30 days of pre-seeded data (~4-5 doses)
@@ -406,5 +395,31 @@ final class ConcentrationTimelineChartUITests: XCTestCase {
 
         print("✅ Therapeutic range band (gradient fill) is visible in concentration chart")
     }
-#endif
+}
+
+/// Launch policy: `concentrationEstimates` is fixed off, so the Analytics picker offers
+/// Adherence and History only. Runs only while `ReleasePolicy` keeps the feature disabled.
+final class ConcentrationLaunchPolicyUITests: XCTestCase {
+    override static var defaultTestSuite: XCTestSuite {
+        ReleasePolicy.isEnabled(.concentrationEstimates)
+            ? XCTestSuite(name: "ConcentrationLaunchPolicyUITests (policy on)") : super.defaultTestSuite
+    }
+
+    override func setUpWithError() throws {
+        continueAfterFailure = false
+    }
+
+    func testConcentrationSegmentIsAbsentUnderLaunchPolicy() throws {
+        let app = TestUtilities.launchAppWithSeededData(preset: .thirtyDays)
+        TestUtilities.navigateToGLP1Analytics(app)
+
+        let picker = app.segmentedControls["analytics-section-picker"]
+        TestUtilities.debugScreenshot(app, name: "concentration-absent-under-launch-policy")
+        print(app.debugDescription)
+        XCTAssertTrue(picker.waitForExistence(timeout: 5))
+        XCTAssertEqual(picker.buttons.allElementsBoundByIndex.map(\.label), ["Adherence", "History"])
+        XCTAssertFalse(picker.buttons["Concentration"].exists)
+        XCTAssertFalse(app.otherElements["concentration-section"].exists)
+        XCTAssertTrue(picker.buttons["History"].isSelected)
+    }
 }

@@ -8,7 +8,7 @@ Test-only slice stacked on KAT-3581 (PR #373). History and GLP-1 analytics UI te
 
 - Adherence classes were rewritten debug-first. A raw hierarchy dump on the live simulator showed the parent `adherence-section` identifier replacing the child identifiers the old tests queried, so the tests now find elements by exact label and value (`Adherence rate: 100%, Excellent adherence` = 100%, `Current streak: 1 day`, `Best streak: 1 day`, goal 100% against 80% target, `Current trend: Stable`, `Total missed doses: 0`) using three deterministic 100%-adherence seeded doses. No production identifier changed.
 - `testAdherenceMetricsUpdate` exposed a helper defect: the More tab keeps its navigation stack, so after returning from Dashboard the GLP-1 screen is already open. `navigateToGLP1Analytics` now checks for the open picker before looking for the More row.
-- ConcentrationTimelineChartUITests: `testConcentrationSegmentIsAbsentUnderLaunchPolicy` runs and asserts the picker offers exactly Adherence and History. The former chart tests stay in the file under `#if CONCENTRATION_ESTIMATES_ENABLED` (not skipped, not deleted) and return when the flag is enabled.
+- ConcentrationTimelineChartUITests: `testConcentrationSegmentIsAbsentUnderLaunchPolicy` (class `ConcentrationLaunchPolicyUITests`) runs and asserts the picker offers exactly Adherence and History. The former chart tests stay in the file and run instead when `ReleasePolicy.isEnabled(.concentrationEstimates)` is true: `ReleasePolicy.swift` is compiled into the UI test target and each class overrides `defaultTestSuite`, so exactly one of the two contributes tests (no skips).
 
 ## Live scenarios (integrated simulator, `live/`)
 
