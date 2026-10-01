@@ -176,4 +176,16 @@ final class ReleaseSurfaceUITests: XCTestCase {
         TestUtilities.debugScreenshot(app, name: "release-weight-default-after-save")
         XCTAssertEqual(app.pickerWheels.element(boundBy: 0).value as? String, "81", "Saved weight should become the next default")
     }
+
+    func testDashboardFoodLogMoreComparisonFlow() {
+        TestUtilities.debugScreenshot(app, name: "scenario1-dashboard")
+        TestUtilities.navigateToTab(app, tabName: "Food Log")
+        XCTAssertTrue(app.staticTexts.matching(identifier: "macro-consumed-cal").firstMatch.waitForExistence(timeout: 5))
+        TestUtilities.debugScreenshot(app, name: "scenario1-food-log")
+        TestUtilities.navigateToTab(app, tabName: "More")
+        XCTAssertTrue(app.descendants(matching: .any)["more-view"].firstMatch.waitForExistence(timeout: 5))
+        TestUtilities.debugScreenshot(app, name: "scenario1-more")
+        app.swipeUp()
+        TestUtilities.debugScreenshot(app, name: "scenario1-more-account")
+    }
 }
