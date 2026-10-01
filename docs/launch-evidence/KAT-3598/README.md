@@ -24,7 +24,7 @@ Automated, Debug, clone simulator (iOS 27), commit 45f2654a:
 
 - `FoodSearchV08UITests` (full class, 20 tests): 19 passed, 1 failed, 0 skipped. The failure is `testSearchShowsPendingThenFinalState`, which expects a visible loading state; with the 22-row fixture the search returns before the state is observable. It fails the same way on the pre-fix base (51c9a1a0). The new `testRecentAndLibrarySelectionsOpenPopulatedDetails` passes.
 - `JabTrackerUnitTests` (full suite): 3065 passed, 2 failed, 1 skipped. Both failures are `NotificationServiceActionTests` titration cases (`UNErrorDomain 2003`, notification authorization on a cloned simulator), outside this diff. The skip is the existing "Check authentication status with UI testing environment".
-- Base 51c9a1a0 for comparison: `testServingPillPickerShowsUniversalUnits` and `testCompleteAddFoodFlow` fail with "Food detail sheet should appear" (blank sheet); `BarcodeScanningUITests` is unstable in the simulator on both base and branch (camera-dependent, 6 to 8 of 8 failing depending on run), so no barcode result is claimed.
+- Base 51c9a1a0 for comparison: `testServingPillPickerShowsUniversalUnits` and `testCompleteAddFoodFlow` fail with "Food detail sheet should appear" (blank sheet); `BarcodeScanningUITests` fails 7 of 8 in the simulator on both base and branch (camera-dependent; a different single test passes each run), so no barcode result is claimed.
 
 ## Ten live scenarios on the integrated simulator (iPhone 18 Pro, iOS 27)
 
