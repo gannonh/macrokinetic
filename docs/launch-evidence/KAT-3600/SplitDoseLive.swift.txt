@@ -1,0 +1,247 @@
+import XCTest
+
+/// KAT-3600 live scenario driver (not committed). Env: TEST_RUNNER_LIVE_PREFIX (main|branch), TEST_RUNNER_LIVE_DIR.
+final class SplitDoseLive: XCTestCase {
+    private var app: XCUIApplication!
+    private var prefix: String { ProcessInfo.processInfo.environment["LIVE_PREFIX"] ?? "branch" }
+    private var dir: String { ProcessInfo.processInfo.environment["LIVE_DIR"] ?? "/tmp/jab-coord/split/live-shots" }
+
+    override func setUp() {
+        super.setUp()
+        continueAfterFailure = false
+        try? FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
+    }
+
+    // MARK: helpers
+
+    private func launch(split: Bool = false, reset: Bool = true) {
+        app = XCUIApplication()
+        if reset {
+            app.launchEnvironment["TEST_DATA_SEED"] = "true"
+            app.launchEnvironment["TEST_DATA_DAYS"] = "7"
+            app.launchEnvironment["TEST_DATA_DOSE_COUNT"] = "1"
+            app.launchEnvironment["TEST_DATA_MEDICATION"] = "semaglutide"
+            app.launchEnvironment["TEST_DATA_BRAND"] = "Ozempic"
+            app.launchEnvironment["TEST_DATA_DOSE"] = "5.0"
+            app.launchEnvironment["TEST_DATA_ADHERENCE"] = "1.0"
+            app.launchEnvironment["TEST_DATA_VARIABILITY"] = "false"
+            app.launchEnvironment["TEST_DATA_SKIPPED"] = "false"
+            if split { app.launchEnvironment["TEST_DATA_SPLIT_SCHEDULE"] = "true" }
+            app.launchArguments = ["--ui-testing", "--reset-app-data"]
+        } else {
+            app.launchArguments = ["--ui-testing"]
+        }
+        app.launch()
+        XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 20))
+    }
+
+    private func shot(_ name: String) {
+        let data = app.screenshot().pngRepresentation
+        try? data.write(to: URL(fileURLWithPath: "\(dir)/\(prefix)-\(name).png"))
+    }
+
+    private func note(_ line: String) {
+        let path = "\(dir)/\(prefix)-results.txt"
+        let existing = (try? String(contentsOfFile: path, encoding: .utf8)) ?? ""
+        try? (existing + line + "\n").write(toFile: path, atomically: true, encoding: .utf8)
+        print("LIVE-NOTE: \(line)")
+    }
+
+    private func openProfile() {
+        TestUtilities.navigateToTab(app, tabName: "More")
+        let programs = app.buttons["glp1-programs-row"]
+        XCTAssertTrue(programs.waitForExistence(timeout: 10))
+        programs.tap()
+        let medications = app.buttons["Medications"]
+        XCTAssertTrue(medications.waitForExistence(timeout: 10))
+        medications.tap()
+        let profile = app.buttons.matching(NSPredicate(
+            format: "identifier BEGINSWITH 'medication-profile-semaglutide-ozempic-'")).firstMatch
+        XCTAssertTrue(profile.waitForExistence(timeout: 10))
+        profile.tap()
+        XCTAssertTrue(app.buttons["edit-schedule-button"].waitForExistence(timeout: 10))
+    }
+
+    private func openEditor() {
+        app.buttons["edit-schedule-button"].tap()
+        XCTAssertTrue(app.buttons["cancel-schedule-edit"].waitForExistence(timeout: 5))
+    }
+
+    private func saveEditor() {
+        app.buttons["save-schedule-edit"].tap()
+        XCTAssertTrue(app.buttons["edit-schedule-button"].waitForExistence(timeout: 10))
+    }
+
+    /// Opens the calendar, long-presses every day that has a scheduled dose and records the action sheet amounts.
+    private func recordCalendarAmounts(_ tag: String) {
+        TestUtilities.navigateToHistoryView(in: app)
+        let picker = app.segmentedControls["history-view-mode-picker"]
+        XCTAssertTrue(picker.waitForExistence(timeout: 5))
+        picker.buttons["Calendar"].tap()
+        sleep(3)
+        shot("\(tag)-calendar")
+        let days = app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH 'calendar-day-'"))
+        note("\(tag) calendar day elements=\(days.count) labels=\(days.allElementsBoundByIndex.filter { $0.label.lowercased().contains("dose") }.map { "\($0.identifier)=\($0.label)" })")
+        var amounts: [String] = []
+        for index in 0..<days.count {
+            let day = days.element(boundBy: index)
+            let label = day.label
+            guard label.lowercased().contains("scheduled") else { continue }
+            day.press(forDuration: 1.0)
+            let amount = app.staticTexts["dose-action-amount"]
+            if amount.waitForExistence(timeout: 3) {
+                amounts.append("\(day.identifier):\(amount.label)")
+                shot("\(tag)-\(day.identifier)-action-sheet")
+                let cancel = app.buttons["dose-action-cancel"]
+                if cancel.exists { cancel.tap() } else { app.swipeDown() }
+                sleep(1)
+            }
+        }
+        note("\(tag) scheduled-dose amounts: \(amounts)")
+    }
+
+    private func backToProfileList() {
+        TestUtilities.navigateToTab(app, tabName: "More")
+    }
+
+    // MARK: scenarios
+
+    func testS01_weeklyToSplitEdit() {
+        launch()
+        openProfile()
+        shot("s01-profile-weekly")
+        openEditor()
+        shot("s01-editor-weekly")
+        let split = app.buttons["Split Dose"]
+        if split.waitForExistence(timeout: 3) {
+            note("S01 \(prefix): Split Dose is offered for the weekly 5 mg profile")
+            split.tap()
+            shot("s01-split-selected")
+            let total = app.staticTexts["split-weekly-total"]
+            note("S01 \(prefix): split amounts section present = \(total.exists)")
+            saveEditor()
+            shot("s01-after-save-split")
+            recordCalendarAmounts("s01-after-split")
+        } else {
+            note("S01 \(prefix): Split Dose is NOT offered for the weekly 5 mg profile")
+            app.buttons["cancel-schedule-edit"].tap()
+            recordCalendarAmounts("s01-weekly")
+        }
+    }
+
+    func testS02_weeklyEditorOffersDailyWeeklyOnly() {
+        launch()
+        openProfile()
+        openEditor()
+        XCTAssertFalse(app.buttons["Split Dose"].exists)
+        XCTAssertFalse(app.buttons["Recorded Split Schedule"].exists)
+        XCTAssertFalse(app.staticTexts["split-weekly-total"].exists)
+        shot("s02-editor-weekly-only")
+        note("S02: weekly editor: Daily/Weekly only; Split Dose absent; Current Dose row = \(app.staticTexts["5.00 mg"].exists ? "5.00 mg" : "?")")
+    }
+
+    func testS03_existingSplitStatesAmounts() {
+        launch(split: true)
+        openProfile()
+        openEditor()
+        let total = app.staticTexts["split-weekly-total"]
+        XCTAssertTrue(total.waitForExistence(timeout: 5))
+        shot("s03-split-editor-amounts")
+        note("S03: per administration=\(app.staticTexts["split-per-administration"].label) administrations=\(app.staticTexts["split-administrations-per-week"].label) weekly total=\(total.label)")
+    }
+
+    func testS04_splitRevertToWeekly() {
+        launch(split: true)
+        openProfile()
+        openEditor()
+        app.buttons["Weekly"].tap()
+        shot("s04-reverted-selection")
+        saveEditor()
+        shot("s04-after-revert-save")
+        recordCalendarAmounts("s04-after-revert")
+    }
+
+    func testS05_splitCalendarAmounts() {
+        launch(split: true)
+        recordCalendarAmounts("s05-split")
+    }
+
+    func testS06_pauseKeepsAmounts() {
+        launch(split: true)
+        openProfile()
+        app.buttons["pause-schedule-button"].tap()
+        shot("s06-pause-sheet")
+        app.buttons["pause-confirm-button"].tap()
+        XCTAssertTrue(app.buttons["resume-schedule-button"].waitForExistence(timeout: 10))
+        shot("s06-paused")
+        app.buttons["resume-schedule-button"].tap()
+        XCTAssertTrue(app.buttons["pause-schedule-button"].waitForExistence(timeout: 10))
+        openEditor()
+        shot("s06-editor-after-resume")
+        note("S06: after pause+resume split amounts: per administration=\(app.staticTexts["split-per-administration"].label) weekly total=\(app.staticTexts["split-weekly-total"].label)")
+    }
+
+    func testS07_pastRecordedDoseUnchangedBySwitch() {
+        launch(split: true)
+        TestUtilities.navigateToHistoryView(in: app)
+        shot("s07-history-before")
+        let before = app.staticTexts.matching(identifier: "dose-amount").allElementsBoundByIndex.map(\.label)
+        openProfile()
+        openEditor()
+        app.buttons["Weekly"].tap()
+        saveEditor()
+        TestUtilities.navigateToHistoryView(in: app)
+        shot("s07-history-after")
+        let after = app.staticTexts.matching(identifier: "dose-amount").allElementsBoundByIndex.map(\.label)
+        note("S07: recorded dose amounts before=\(before) after=\(after)")
+    }
+
+    func testS08_quickDoseRecordsExplicitAmountForSplit() {
+        launch(split: true)
+        TestUtilities.openShortcutsSheet(app)
+        app.buttons["shortcut-button-shots"].tap()
+        let amount = app.textFields["quick-dose-prescribed-amount-input"]
+        XCTAssertTrue(amount.waitForExistence(timeout: 5))
+        shot("s08-quick-dose-split-empty")
+        amount.tap()
+        amount.typeText("2.5")
+        shot("s08-quick-dose-entered-2.5")
+        app.buttons["quick-dose-save-button"].tap()
+        XCTAssertTrue(amount.waitForNonExistence(timeout: 5))
+        TestUtilities.navigateToHistoryView(in: app)
+        shot("s08-history-recorded-2.5")
+        let amounts = app.staticTexts.matching(identifier: "dose-amount").allElementsBoundByIndex.map(\.label)
+        note("S08: history amounts after recording 2.5 = \(amounts)")
+    }
+
+    func testS09_splitSurvivesRelaunch() {
+        launch(split: true)
+        openProfile()
+        openEditor()
+        XCTAssertTrue(app.staticTexts["split-weekly-total"].waitForExistence(timeout: 5))
+        app.buttons["cancel-schedule-edit"].tap()
+        app.terminate()
+        launch(reset: false)
+        openProfile()
+        openEditor()
+        XCTAssertTrue(app.staticTexts["split-weekly-total"].waitForExistence(timeout: 5))
+        shot("s09-split-after-relaunch")
+        note("S09: after relaunch per administration=\(app.staticTexts["split-per-administration"].label) weekly total=\(app.staticTexts["split-weekly-total"].label)")
+    }
+
+    func testS10_dailyAndWeeklyUnaffected() {
+        launch()
+        openProfile()
+        openEditor()
+        app.buttons["Daily"].tap()
+        shot("s10-daily-selected")
+        XCTAssertFalse(app.staticTexts["split-weekly-total"].exists)
+        saveEditor()
+        recordCalendarAmounts("s10-daily")
+        openProfile()
+        openEditor()
+        app.buttons["Weekly"].tap()
+        saveEditor()
+        recordCalendarAmounts("s10-weekly-again")
+    }
+}
