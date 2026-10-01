@@ -287,7 +287,6 @@ struct MedicalReleasePolicyTests {
         )
         let editor = DoseScheduleEditView(medicationProfile: profile, existingSchedule: schedule, onSave: { _, _ in })
         let preserved = try #require(editor.scheduleConfiguration)
-        #expect(editor.recordedDoseAmount == 0.375)
         #expect(preserved.doseAmount == 0.375)
         #expect(preserved.interval == 7)
         #expect(preserved.secondTimeOfDay == TimeComponents(hour: 18, minute: 30))
@@ -297,6 +296,37 @@ struct MedicalReleasePolicyTests {
             frequency: .weekly, intervalDays: 7, daysOfWeek: [1, 4], monthlyPattern: nil
         ))
         #expect(profile.currentDose == 1.375)
+    }
+
+    @Test("A new schedule has no preselected pattern and a saved one keeps its own")
+    @MainActor
+    func newScheduleRequiresExplicitPattern() throws {
+        let daily = MedicationProfile(genericName: "liraglutide", brandName: "Generic", currentDose: 1.2)
+        #expect(daily.medication?.frequency == .daily)
+        let creating = DoseScheduleEditView(medicationProfile: daily, existingSchedule: nil, onSave: { _, _ in })
+        #expect(creating.hasChosenPattern == false)
+
+        let schedule = DoseSchedule(
+            medicationProfile: daily, patternType: .daily,
+            baseSchedule: try JSONEncoder().encode(recordedConfiguration(interval: 1, amount: 1.2))
+        )
+        let editing = DoseScheduleEditView(medicationProfile: daily, existingSchedule: schedule, onSave: { _, _ in })
+        #expect(editing.hasChosenPattern == true)
+        #expect(editing.selectedPattern == .daily)
+    }
+
+    @Test("Saving a daily or weekly schedule records the dose the editor shows")
+    @MainActor
+    func manualScheduleUsesDisplayedDose() throws {
+        let profile = MedicationProfile(genericName: "semaglutide", brandName: "Generic", currentDose: 1.375)
+        let schedule = DoseSchedule(
+            medicationProfile: profile, patternType: .weekly,
+            baseSchedule: try JSONEncoder().encode(recordedConfiguration(interval: 7, amount: 0.375))
+        )
+        let editor = DoseScheduleEditView(medicationProfile: profile, existingSchedule: schedule, onSave: { _, _ in })
+        let config = try #require(editor.scheduleConfiguration)
+        #expect(config.doseAmount == 1.375)
+        #expect(config.interval == 7)
     }
 
     private func recordedConfiguration(interval: Int, amount: Double) -> ScheduleConfiguration {
