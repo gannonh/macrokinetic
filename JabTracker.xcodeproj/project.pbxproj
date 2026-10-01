@@ -285,6 +285,7 @@
 		71BC8E6BD11272D8A573F92B /* MedicationProfileEnhancementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72833DFDEE7BFE9D0870B3CA /* MedicationProfileEnhancementTests.swift */; };
 		71C487BA56AEBC9765AFE5BD /* DoseAnalyticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE3823A15F5FCF1DCF1E5859 /* DoseAnalyticsTests.swift */; };
 		71E84087005ACF8589F70BFD /* DailyNutritionHeroWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A21512E4641A3336BD76841 /* DailyNutritionHeroWidget.swift */; };
+		71EBE5EC930BBDD03FFE6A35 /* NutritionLaunchUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A082AD99237B19397232976 /* NutritionLaunchUITests.swift */; };
 		71FEE1DC7A2D814E7CB3660C /* MissedDosePatternView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E9A179D9C31154306B64BEF /* MissedDosePatternView.swift */; };
 		726B23B8EDBA686000DEAEE2 /* PermissionsRequestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 872F17B86104CBB8BEAAB81D /* PermissionsRequestView.swift */; };
 		73396059B905C087684F3DC8 /* SubscriptionManagerMoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 982BEC8C7EF1C6A76703D2FF /* SubscriptionManagerMoreTests.swift */; };
@@ -878,6 +879,7 @@
 		59476CC561EE12026913348A /* DoseButtonUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseButtonUITests.swift; sourceTree = "<group>"; };
 		5951BDD41F83832C99DE40C4 /* TestUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestUtilities.swift; sourceTree = "<group>"; };
 		59D73FD66FDC6992764A72E8 /* MealSectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MealSectionTests.swift; sourceTree = "<group>"; };
+		5A082AD99237B19397232976 /* NutritionLaunchUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionLaunchUITests.swift; sourceTree = "<group>"; };
 		5BCF34ABD4B468583B3C1FA7 /* UserModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserModelTests.swift; sourceTree = "<group>"; };
 		5C1B06AAB60967FA3C0B9B69 /* DoseHistoryViewModelErrorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseHistoryViewModelErrorTests.swift; sourceTree = "<group>"; };
 		5C28579D0D0F896EAD9A6A2B /* WeightEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeightEntry.swift; sourceTree = "<group>"; };
@@ -2122,6 +2124,7 @@
 				FC7156F56C9133F03E7BBD5F /* FoodLibraryUITests.swift */,
 				F9B0C845395C5C98EC04A770 /* FoodSearchReleaseBenchmarkUITests.swift */,
 				B010A5AAB9AA924FB9CD3D68 /* FoodSearchV08UITests.swift */,
+				5A082AD99237B19397232976 /* NutritionLaunchUITests.swift */,
 			);
 			path = Nutrition;
 			sourceTree = "<group>";
@@ -2670,6 +2673,7 @@
 				D3148B78DC1F980CF4FB46E2 /* NotificationSettingsUITests.swift in Sources */,
 				1CBEBB4D0AC6C2E903D47874 /* NutritionDashboardUITests.swift in Sources */,
 				01599635E10A9B1ED4BE2CCB /* NutritionFlowUITests.swift in Sources */,
+				71EBE5EC930BBDD03FFE6A35 /* NutritionLaunchUITests.swift in Sources */,
 				0E2952129994D1A3224647B2 /* OnboardingPermissionsUITests.swift in Sources */,
 				17B390D46C6B77E9A5097E0F /* OnboardingUITests.swift in Sources */,
 				74E6DC7E13C647A9AAE7F362 /* PKEngineUITests.swift in Sources */,
