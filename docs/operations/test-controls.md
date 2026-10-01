@@ -75,6 +75,19 @@ Ordinary Release was installed over an isolated fictional Debug store and launch
 
 Evidence is retained in the launch run directory under controls-actual-build-evidence.json, controls-fictional-before.json, controls-fictional-after.json, controls-harness-retry.xcresult and the three controls screenshots. The candidate archive, exported IPA and signed-device gates remain incomplete; this branch stays draft.
 
+### Independent Release verification at 9f5e7224, 2026-09-30
+
+All files are under `docs/launch-evidence/KAT-3597/`. Simulators: an isolated iOS 27 clone for the full matrix, and `iPhone 18 Pro` for the live session. Data is fictional (Debug `--seed-test-7d`: one user, one dose, one profile, one schedule).
+
+- **Inventory and Debug behavior.** The Debug app on the same sources still honors the controls: a Debug build seeds the fictional user and dose from `--ui-testing --bypass-onboarding --seed-test-7d` (matrix row `retained|BEFORE`). The Debug binary contains each control string; the ordinary Release binary contains none (`release-binary-control-strings.txt`, `strings-check.sh`). Short Swift string literals such as `--ui-testing` are stored inline and cannot be proven absent by `strings`; the runtime matrix covers them.
+- **Ordinary Release, each control alone.** `release-hostile-matrix-results.txt` runs 24 inputs (every inventoried argument and the `UI_TESTING` / `TEST_DATA_*` variables, plus storage-fixture and combined) twice on a Release build:
+  - Fresh install: all 24 launches produce a byte-identical screenshot (Sign in with Apple) and an empty store. No authentication bypass, no fake user, no seeded data.
+  - Over the Debug-seeded store: record counts and a hash of the user, dose and profile rows are identical before, after every input, and after the last one, including `--reset-app-data`. Screenshot hashes vary only by the dashboard's "Updated" clock minute.
+- **Exact archive preflight.** `xcodebuild archive` with signing disabled for the `JabTracker` and `JabTrackerReleaseTestHarness` schemes, with the app zipped into IPA form. `archive-preflight-results.txt`: the ordinary pair passes `inspect-release-bundle.sh`; harness/harness, Release/harness and harness/Release pairs, an IPA without the manifest, and an IPA whose manifest claims `DEBUG` are all rejected with exit 1. The iphoneos Release binary has no control strings; the harness binary has them. These archives are unsigned `CODE_SIGNING_ALLOWED=NO` builds of the candidate sources, not the signed submission artifact.
+- **Live session on `iPhone 18 Pro`.** `live-iphone-18-pro-results.txt`, `live-iphone-18-pro-*.png`: Release over the seeded store with combined hostile inputs kept the same rows and hash and showed the app; a fresh Release with hostile inputs and with `--reset-app-data --seed-test-new-user` showed Sign in with Apple and an empty store.
+
+Scenario 4 (real Apple authentication, real biometric/notification permission, CloudKit and signed-device upgrade retention) needs a signed ordinary build on a device with an Apple ID. It was not run. The simulator launches above use a development-style install, not distribution signing.
+
 | Check | Evidence available from implementation | Acceptance still required |
 | --- | --- | --- |
 | CLI/inspector behavior | 12 Python tests drive real CLI calls, fixture `.app` directories and IPA zip files; eight existing release-tool tests pass | Actual ordinary/harness archive and exported IPA inspection |
