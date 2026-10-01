@@ -115,7 +115,6 @@ extension FoodSearchSheet {
     func searchResultRow(_ result: FoodSearchResult) -> some View {
         Button {
             selectedFood = result
-            showingFoodDetail = true
         } label: {
             FoodSearchResultRow(result: result)
         }
@@ -327,7 +326,6 @@ extension FoodSearchSheet {
             if let customFood = try await customFoodService?.lookup(barcode: barcode) {
                 selectedFood = customFood.toSearchResult()
                 isLookingUpBarcode = false
-                showingFoodDetail = true
                 logger.info("Found custom food for barcode: \(barcode)")
                 return
             }
@@ -341,7 +339,6 @@ extension FoodSearchSheet {
             if let result = try await foodService.lookupBarcode(barcode) {
                 selectedFood = result
                 isLookingUpBarcode = false
-                showingFoodDetail = true
                 logger.info("Found food in local database for barcode: \(barcode)")
                 return
             }
