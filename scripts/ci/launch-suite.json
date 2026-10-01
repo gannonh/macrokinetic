@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "name": "launch-release-smoke",
+  "scheme": "JabTrackerReleaseTestHarness",
+  "configuration": "ReleaseTestHarness",
+  "fixture": "ci-foods-22",
+  "critical_journeys": [
+    "nutrition-only-disk-relaunch",
+    "onboarding-skip-relaunch",
+    "prescribed-medication-history",
+    "unfinished-feature-absence"
+  ],
+  "tests": [
+    {
+      "selector": "JabTrackerUITests/FoodSearchV08UITests/testSearchShowsRetryableError",
+      "source": "JabTrackerUITests/Nutrition/FoodSearchV08UITests.swift",
+      "issue": "KAT-3597",
+      "purpose": "Interim harness plumbing: a fail-once search can retry; this is not critical journey readiness.",
+      "journeys": [
+        "test-controls-retry"
+      ],
+      "verified_evidence": "/tmp/jabtracker-launch-20260930/controls-harness-retry.xcresult (prior local Release harness pass; CI fixture/integrated candidate rerun required)"
+    }
+  ],
+  "missing_critical_journeys": [
+    {
+      "issue": "KAT-3587",
+      "journey": "nutrition-only-disk-relaunch",
+      "reason": "Await integrated 22-food harness proof of literal totals, edits/deletion, retained IDs and offline operation."
+    },
+    {
+      "issue": "KAT-3588",
+      "journey": "onboarding-skip-relaunch",
+      "reason": "Await integrated harness proof of first run, skipped permissions, usable nutrition and exact saved profile/goals."
+    },
+    {
+      "issue": "KAT-3186 / KAT-3581",
+      "journey": "prescribed-medication-history",
+      "reason": "Await reconciled exact prescribed amounts and History actions/relaunch on integrated Release harness."
+    },
+    {
+      "issue": "KAT-3580 / KAT-3581",
+      "journey": "unfinished-feature-absence",
+      "reason": "Await integrated Release harness absence checks with the actual release policy."
+    }
+  ],
+  "quarantine_file": "scripts/ci/launch-quarantine.json"
+}

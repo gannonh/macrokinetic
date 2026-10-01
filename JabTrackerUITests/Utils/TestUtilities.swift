@@ -1247,36 +1247,17 @@ extension XCUIElement {
 // MARK: - Debug Screenshot Utilities
 
 extension TestUtilities {
-    /// Directory where debug screenshots are saved
-    /// Uses __XPC_DYLD_FRAMEWORK_PATH to find project root, or falls back to tmp
     private static var screenshotDirectory: URL {
-        // In Xcode test runner context, find the project root from the framework path
-        // __XPC_DYLD_FRAMEWORK_PATH looks like: /Users/xxx/Library/Developer/Xcode/DerivedData/ProjectName-.../Build/Products/Debug-iphonesimulator
-        if let frameworkPath = ProcessInfo.processInfo.environment["__XPC_DYLD_FRAMEWORK_PATH"],
-            let range = frameworkPath.range(of: "/Library/Developer/Xcode/DerivedData")
-        {
-            let homeDir = String(frameworkPath[..<range.lowerBound])
-            // Try common project locations
-            let possiblePaths = [
-                "\(homeDir)/dev/jab-tracker-ios",
-                "\(homeDir)/Developer/jab-tracker-ios",
-                "\(homeDir)/Projects/jab-tracker-ios",
-            ]
-            for path in possiblePaths where FileManager.default.fileExists(atPath: path) {
-                return URL(fileURLWithPath: path)
-                    .appendingPathComponent("logs")
-                    .appendingPathComponent("latest")
-                    .appendingPathComponent("screenshots")
-            }
+        if let path = ProcessInfo.processInfo.environment["JABTRACKER_TEST_ARTIFACT_DIR"], !path.isEmpty {
+            return URL(fileURLWithPath: path, isDirectory: true)
         }
-
-        // Fallback: use /tmp for test screenshots
         return URL(fileURLWithPath: "/tmp/xctest-screenshots")
     }
 
     /// Capture a debug screenshot and save it to disk for easy viewing
     ///
-    /// Screenshots are saved to `logs/latest/screenshots/` as PNG files.
+    /// Screenshots and the element hierarchy are attached to the xcresult;
+    /// PNG files are also saved to the runner's explicit artifact directory.
     /// Use this during test development to see exactly what the UI looks like at any point.
     ///
     /// **Usage:**
@@ -1305,6 +1286,17 @@ extension TestUtilities {
     ) -> String? {
         let screenshot = app.screenshot()
         let pngData = screenshot.pngRepresentation
+        XCTContext.runActivity(named: name) { activity in
+            let screenshotAttachment = XCTAttachment(screenshot: screenshot)
+            screenshotAttachment.name = name
+            screenshotAttachment.lifetime = .keepAlways
+            activity.add(screenshotAttachment)
+
+            let hierarchyAttachment = XCTAttachment(string: app.debugDescription)
+            hierarchyAttachment.name = "\(name)-hierarchy"
+            hierarchyAttachment.lifetime = .keepAlways
+            activity.add(hierarchyAttachment)
+        }
 
         // Create screenshots directory if needed
         let directory = screenshotDirectory
@@ -1329,11 +1321,10 @@ extension TestUtilities {
 
         do {
             try pngData.write(to: filePath)
-            let relativePath = "logs/latest/screenshots/\(filename)"
             if let context {
-                print("📸 Screenshot saved: \(relativePath) (\(context))")
+                print("📸 Screenshot saved: \(filePath.path) (\(context))")
             } else {
-                print("📸 Screenshot saved: \(relativePath)")
+                print("📸 Screenshot saved: \(filePath.path)")
             }
             return filePath.path
         } catch {
