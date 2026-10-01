@@ -123,21 +123,26 @@ final class DoseHistoryStatesUITests: XCTestCase {
         XCTAssertEqual(firstDose.staticTexts["injection-site"].label, "Abdomen")
 
         let list = app.collectionViews["history-section"]
-        list.swipeUp()
-        let visibleRows = list.buttons.matching(identifier: "dose-history-row")
-        let lastDose = visibleRows.element(boundBy: visibleRows.count - 1)
-        if !lastDose.waitForExistence(timeout: 5) {
-            TestUtilities.debugScreenshot(app, name: "before-missing-last-dose")
-            print(app.debugDescription)
-            XCTFail("Fifth dose should appear after scrolling")
+        let lastHeader = list.staticTexts[expectedDates[4]]
+        var swipes = 0
+        while !lastHeader.isHittable && swipes < 5 {
+            list.swipeUp()
+            swipes += 1
         }
+        if !lastHeader.isHittable {
+            TestUtilities.debugScreenshot(app, name: "before-missing-last-header")
+            print(app.debugDescription)
+            XCTFail("Section \(expectedDates[4]) should scroll into view")
+        }
+        // The row below the last header: the topmost dose row whose top edge is under the header.
+        let rowsBelowHeader = list.buttons.matching(identifier: "dose-history-row")
+            .allElementsBoundByIndex.filter { $0.frame.minY >= lastHeader.frame.maxY }
+        let lastDose = try XCTUnwrap(rowsBelowHeader.min { $0.frame.minY < $1.frame.minY })
+        XCTAssertEqual(rowsBelowHeader.count, 1)
         XCTAssertTrue(lastDose.isHittable)
         XCTAssertEqual(lastDose.staticTexts["dose-amount"].label, "0.25 mg")
         XCTAssertEqual(lastDose.staticTexts["dose-medication"].label, "Ozempic")
         XCTAssertEqual(lastDose.staticTexts["injection-site"].label, "Abdomen")
-        let lastHeader = list.staticTexts[expectedDates[4]]
-        XCTAssertTrue(lastHeader.isHittable)
-        XCTAssertGreaterThanOrEqual(lastDose.frame.minY, lastHeader.frame.maxY)
     }
 
     func test_doseHistory_voiceOverAccessibility() throws {

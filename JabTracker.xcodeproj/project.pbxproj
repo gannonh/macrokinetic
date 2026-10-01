@@ -15,6 +15,7 @@
 		014EF762E38FE6D5B08FF6B8 /* GeneralSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06D47A7945B5A392FA8CB11C /* GeneralSettingsView.swift */; };
 		015077CF812A0A7778CAC113 /* DoseMarkerOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BF63924BEDAD57B9C3C47C6 /* DoseMarkerOverlay.swift */; };
 		01599635E10A9B1ED4BE2CCB /* NutritionFlowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E7CAC44C9BE663CB47FBF47 /* NutritionFlowUITests.swift */; };
+		019017A1931E298D7942FC0A /* ReleasePolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5862D3BD2DA1D25F3FC9DF79 /* ReleasePolicy.swift */; };
 		01F37AF9B22B07B82E9C107F /* DoseEventTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBFA1272C12684111836F5E8 /* DoseEventTests.swift */; };
 		020BA0D09ABD698851900B09 /* ReconstitutionCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 237634B95610580901398F2F /* ReconstitutionCalculator.swift */; };
 		027272F6E1A7B51462ADD7D8 /* ChartDataModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2371FC6C0CDFC9C1317A4BC6 /* ChartDataModelTests.swift */; };
@@ -2710,6 +2711,7 @@
 				B3BD0704DF517776D13D741A /* ProgramWizardUITests.swift in Sources */,
 				29EE31A9252020E91F81DD5D /* QuickAddUITests.swift in Sources */,
 				B06AAAD38B5E24A34C4CAA54 /* QuickDoseStepperUITests.swift in Sources */,
+				019017A1931E298D7942FC0A /* ReleasePolicy.swift in Sources */,
 				AB3ED2B43D3534A1BA694A3A /* ReleaseSurfaceUITests.swift in Sources */,
 				0603FCBFD7E749E8001E3B43 /* RolloverCaloriesUITests.swift in Sources */,
 				99133DB3B673F129F771D8E4 /* ScreenshotCapture.swift in Sources */,
