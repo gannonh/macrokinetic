@@ -1,17 +1,17 @@
+S03: per administration=2.50 mg administrations=2 weekly total=5.00 mg
+S01 branch: Split Dose is NOT offered for the weekly 5 mg profile
+s01-weekly calendar day elements=31 labels=[]
+s01-weekly scheduled-dose amounts: ["calendar-day-8:5.00 mg", "calendar-day-15:5.00 mg", "calendar-day-22:5.00 mg", "calendar-day-29:5.00 mg"]
 S02: weekly editor: Daily/Weekly only; Split Dose absent; Current Dose row = 5.00 mg
+s04-after-revert calendar day elements=31 labels=[]
+s04-after-revert scheduled-dose amounts: ["calendar-day-8:5.00 mg", "calendar-day-15:5.00 mg", "calendar-day-22:5.00 mg", "calendar-day-29:5.00 mg"]
+s05-split calendar day elements=31 labels=[]
+s05-split scheduled-dose amounts: ["calendar-day-5:2.50 mg", "calendar-day-8:2.50 mg", "calendar-day-12:2.50 mg", "calendar-day-15:2.50 mg", "calendar-day-19:2.50 mg", "calendar-day-22:2.50 mg", "calendar-day-26:2.50 mg", "calendar-day-29:2.50 mg"]
+S07: recorded dose amounts before=["5.00 mg"] after=["5.00 mg"]
 S08: history amounts after recording 2.5 = ["2.50 mg", "5.00 mg"]
+S06: after pause+resume split amounts: per administration=2.50 mg weekly total=5.00 mg
 s10-daily calendar day elements=31 labels=[]
 s10-daily scheduled-dose amounts: ["calendar-day-2:5.00 mg", "calendar-day-3:5.00 mg", "calendar-day-4:5.00 mg", "calendar-day-5:5.00 mg", "calendar-day-6:5.00 mg", "calendar-day-7:5.00 mg", "calendar-day-8:5.00 mg", "calendar-day-9:5.00 mg", "calendar-day-10:5.00 mg", "calendar-day-11:5.00 mg", "calendar-day-12:5.00 mg", "calendar-day-13:5.00 mg", "calendar-day-14:5.00 mg", "calendar-day-15:5.00 mg", "calendar-day-16:5.00 mg", "calendar-day-17:5.00 mg", "calendar-day-18:5.00 mg", "calendar-day-19:5.00 mg", "calendar-day-20:5.00 mg", "calendar-day-21:5.00 mg", "calendar-day-22:5.00 mg", "calendar-day-23:5.00 mg", "calendar-day-24:5.00 mg", "calendar-day-25:5.00 mg", "calendar-day-26:5.00 mg", "calendar-day-27:5.00 mg", "calendar-day-28:5.00 mg", "calendar-day-29:5.00 mg", "calendar-day-30:5.00 mg", "calendar-day-31:5.00 mg"]
 s10-weekly-again calendar day elements=31 labels=[]
 s10-weekly-again scheduled-dose amounts: ["calendar-day-2:5.00 mg", "calendar-day-3:5.00 mg", "calendar-day-4:5.00 mg", "calendar-day-5:5.00 mg", "calendar-day-6:5.00 mg", "calendar-day-7:5.00 mg", "calendar-day-8:5.00 mg", "calendar-day-9:5.00 mg", "calendar-day-10:5.00 mg", "calendar-day-11:5.00 mg", "calendar-day-12:5.00 mg", "calendar-day-13:5.00 mg", "calendar-day-14:5.00 mg", "calendar-day-15:5.00 mg", "calendar-day-16:5.00 mg", "calendar-day-17:5.00 mg", "calendar-day-18:5.00 mg", "calendar-day-19:5.00 mg", "calendar-day-20:5.00 mg", "calendar-day-21:5.00 mg", "calendar-day-22:5.00 mg", "calendar-day-23:5.00 mg", "calendar-day-24:5.00 mg", "calendar-day-25:5.00 mg", "calendar-day-26:5.00 mg", "calendar-day-27:5.00 mg", "calendar-day-28:5.00 mg", "calendar-day-29:5.00 mg", "calendar-day-30:5.00 mg", "calendar-day-31:5.00 mg"]
-S01 branch: Split Dose is NOT offered for the weekly 5 mg profile
-s01-weekly calendar day elements=31 labels=[]
-s01-weekly scheduled-dose amounts: ["calendar-day-8:5.00 mg", "calendar-day-15:5.00 mg", "calendar-day-22:5.00 mg", "calendar-day-29:5.00 mg"]
-s04-after-revert calendar day elements=31 labels=[]
-s04-after-revert scheduled-dose amounts: ["calendar-day-8:5.00 mg", "calendar-day-15:5.00 mg", "calendar-day-22:5.00 mg", "calendar-day-29:5.00 mg"]
-S03: per administration=2.50 mg administrations=2 weekly total=5.00 mg
-S06: after pause+resume split amounts: per administration=2.50 mg weekly total=5.00 mg
-s05-split calendar day elements=31 labels=[]
-s05-split scheduled-dose amounts: ["calendar-day-5:2.50 mg", "calendar-day-8:2.50 mg", "calendar-day-12:2.50 mg", "calendar-day-15:2.50 mg", "calendar-day-19:2.50 mg", "calendar-day-22:2.50 mg", "calendar-day-26:2.50 mg", "calendar-day-29:2.50 mg"]
-S07: recorded dose amounts before=["5.00 mg"] after=["5.00 mg"]
 S09: after relaunch per administration=2.50 mg weekly total=5.00 mg
