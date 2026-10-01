@@ -56,10 +56,6 @@ private struct StorageSupportView: View {
                         "Copy or share this information when you contact support. "
                             + "It contains app and storage error details."
                     )
-                    Text(information)
-                        .font(.body.monospaced())
-                        .textSelection(.enabled)
-                        .accessibilityIdentifier("storage-support-info")
                     Button(copied ? "Copied" : "Copy Information") {
                         UIPasteboard.general.string = information
                         copied = true
@@ -69,6 +65,10 @@ private struct StorageSupportView: View {
                     ShareLink("Share Information", item: information)
                         .buttonStyle(.bordered)
                         .accessibilityIdentifier("storage-support-share")
+                    Text(information)
+                        .font(.body.monospaced())
+                        .textSelection(.enabled)
+                        .accessibilityIdentifier("storage-support-info")
                 }
                 .padding(24)
             }
