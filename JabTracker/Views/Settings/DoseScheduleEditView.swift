@@ -28,6 +28,8 @@ struct DoseScheduleEditView: View {
 
     /// Selected schedule pattern
     @State var selectedPattern: SchedulePatternType
+    /// A new schedule needs an explicit Daily or Weekly choice when drug-default patterns are off.
+    @State var hasChosenPattern: Bool
 
     /// Day of week for weekly pattern (1-7, Monday-Sunday)
     @State private var dayOfWeek: Int
@@ -78,6 +80,8 @@ struct DoseScheduleEditView: View {
             defaultPattern = .weekly
         }
         _selectedPattern = State(initialValue: defaultPattern)
+        _hasChosenPattern = State(
+            initialValue: existingSchedule != nil || ReleasePolicy.isEnabled(.medicalCalculators))
 
         // Parse existing schedule baseSchedule configuration if editing
         if let schedule = existingSchedule,
@@ -112,7 +116,7 @@ struct DoseScheduleEditView: View {
 
                 // Frequency stepper (only for weekly pattern)
                 // Split-dose has fixed 3.5-day interval, custom has its own config
-                if selectedPattern == .weekly {
+                if selectedPattern == .weekly, hasChosenPattern {
                     frequencySection
                 }
 
@@ -137,7 +141,7 @@ struct DoseScheduleEditView: View {
                     Button(existingSchedule == nil ? "Create" : "Save") {
                         saveSchedule()
                     }
-                    .disabled(isSaving)
+                    .disabled(isSaving || !hasChosenPattern)
                     .accessibilityIdentifier("save-schedule-edit")
                 }
             }
@@ -178,22 +182,22 @@ struct DoseScheduleEditView: View {
     /// Pattern selection picker
     private var patternSelectionSection: some View {
         Section {
-            Picker("Pattern", selection: $selectedPattern) {
+            Picker("Pattern", selection: patternSelection) {
                 // Show patterns based on medication frequency
                 if !ReleasePolicy.isEnabled(.medicalCalculators) {
-                    Text("Daily").tag(SchedulePatternType.daily)
-                    Text("Weekly").tag(SchedulePatternType.weekly)
+                    Text("Daily").tag(SchedulePatternType?.some(.daily))
+                    Text("Weekly").tag(SchedulePatternType?.some(.weekly))
                     if existingSchedule?.patternType == .splitDose {
-                        Text("Recorded Split Schedule").tag(SchedulePatternType.splitDose)
+                        Text("Recorded Split Schedule").tag(SchedulePatternType?.some(.splitDose))
                     } else if existingSchedule?.patternType == .custom {
-                        Text("Recorded Custom Schedule").tag(SchedulePatternType.custom)
+                        Text("Recorded Custom Schedule").tag(SchedulePatternType?.some(.custom))
                     }
                 } else if medicationProfile.medication?.frequency == .daily {
-                    Text("Daily").tag(SchedulePatternType.daily)
+                    Text("Daily").tag(SchedulePatternType?.some(.daily))
                 } else {
                     // Weekly medications
-                    Text("Weekly").tag(SchedulePatternType.weekly)
-                    Text("Split Dose").tag(SchedulePatternType.splitDose)
+                    Text("Weekly").tag(SchedulePatternType?.some(.weekly))
+                    Text("Split Dose").tag(SchedulePatternType?.some(.splitDose))
                 }
                 // Custom pattern removed from UI
             }
@@ -275,6 +279,18 @@ struct DoseScheduleEditView: View {
             .font(.caption)
             .foregroundStyle(.secondary)
         }
+    }
+
+    /// Nil until the user picks a pattern for a new schedule, so no pattern is preselected.
+    private var patternSelection: Binding<SchedulePatternType?> {
+        Binding(
+            get: { hasChosenPattern ? selectedPattern : nil },
+            set: { newValue in
+                guard let newValue else { return }
+                selectedPattern = newValue
+                hasChosenPattern = true
+            }
+        )
     }
 
     /// Footer text for pattern selection
@@ -367,7 +383,7 @@ struct DoseScheduleEditView: View {
             guard existingSchedule?.patternType == selectedPattern else { return nil }
             return preservedRecordedConfiguration
         }
-        let amount = ReleasePolicy.isEnabled(.medicalCalculators) ? medicationProfile.currentDose : recordedDoseAmount
+        let amount = medicationProfile.currentDose
         switch selectedPattern {
         case .daily:
             return ScheduleConfiguration(
@@ -422,13 +438,6 @@ struct DoseScheduleEditView: View {
                 customRecurrence: nil
             )
         }
-    }
-
-    var recordedDoseAmount: Double {
-        guard let existingSchedule,
-            let recorded = try? JSONDecoder().decode(ScheduleConfiguration.self, from: existingSchedule.baseSchedule)
-        else { return medicationProfile.currentDose }
-        return recorded.doseAmount
     }
 
     var preservedRecordedConfiguration: ScheduleConfiguration? {
