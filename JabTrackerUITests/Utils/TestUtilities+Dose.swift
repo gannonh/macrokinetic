@@ -86,6 +86,26 @@ extension TestUtilities {
         return TestUtilities.launchAppWithSeededData(preset: customPreset, resetData: true)
     }
 
+    /// Finds an element by exact accessibility label (and value). Parent identifiers such as
+    /// `adherence-section` replace child identifiers, so labels are the stable handle.
+    /// On a miss it captures a screenshot and the hierarchy before failing.
+    @discardableResult
+    static func requireLabeled(
+        _ app: XCUIApplication, _ label: String, value: String? = nil,
+        timeout: TimeInterval = 5, file: StaticString = #filePath, line: UInt = #line
+    ) -> XCUIElement {
+        let predicate =
+            value.map { NSPredicate(format: "label == %@ AND value == %@", label, $0) }
+            ?? NSPredicate(format: "label == %@", label)
+        let element = app.descendants(matching: .any).matching(predicate).firstMatch
+        if !element.waitForExistence(timeout: timeout) {
+            debugScreenshot(app, name: "missing-\(label.prefix(40))")
+            print(app.debugDescription)
+            XCTFail("Missing element labeled '\(label)' value \(value ?? "any")", file: file, line: line)
+        }
+        return element
+    }
+
     static func replaceHistoryPrescribedAmount(
         in app: XCUIApplication, with value: String, evidenceName: String,
         file: StaticString = #filePath, line: UInt = #line
