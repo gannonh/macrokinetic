@@ -190,26 +190,24 @@ final class MoreTabUITests: XCTestCase {
         XCTAssertTrue(foodsTab.waitForExistence(timeout: 3), "Foods tab should exist in library")
     }
 
-    // MARK: - Inactive Placeholder Tests
+    // MARK: - Hidden Placeholder Tests
 
-    func testInactiveItemsNotTappable() throws {
+    func testInactivePlaceholdersAreHiddenInLaunchBuild() throws {
         TestUtilities.navigateToTab(app, tabName: "More")
 
         let moreView = app.descendants(matching: .any)["more-view"].firstMatch
         XCTAssertTrue(moreView.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["metrics-settings-link"].waitForExistence(timeout: 3))
 
-        // Placeholder items exist as StaticText (inactive, grayed out)
-        // In SwiftUI List, Label creates both Image and StaticText with the identifier
-        let foodLogPlaceholder = app.staticTexts["food-log-placeholder"]
-        XCTAssertTrue(foodLogPlaceholder.waitForExistence(timeout: 3), "Food Log placeholder should exist")
+        for identifier in ["dashboard-settings-placeholder", "food-log-placeholder", "shortcuts-placeholder"] {
+            XCTAssertFalse(app.descendants(matching: .any)[identifier].firstMatch.exists, "\(identifier) should be hidden")
+        }
 
-        let shortcutsPlaceholder = app.staticTexts["shortcuts-placeholder"]
-        XCTAssertTrue(shortcutsPlaceholder.waitForExistence(timeout: 3), "Shortcuts placeholder should exist")
-
-        // FAQ placeholder - need to scroll to see it
         app.swipeUp()
-        let faqPlaceholder = app.staticTexts["faq-placeholder"]
-        XCTAssertTrue(faqPlaceholder.waitForExistence(timeout: 3), "FAQ placeholder should exist")
+        XCTAssertTrue(app.buttons["general-link"].waitForExistence(timeout: 3))
+        for identifier in ["faq-placeholder", "help-support-placeholder"] {
+            XCTAssertFalse(app.descendants(matching: .any)[identifier].firstMatch.exists, "\(identifier) should be hidden")
+        }
     }
 
     // MARK: - Security & Privacy Tests
