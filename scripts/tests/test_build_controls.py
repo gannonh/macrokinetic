@@ -36,6 +36,8 @@ class BuildControlsTests(unittest.TestCase):
             "SWIFT_ACTIVE_COMPILATION_CONDITIONS": "",
             "OTHER_SWIFT_FLAGS": "",
             "TOOLCHAIN_DIR": "",
+            "DT_TOOLCHAIN_DIR": "",
+            "TOOLCHAINS": "",
             "SWIFT_EXEC": "",
             "SWIFT_FRONTEND_EXEC": "",
             "SWIFT_DRIVER_SWIFT_FRONTEND_EXEC": "",
@@ -120,7 +122,7 @@ class BuildControlsTests(unittest.TestCase):
     def test_resolved_standard_apple_compilers_are_recorded_and_accepted(self):
         toolchain = "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain"
         result = self.generate(
-            TOOLCHAIN_DIR=toolchain,
+            DT_TOOLCHAIN_DIR=toolchain,
             SWIFT_EXEC=f"{toolchain}/usr/bin/swiftc",
             SWIFT_FRONTEND_EXEC=f"{toolchain}/usr/bin/swift-frontend",
             SWIFT_DRIVER_SWIFT_FRONTEND_EXEC=f"{toolchain}/usr/bin/swift-frontend",
@@ -130,6 +132,26 @@ class BuildControlsTests(unittest.TestCase):
         payload = json.loads((self.app / MANIFEST).read_text())
         self.assertEqual(payload["inputs"]["toolchain_dir"], toolchain)
         self.assertEqual(payload["inputs"]["compiler_overrides"]["SWIFT_EXEC"], f"{toolchain}/usr/bin/swiftc")
+
+    def test_ci_xcode_with_metal_toolchain_is_recorded_from_the_default_toolchain(self):
+        default = "/Applications/Xcode_26.5.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain"
+        result = self.generate(
+            TOOLCHAIN_DIR="/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v17.6.42.0.QG3WU8/Metal.xctoolchain",
+            DT_TOOLCHAIN_DIR=default,
+            TOOLCHAINS="com.apple.dt.toolchain.Metal.32023.883 com.apple.dt.toolchain.XcodeDefault",
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads((self.app / MANIFEST).read_text())["inputs"]["toolchain_dir"], default)
+
+    def test_selected_non_apple_toolchains_are_rejected(self):
+        default = "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain"
+        for toolchains in ("org.swift.59202401a", "com.apple.dt.toolchain.XcodeDefault org.swift.59202401a",
+                           "com.apple.dt.toolchain.Metal.x$(y)"):
+            with self.subTest(toolchains=toolchains):
+                result = self.generate(DT_TOOLCHAIN_DIR=default, TOOLCHAINS=toolchains)
+                self.assertNotEqual(result.returncode, 0, result.stdout)
+                self.assertIn("custom Swift toolchains are not inspectable", result.stderr)
+                self.assertFalse((self.app / MANIFEST).exists())
 
     def test_inspector_rejects_definitions_from_every_supported_compiler_input(self):
         cases = [
@@ -166,10 +188,10 @@ class BuildControlsTests(unittest.TestCase):
             {"SWIFT_EXEC": "/custom/swiftc"},
             {"SWIFT_FRONTEND_EXEC": "/custom/frontend"},
             {"SWIFT_DRIVER_SWIFT_FRONTEND_EXEC": "/custom/frontend"},
-            {"TOOLCHAIN_DIR": "/custom/Toolchain.xctoolchain"},
-            {"TOOLCHAIN_DIR": "$(TOOLCHAIN_DIR)"},
+            {"DT_TOOLCHAIN_DIR": "/custom/Toolchain.xctoolchain"},
+            {"DT_TOOLCHAIN_DIR": "$(DT_TOOLCHAIN_DIR)"},
             {
-                "TOOLCHAIN_DIR": "/Applications/$(XCODE)/XcodeDefault.xctoolchain",
+                "DT_TOOLCHAIN_DIR": "/Applications/$(XCODE)/XcodeDefault.xctoolchain",
                 "SWIFT_EXEC": "/Applications/$(XCODE)/XcodeDefault.xctoolchain/usr/bin/swiftc",
             },
             {"CONFIGURATION": "`configuration`"},
