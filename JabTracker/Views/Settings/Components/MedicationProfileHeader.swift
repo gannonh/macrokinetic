@@ -14,7 +14,7 @@ struct MedicationProfileHeader: View {
                     DetailRow(title: "Brand", value: profile.brandName)
                     DetailRow(
                         title: "Current Dose",
-                        value: "\(String(format: "%.2f", profile.currentDose)) mg")
+                        value: "\(RecordedAmountInput.displayText(for: profile.currentDose)) mg")
                     DetailRow(
                         title: "Start Date",
                         value: profile.startDate.formatted(date: .abbreviated, time: .omitted))
@@ -23,7 +23,7 @@ struct MedicationProfileHeader: View {
                         value: profile.preferredInjectionSites.joined(separator: ", "))
 
                     // Show reconstitution data for compounded medications
-                    if profile.isCompounded {
+                    if ReleasePolicy.isEnabled(.medicalCalculators), profile.isCompounded {
                         if let concentration = profile.concentration {
                             DetailRow(
                                 title: "Concentration",
@@ -36,7 +36,9 @@ struct MedicationProfileHeader: View {
                         }
                     }
 
-                    if let medication = Medication(rawValue: profile.medicationType) {
+                    if ReleasePolicy.isEnabled(.concentrationEstimates),
+                        let medication = Medication(rawValue: profile.medicationType)
+                    {
                         DetailRow(
                             title: "Half-life",
                             value: "\(String(format: "%.1f", medication.halfLifeDays)) days")

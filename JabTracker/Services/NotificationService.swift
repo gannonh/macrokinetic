@@ -133,6 +133,23 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
         logger.info("NotificationService initialized")
     }
 
+    static func cancelUnavailableTitrationNotifications(
+        notificationCenter: NotificationCenterProtocol = UNUserNotificationCenter.current()
+    ) async {
+        guard !ReleasePolicy.isEnabled(.medicalCalculators) else { return }
+        let requests = await notificationCenter.pendingNotificationRequests()
+        let identifiers = requests.filter(isTitrationRequest).map(\.identifier)
+        if !identifiers.isEmpty {
+            notificationCenter.removePendingNotificationRequests(withIdentifiers: identifiers)
+        }
+    }
+
+    static func isTitrationRequest(_ request: UNNotificationRequest) -> Bool {
+        request.content.categoryIdentifier == "TITRATION"
+            || request.content.userInfo[UserInfoKeys.titrationId] != nil
+            || request.identifier.hasPrefix("titration-")
+    }
+
     // MARK: - Authorization
 
     /**
@@ -196,11 +213,6 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
 
     /**
      * Register notification categories with actionable buttons.
-     *
-     * Registers three categories:
-     * - DOSE_REMINDER: Take, Skip, Snooze actions for upcoming doses
-     * - MISSED_DOSE: Take Now, Skip actions for missed doses
-     * - TITRATION: Complete, Reschedule, Remind Later actions for titration
      *
      * Called automatically during initialization.
      */
@@ -287,13 +299,16 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
             options: []
         )
 
-        notificationCenter.setNotificationCategories([
+        var categories: Set<UNNotificationCategory> = [
             doseReminderCategory,
             missedDoseCategory,
-            titrationCategory,
             weighInCategory,
             foodLogCategory,
-        ])
+        ]
+        if ReleasePolicy.isEnabled(.medicalCalculators) {
+            categories.insert(titrationCategory)
+        }
+        notificationCenter.setNotificationCategories(categories)
 
         logger.info("Notification categories registered successfully")
     }
@@ -531,6 +546,9 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
      * - Throws: NotificationServiceError.schedulingFailed if notification cannot be scheduled
      */
     func scheduleTitrationNotification(for titration: DoseTitration) async throws {
+        guard ReleasePolicy.isEnabled(.medicalCalculators) else {
+            throw NotificationServiceError.medicalCalculatorsUnavailable
+        }
         logger.info("Scheduling titration notification for titration: \(titration.id)")
 
         // Don't schedule notifications in the past
@@ -622,20 +640,27 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification
     ) async -> UNNotificationPresentationOptions {
-        // Show notifications even when app is in foreground
-        [.banner, .sound, .badge]
+        await foregroundPresentationOptions(for: notification.request)
+    }
+
+    func foregroundPresentationOptions(for request: UNNotificationRequest) -> UNNotificationPresentationOptions {
+        if !ReleasePolicy.isEnabled(.medicalCalculators) && Self.isTitrationRequest(request) {
+            return []
+        }
+        return [.banner, .sound, .badge]
     }
 }
 
 // MARK: - NotificationServiceError
 
 /// Errors specific to NotificationService operations.
-enum NotificationServiceError: LocalizedError {
+enum NotificationServiceError: LocalizedError, Equatable {
     case authorizationDenied
     case schedulingFailed
     case notificationLimitExceeded
     case invalidScheduledDose
     case invalidReminderTiming
+    case medicalCalculatorsUnavailable
 
     var errorDescription: String? {
         switch self {
@@ -663,6 +688,11 @@ enum NotificationServiceError: LocalizedError {
             return NSLocalizedString(
                 "Invalid reminder timing. Please choose 15, 30, 60, or 120 minutes.",
                 comment: "Invalid reminder timing error"
+            )
+        case .medicalCalculatorsUnavailable:
+            return NSLocalizedString(
+                "Medical calculators are unavailable in this release.",
+                comment: "Medical calculators unavailable error"
             )
         }
     }

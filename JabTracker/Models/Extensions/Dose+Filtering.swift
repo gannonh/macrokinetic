@@ -185,7 +185,7 @@ extension Dose {
     /// Formatted dose amount with medication unit
     var formattedAmount: String {
         let unit = "mg"  // Default unit for all GLP-1 medications
-        return String(format: "%.2f", amount) + " " + unit
+        return RecordedAmountInput.displayText(for: amount) + " " + unit
     }
 
     /// Formatted timestamp for display

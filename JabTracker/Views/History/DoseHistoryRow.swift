@@ -146,7 +146,7 @@ struct DoseHistoryRow: View {
         var components: [String] = []
 
         // Dose amount
-        components.append(String(format: "%.2f milligrams", self.dose.amount))
+        components.append("\(RecordedAmountInput.displayText(for: self.dose.amount)) milligrams")
 
         // Medication
         if let medication = dose.medication {
