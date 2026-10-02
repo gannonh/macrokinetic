@@ -25,7 +25,7 @@ PROJECT_YML = ROOT / "project.yml"
 LANE_CONFIG = ROOT / "scripts" / "ci" / "test-lanes.json"
 
 REQUIRED_PR_JOBS = {
-    "Fast unit tests": 20,
+    "Fast unit tests": 35,
     "SwiftLint": 5,
     "Python tooling": 5,
 }

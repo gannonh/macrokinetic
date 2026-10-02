@@ -5,7 +5,7 @@ name: CI
 #   CI / Integration tests, CI / StoreKit tests, CI / Performance tests.
 # Every xcode lane uploads xcresult, log, manifest, and timing artifacts with if: always().
 # Use the standard runner so this public repository's Actions usage remains free.
-# The clean compile can take longer than 10 minutes, so allow 20 minutes here.
+# The clean compile plus the full unit suite takes about 18 minutes on main, so allow 35 minutes here.
 
 on:
   pull_request:
@@ -29,7 +29,7 @@ jobs:
   unit:
     name: Fast unit tests
     runs-on: macos-26
-    timeout-minutes: 20
+    timeout-minutes: 35
     steps:
       - name: Record job start
         run: echo "JOB_START_EPOCH=$(date +%s)" >> "$GITHUB_ENV"
