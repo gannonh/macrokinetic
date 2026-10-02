@@ -1,6 +1,6 @@
 # Prescribed-dose release verification
 
-KAT-3581 disables calculators, titration actions/reminders and concentration estimates while preserving clinician-entered medication/dose records and manual schedules. The registry has fourteen fixed-off flags. Ordinary reminder and stored titration/schedule records remain intact; only pending titration requests are canceled at unconditional startup.
+KAT-3581 disables calculators, titration actions/reminders and concentration estimates while preserving clinician-entered medication/dose records and manual schedules. The registry has fifteen fixed-off flags. Ordinary reminder and stored titration/schedule records remain intact; only pending titration requests are canceled at unconditional startup.
 
 The full Debug unit suite after notification guards passed 3086 tests, zero failures, with one pre-existing disabled authentication test. Result: `/tmp/jabtracker-launch-20260930/medical-full-units-after-notifications.xcresult`. This predates the subsequent raw-text and precision fix and is not verification of that newer code.
 
