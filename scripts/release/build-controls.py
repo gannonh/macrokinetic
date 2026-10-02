@@ -20,9 +20,12 @@ ENVIRONMENT_KEYS = {
     "platform_name": "PLATFORM_NAME",
     "swift_active_compilation_conditions": "SWIFT_ACTIVE_COMPILATION_CONDITIONS",
     "other_swift_flags": "OTHER_SWIFT_FLAGS",
-    "toolchain_dir": "TOOLCHAIN_DIR",
+    "toolchain_dir": "DT_TOOLCHAIN_DIR",
 }
 SYMBOL = re.compile(r"[A-Za-z_][A-Za-z0-9_]*\Z")
+# Xcode lists the Metal toolchain first when its cryptex is installed, which makes TOOLCHAIN_DIR the Metal
+# toolchain. DT_TOOLCHAIN_DIR is always the default toolchain; TOOLCHAINS shows whether anything else is selected.
+APPLE_TOOLCHAINS = re.compile(r"com\.apple\.dt\.toolchain\.(XcodeDefault|Metal(\.[0-9]+)*)\Z")
 
 
 def tokens(raw):
@@ -96,7 +99,13 @@ def read_info(path):
     return info
 
 
+def selected_toolchains_are_apple():
+    return all(APPLE_TOOLCHAINS.fullmatch(identifier) for identifier in os.environ.get("TOOLCHAINS", "").split())
+
+
 def generate(output, info_path):
+    if not selected_toolchains_are_apple():
+        raise ValueError("custom Swift toolchains are not inspectable")
     inputs = {key: os.environ.get(variable, "") for key, variable in ENVIRONMENT_KEYS.items()}
     inputs["compiler_overrides"] = {key: os.environ.get(key, "") for key in COMPILER_OVERRIDES}
     definitions(inputs)
