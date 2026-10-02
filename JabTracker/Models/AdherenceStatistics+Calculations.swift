@@ -40,13 +40,14 @@ extension AdherenceStatisticsCalculator {
     static func calculateStreaks(
         doses: [Dose],
         periodStart: Date,
-        periodEnd: Date
+        periodEnd: Date,
+        now: Date = Date(),
+        calendar: Calendar = .current
     ) -> StreakResult {
         // Sort doses by date
         let sortedDoses = doses.sorted { $0.timestamp < $1.timestamp }
 
         // Group doses by day
-        let calendar = Calendar.current
         let dosesByDay = Dictionary(grouping: sortedDoses) { dose in
             calendar.startOfDay(for: dose.timestamp)
         }
@@ -66,7 +67,7 @@ extension AdherenceStatisticsCalculator {
         // Iterate through each day in the period
         var currentDate = calendar.startOfDay(for: periodStart)
         let endDate = calendar.startOfDay(for: periodEnd)
-        let today = calendar.startOfDay(for: Date())
+        let today = calendar.startOfDay(for: now)
         guard let yesterday = calendar.date(byAdding: .day, value: -1, to: today) else {
             return StreakResult(current: 0, longest: 0, isActive: false)
         }
@@ -107,5 +108,22 @@ extension AdherenceStatisticsCalculator {
         let isActive = mostRecentStreakEndsToday
 
         return StreakResult(current: currentStreak, longest: longestStreak, isActive: isActive)
+    }
+}
+
+extension AdherenceStatisticsCalculator {
+    /// Current streak of consecutive dosed days ending today (active) or yesterday. When the context
+    /// carries the full dose history the count runs across month and year boundaries; otherwise the
+    /// period-scoped `fallback` is used.
+    static func calculateCurrentStreak(context: StreakContext, fallback: StreakResult) -> StreakResult {
+        guard let history = context.history?.filter({ !$0.skipped }),
+            let earliest = history.map(\.timestamp).min()
+        else { return fallback }
+        return self.calculateStreaks(
+            doses: history,
+            periodStart: earliest,
+            periodEnd: context.now,
+            now: context.now,
+            calendar: context.calendar)
     }
 }

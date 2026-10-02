@@ -8,6 +8,21 @@
 
 import Foundation
 
+/// Clock, calendar and optional full dose history for streak calculations.
+/// With `history`, the current streak counts back across month and year boundaries instead of
+/// stopping at the period start.
+struct StreakContext {
+    var history: [Dose]?
+    var now: Date
+    var calendar: Calendar
+
+    init(history: [Dose]? = nil, now: Date = Date(), calendar: Calendar = .current) {
+        self.history = history
+        self.now = now
+        self.calendar = calendar
+    }
+}
+
 /// Result of streak calculations
 struct StreakResult {
     let current: Int
@@ -200,7 +215,8 @@ enum AdherenceStatisticsCalculator {
         periodEnd: Date,
         medicationFrequency: DoseFrequency = .weekly,
         scheduleService: ScheduleService? = nil,
-        schedule: DoseSchedule? = nil
+        schedule: DoseSchedule? = nil,
+        streakContext: StreakContext = StreakContext()
     ) -> AdherenceStatistics {
         // Calculate schedule adherence if schedule provided
         var scheduleMetrics: ScheduleMetricsHelper?
@@ -225,7 +241,8 @@ enum AdherenceStatisticsCalculator {
             periodStart: periodStart,
             periodEnd: periodEnd,
             medicationFrequency: medicationFrequency,
-            scheduleMetrics: scheduleMetrics
+            scheduleMetrics: scheduleMetrics,
+            streakContext: streakContext
         )
     }
 
@@ -235,7 +252,8 @@ enum AdherenceStatisticsCalculator {
         periodStart: Date,
         periodEnd: Date,
         medicationFrequency: DoseFrequency = .weekly,
-        scheduleMetrics: ScheduleMetricsHelper?
+        scheduleMetrics: ScheduleMetricsHelper?,
+        streakContext: StreakContext
     ) -> AdherenceStatistics {
         // Filter doses to the specified period
         let periodDoses = doses.filter { dose in
@@ -275,10 +293,11 @@ enum AdherenceStatisticsCalculator {
         let streakResult = self.calculateStreaks(
             doses: takenDoses,
             periodStart: periodStart,
-            periodEnd: periodEnd)
-        let currentStreak = streakResult.current
-        let longestStreak = streakResult.longest
-        let isCurrentStreakActive = streakResult.isActive
+            periodEnd: periodEnd,
+            now: streakContext.now,
+            calendar: streakContext.calendar)
+        let currentResult = self.calculateCurrentStreak(
+            context: streakContext, fallback: streakResult)
 
         // MARK: - Stream C: Include Schedule Metrics
         return AdherenceStatistics(
@@ -288,9 +307,9 @@ enum AdherenceStatisticsCalculator {
             averageDose: averageDose,
             totalMedicationAmount: totalMedicationAmount,
             doseRange: doseRange,
-            currentStreak: currentStreak,
-            longestStreak: longestStreak,
-            isCurrentStreakActive: isCurrentStreakActive,
+            currentStreak: currentResult.current,
+            longestStreak: streakResult.longest,
+            isCurrentStreakActive: currentResult.isActive,
             siteDistribution: siteDistribution,
             periodStart: periodStart,
             periodEnd: periodEnd,

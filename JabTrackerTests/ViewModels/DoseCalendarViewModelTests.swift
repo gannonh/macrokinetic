@@ -439,26 +439,91 @@ struct DoseCalendarViewModelTests {
         #expect(adherenceRate != "0.0%", "Should calculate non-zero rate with actual data")
     }
 
-    @Test("ViewModel provides formatted streak display")
+    @Test("Streak counts consecutive days across a month boundary: Sep 30 and Oct 1 is 2 days")
     func currentStreakDisplayFormatting() throws {
-        // Given: Doses creating a streak
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: Date())
-        let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
+        let now = FixedClock.date(2026, 10, 1, hour: 0, minute: 1)
+        let viewModel = DoseCalendarViewModel(now: { now }, calendar: FixedClock.calendar)
 
-        let doses = [
-            createTestDose(timestamp: yesterday, skipped: false),
-            createTestDose(timestamp: today, skipped: false),
-        ]
+        viewModel.setDoses([
+            self.createTestDose(timestamp: FixedClock.date(2026, 9, 30, hour: 23, minute: 59)),
+            self.createTestDose(timestamp: FixedClock.date(2026, 10, 1, hour: 0, minute: 0)),
+        ])
 
-        self.viewModel.setDoses(doses)
+        #expect(viewModel.currentStreakDisplay == "2 days (active)")
+    }
 
-        // When: Getting streak display
-        let streakDisplay = self.viewModel.currentStreakDisplay
+    @Test("Doses at 23:59 and 00:01 UTC around the Oct 1 boundary land in different months and days")
+    func dosesGroupAcrossMidnightBoundary() throws {
+        let now = FixedClock.date(2026, 10, 1, hour: 0, minute: 1)
+        let viewModel = DoseCalendarViewModel(now: { now }, calendar: FixedClock.calendar)
+        let lateSeptember = FixedClock.date(2026, 9, 30, hour: 23, minute: 59)
+        let earlyOctober = FixedClock.date(2026, 10, 1, hour: 0, minute: 1)
 
-        // Then: Display is formatted correctly
-        #expect(streakDisplay.contains("day"), "Streak display should contain 'day' or 'days'")
-        #expect(streakDisplay.contains("2"), "Should show streak count")
+        viewModel.setDoses([self.createTestDose(timestamp: lateSeptember), self.createTestDose(timestamp: earlyOctober)])
+
+        #expect(viewModel.currentMonthTitle == "October 2026")
+        #expect(viewModel.monthlyDoses.count == 1)
+        #expect(viewModel.dosesByDate.count == 1)
+        #expect(viewModel.doseCount(for: earlyOctober) == 1)
+        #expect(viewModel.isToday(earlyOctober))
+        #expect(!viewModel.isToday(lateSeptember))
+
+        viewModel.navigateToPreviousMonth()
+        #expect(viewModel.monthlyDoses.count == 1)
+        #expect(viewModel.doseCount(for: lateSeptember) == 1)
+        #expect(viewModel.isPastDate(lateSeptember))
+    }
+
+    @Test("Streak does not depend on which month is displayed")
+    func currentStreakIgnoresDisplayedMonth() throws {
+        let now = FixedClock.date(2026, 3, 1, hour: 9)
+        let viewModel = DoseCalendarViewModel(now: { now }, calendar: FixedClock.calendar)
+
+        viewModel.setDoses([
+            self.createTestDose(timestamp: FixedClock.date(2026, 1, 31, hour: 9)),  // before the streak
+            self.createTestDose(timestamp: FixedClock.date(2026, 2, 28, hour: 9)),
+            self.createTestDose(timestamp: FixedClock.date(2026, 3, 1, hour: 8)),
+        ])
+        #expect(viewModel.currentStreakDisplay == "2 days (active)")
+
+        viewModel.navigateToPreviousMonth()  // February
+        #expect(viewModel.currentMonthTitle == "February 2026")
+        #expect(viewModel.currentStreakDisplay == "2 days (active)")
+
+        viewModel.navigateToPreviousMonth()  // January
+        #expect(viewModel.currentStreakDisplay == "2 days (active)")
+    }
+
+    @Test("Streak counts across a year boundary: Dec 30, Dec 31, Jan 1 is 3 days")
+    func currentStreakAcrossYearBoundary() throws {
+        let now = FixedClock.date(2027, 1, 1, hour: 0, minute: 1)
+        let viewModel = DoseCalendarViewModel(now: { now }, calendar: FixedClock.calendar)
+
+        viewModel.setDoses([
+            self.createTestDose(timestamp: FixedClock.date(2026, 12, 30, hour: 20)),
+            self.createTestDose(timestamp: FixedClock.date(2026, 12, 31, hour: 23, minute: 59)),
+            self.createTestDose(timestamp: FixedClock.date(2027, 1, 1, hour: 0, minute: 0)),
+        ])
+
+        #expect(viewModel.currentStreakDisplay == "3 days (active)")
+    }
+
+    @Test("Streak ending yesterday stays alive but is not active, and a gap resets it")
+    func currentStreakYesterdayAndGap() throws {
+        let now = FixedClock.date(2026, 10, 1, hour: 10)
+        let viewModel = DoseCalendarViewModel(now: { now }, calendar: FixedClock.calendar)
+
+        viewModel.setDoses([
+            self.createTestDose(timestamp: FixedClock.date(2026, 9, 29, hour: 9)),
+            self.createTestDose(timestamp: FixedClock.date(2026, 9, 30, hour: 9)),
+        ])
+        #expect(viewModel.currentStreakDisplay == "2 days")
+
+        viewModel.setDoses([
+            self.createTestDose(timestamp: FixedClock.date(2026, 9, 28, hour: 9)),
+            self.createTestDose(timestamp: FixedClock.date(2026, 10, 1, hour: 9)),
+        ])
+        #expect(viewModel.currentStreakDisplay == "1 day (active)")
     }
 
     // MARK: - Month Navigation with Data Updates Tests

@@ -49,6 +49,8 @@ final class WeightTrendDetailViewModel {
 
     private let metricsService: MetricsService
     private let context: ModelContext
+    private let now: () -> Date
+    private let calendar: Calendar
 
     /// EWMA smoothing factor (higher = more weight to recent values)
     private let ewmaAlpha: Double = 0.2
@@ -108,9 +110,18 @@ final class WeightTrendDetailViewModel {
     /// - Parameters:
     ///   - metricsService: Service for fetching weight data
     ///   - context: ModelContext for fetching user data
-    init(metricsService: MetricsService, context: ModelContext) {
+    ///   - now: Clock used for the selected period window (injectable for tests)
+    ///   - calendar: Calendar used for the selected period window (injectable for tests)
+    init(
+        metricsService: MetricsService,
+        context: ModelContext,
+        now: @escaping () -> Date = Date.init,
+        calendar: Calendar = .current
+    ) {
         self.metricsService = metricsService
         self.context = context
+        self.now = now
+        self.calendar = calendar
     }
 
     // MARK: - Data Loading
@@ -194,10 +205,10 @@ final class WeightTrendDetailViewModel {
 
     /// Load weight entries for selected time period
     private func loadWeightEntries() async -> [WeightEntry] {
-        let endDate = Date()
+        let endDate = self.now()
 
         do {
-            if let startDate = selectedPeriod.startDate {
+            if let startDate = selectedPeriod.startDate(now: endDate, calendar: self.calendar) {
                 return try await metricsService.getWeightEntries(from: startDate, to: endDate)
             } else {
                 // All time

@@ -651,28 +651,119 @@ struct WeightTrendDetailViewModelTests {
 
     // MARK: - Current Weight & Difference Tests
 
-    @Test("ViewModel calculates current weight and difference")
-    func testCalculatesCurrentWeightAndDifference() async throws {
+    /// Loads a 1M trend for `entries` (timestamp, kg) as seen from `now`, in kg, on the fixed UTC calendar.
+    private func loadOneMonthTrend(
+        entries: [(timestamp: Date, weightKg: Double)],
+        now: Date
+    ) async throws -> WeightTrendDetailViewModel {
         let (context, container) = createTestContext()
         _ = container
-
-        // Given: Weight entries showing decline
-        _ = createWeightEntry(in: context, weightKg: 90.0, daysAgo: 30)
-        _ = createWeightEntry(in: context, weightKg: 83.0, daysAgo: 0)
+        _ = createTestUser(in: context, weightUnit: "kg")
+        for entry in entries {
+            context.insert(WeightEntry(timestamp: entry.timestamp, weightKg: entry.weightKg))
+        }
         try context.save()
 
-        let metricsService = MetricsService(context: context)
-        let viewModel = WeightTrendDetailViewModel(metricsService: metricsService, context: context)
+        let viewModel = WeightTrendDetailViewModel(
+            metricsService: MetricsService(context: context),
+            context: context,
+            now: { now },
+            calendar: FixedClock.calendar)
         viewModel.selectedPeriod = .oneMonth
+        await viewModel.loadData()
+        return viewModel
+    }
 
-        // When: Loading data
+    @Test("1M includes an entry exactly one month old on Oct 1 (Sep 1 is 30 days back)")
+    func testCalculatesCurrentWeightAndDifference() async throws {
+        let now = FixedClock.date(2026, 10, 1, hour: 0, minute: 1)
+        let viewModel = try await loadOneMonthTrend(
+            entries: [
+                (FixedClock.date(2026, 9, 1, hour: 0, minute: 1), 90.0),
+                (now, 83.0),
+            ],
+            now: now)
+
+        #expect(viewModel.difference == -7.0)
+        #expect(viewModel.currentWeight == 86.5)
+    }
+
+    @Test("1M on Mar 1 is a calendar month: Feb 1 is in, Jan 31 is out")
+    func oneMonthWindowOnMarchFirst() async throws {
+        let now = FixedClock.date(2026, 3, 1, hour: 23, minute: 59)
+        let viewModel = try await loadOneMonthTrend(
+            entries: [
+                // 29 days before Mar 1, but outside the calendar month
+                (FixedClock.date(2026, 1, 31, hour: 12), 95.0),
+                (FixedClock.date(2026, 2, 1, hour: 0, minute: 1), 90.0),
+                (now, 88.0),
+            ],
+            now: now)
+
+        #expect(viewModel.difference == -2.0)  // Mar 1 (88) minus Feb 1 (90); Jan 31 excluded
+        #expect(viewModel.currentWeight == 89.0)
+    }
+
+    @Test("1M on Jan 1 reaches back to Dec 1 of the previous year")
+    func oneMonthWindowOnJanuaryFirst() async throws {
+        let now = FixedClock.date(2027, 1, 1, hour: 0, minute: 1)
+        let viewModel = try await loadOneMonthTrend(
+            entries: [
+                (FixedClock.date(2026, 11, 30, hour: 23, minute: 59), 100.0),  // outside
+                (FixedClock.date(2026, 12, 1, hour: 0, minute: 1), 96.0),
+                (FixedClock.date(2026, 12, 31, hour: 23, minute: 59), 94.0),
+                (now, 93.0),
+            ],
+            now: now)
+
+        #expect(viewModel.difference == -3.0)  // Jan 1 (93) minus Dec 1 (96)
+    }
+
+    @Test("1M window starts at the beginning of the day one month ago")
+    func oneMonthStartDateIsStartOfDay() {
+        let now = FixedClock.date(2026, 3, 31, hour: 17, minute: 45)
+        #expect(
+            DetailTimePeriod.oneMonth.startDate(now: now, calendar: FixedClock.calendar)
+                == FixedClock.date(2026, 2, 28, hour: 0, minute: 0))
+    }
+
+    @Test("1W is seven calendar dates: today plus the previous 6 days")
+    func oneWeekStartDateIsSevenDates() {
+        let now = FixedClock.date(2026, 10, 1, hour: 0, minute: 1)
+        #expect(
+            DetailTimePeriod.oneWeek.startDate(now: now, calendar: FixedClock.calendar)
+                == FixedClock.date(2026, 9, 25, hour: 0, minute: 0))
+
+        // Across a month and a year boundary: Jan 1 reaches back to Dec 26
+        let newYear = FixedClock.date(2027, 1, 1, hour: 23, minute: 59)
+        #expect(
+            DetailTimePeriod.oneWeek.startDate(now: newYear, calendar: FixedClock.calendar)
+                == FixedClock.date(2026, 12, 26, hour: 0, minute: 0))
+    }
+
+    @Test("1W loads Sep 25 through Oct 1 and excludes Sep 24")
+    func oneWeekWindowExcludesEighthDate() async throws {
+        let now = FixedClock.date(2026, 10, 1, hour: 0, minute: 1)
+        let (context, container) = createTestContext()
+        _ = container
+        _ = createTestUser(in: context, weightUnit: "kg")
+        for (date, kg) in [
+            (FixedClock.date(2026, 9, 24, hour: 23, minute: 59), 90.0),
+            (FixedClock.date(2026, 9, 25, hour: 0, minute: 1), 88.0),
+            (now, 85.0),
+        ] {
+            context.insert(WeightEntry(timestamp: date, weightKg: kg))
+        }
+        try context.save()
+
+        let viewModel = WeightTrendDetailViewModel(
+            metricsService: MetricsService(context: context),
+            context: context,
+            now: { now },
+            calendar: FixedClock.calendar)
+        viewModel.selectedPeriod = .oneWeek
         await viewModel.loadData()
 
-        // Then: Current weight and difference are set
-        #expect(viewModel.currentWeight != nil)
-        #expect(viewModel.difference != nil)
-        if let diff = viewModel.difference {
-            #expect(diff < 0)  // Weight decreased
-        }
+        #expect(viewModel.difference == -3.0)  // Oct 1 (85) minus Sep 25 (88); Sep 24 excluded
     }
 }

@@ -40,23 +40,29 @@ enum DetailTimePeriod: String, CaseIterable, Identifiable {
     /// Start date for filtering data based on selected time period.
     /// Returns nil for `.all` (no filtering).
     var startDate: Date? {
-        let calendar = Calendar.current
-        let today = Date()
+        self.startDate(now: Date(), calendar: .current)
+    }
 
+    /// Window contract: anchored to the start of a calendar day, so a boundary entry is always inside.
+    /// 1W is today plus the previous 6 days (7 dates). 1M/3M/6M/1Y go back that many calendar units
+    /// (one month before Mar 1 is Feb 1, not 30 days) and include the entry exactly one period old.
+    func startDate(now: Date, calendar: Calendar) -> Date? {
+        let start: Date?
         switch self {
         case .oneWeek:
-            return calendar.date(byAdding: .day, value: -7, to: today)
+            start = calendar.date(byAdding: .day, value: -6, to: now)
         case .oneMonth:
-            return calendar.date(byAdding: .month, value: -1, to: today)
+            start = calendar.date(byAdding: .month, value: -1, to: now)
         case .threeMonths:
-            return calendar.date(byAdding: .month, value: -3, to: today)
+            start = calendar.date(byAdding: .month, value: -3, to: now)
         case .sixMonths:
-            return calendar.date(byAdding: .month, value: -6, to: today)
+            start = calendar.date(byAdding: .month, value: -6, to: now)
         case .oneYear:
-            return calendar.date(byAdding: .year, value: -1, to: today)
+            start = calendar.date(byAdding: .year, value: -1, to: now)
         case .all:
-            return nil
+            start = nil
         }
+        return start.map { calendar.startOfDay(for: $0) }
     }
 }
 
