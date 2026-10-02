@@ -368,6 +368,7 @@ struct FoodSearchSheet: View {
 
     @ViewBuilder
     private var searchExecutionMarker: some View {
+        #if DEBUG || JABTRACKER_TEST_HARNESS
         if ProcessInfo.processInfo.arguments.contains("--ui-testing") {
             Text("Search execution")
                 .frame(width: 1, height: 1)
@@ -378,6 +379,8 @@ struct FoodSearchSheet: View {
                     viewModel.searchStartedAt.map { String($0.timeIntervalSince1970) } ?? ""
                 )
         }
+        #endif
+
     }
 
     // MARK: - Content Section

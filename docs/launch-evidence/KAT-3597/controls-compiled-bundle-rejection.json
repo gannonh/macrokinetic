@@ -1,0 +1,17 @@
+{
+  "Release": {
+    "exit": 0,
+    "output": "archive and IPA have ordinary Release compiler inputs\n",
+    "scope": "same compiled simulator bundle supplied twice; not archive/export acceptance"
+  },
+  "ReleaseTestHarness": {
+    "exit": 1,
+    "output": "build-controls: only ordinary Release can pass shipment preflight\n",
+    "scope": "same compiled simulator bundle supplied twice; not archive/export acceptance"
+  },
+  "Debug": {
+    "exit": 1,
+    "output": "build-controls: only ordinary Release can pass shipment preflight\n",
+    "scope": "same compiled simulator bundle supplied twice; not archive/export acceptance"
+  }
+}
