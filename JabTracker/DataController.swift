@@ -88,16 +88,22 @@ private struct CloudKitConfig {
 
 @MainActor
 class DataController: ObservableObject {
-    static let shared = DataController()
+    static let shared: DataController = {
+        #if DEBUG || JABTRACKER_TEST_HARNESS
+        if let controller = StorageTestFixture.controller(arguments: ProcessInfo.processInfo.arguments) {
+            return controller
+        }
+        #endif
+        return DataController()
+    }()
 
     private static let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "DataController")
 
     @Published var syncStatus: SyncStatus = .unknown
     @Published var isCloudKitEnabled: Bool = false
 
-    /// Error that occurred during initialization, if any
-    /// Views can check this to display appropriate error UI
-    @Published var initializationError: String?
+    @Published private(set) var storageState: StorageState
+    private let storeOpening: StoreOpening
 
     /// Preview container for SwiftUI previews
     static var preview: DataController = {
@@ -154,7 +160,12 @@ class DataController: ObservableObject {
         return controller
     }()
 
-    let container: ModelContainer
+    var container: ModelContainer {
+        guard case let .ready(container) = storageState else {
+            preconditionFailure("Storage must be ready before a model context is used")
+        }
+        return container
+    }
 
     /// All SwiftData model types registered with the app
     private static let modelTypes: [any PersistentModel.Type] = [
@@ -176,91 +187,44 @@ class DataController: ObservableObject {
         FoodSchedule.self,
     ]
 
-    init(inMemory: Bool = false) {
-        let schema = Schema(Self.modelTypes)
-        #if !JABTRACKER_TEST_HARNESS
-        let cloudKitContainerIdentifier = "iCloud.com.gannonhall.JabTracker"
-        #endif
-
-        // Determine CloudKit configuration based on environment
-        let config = CloudKitConfig.determine(inMemory: inMemory)
-        let inMemory = config.inMemory
-        let shouldEnableCloudKit = config.shouldEnableCloudKit
-        config.log(with: Self.logger)
-
-        let configuration: ModelConfiguration
-        if inMemory {
-            // Unique names keep parallel Swift Testing workers from sharing one
-            // in-memory store. Disk stores keep the default unnamed configuration
-            // so existing user data is unchanged.
-            configuration = ModelConfiguration(
-                "JabTracker-memory-\(UUID().uuidString)",
-                schema: schema,
-                isStoredInMemoryOnly: true,
-                cloudKitDatabase: .none)
-        } else {
-            #if JABTRACKER_TEST_HARNESS
-            configuration = ModelConfiguration(
-                schema: schema,
-                isStoredInMemoryOnly: false,
-                cloudKitDatabase: .none)
-            #else
-            configuration = ModelConfiguration(
-                schema: schema,
-                isStoredInMemoryOnly: false,
-                cloudKitDatabase: shouldEnableCloudKit
-                    ? .private(cloudKitContainerIdentifier)
-                    : .none)
-            #endif
+    init(
+        inMemory: Bool = false,
+        storeURL: URL? = nil,
+        makeContainer: @escaping StoreOpening.ContainerFactory = { schema, configurations in
+            try ModelContainer(for: schema, configurations: configurations)
         }
+    ) {
+        let config = CloudKitConfig.determine(inMemory: inMemory)
+        if storeURL == nil { config.log(with: Self.logger) }
+        self.storeOpening = StoreOpening(
+            schema: Schema(Self.modelTypes),
+            inMemory: storeURL == nil && config.inMemory,
+            shouldEnableCloudKit: storeURL == nil && config.shouldEnableCloudKit,
+            storeURL: storeURL,
+            makeContainer: makeContainer)
+        let outcome = storeOpening.open(attempt: 1)
+        self.storageState = outcome.state
+        self.isCloudKitEnabled = outcome.cloudKitEnabled
+        if outcome.cloudKitEnabled {
+            #if !JABTRACKER_TEST_HARNESS
+            self.checkCloudKitStatus()
+            #endif
+        } else {
+            self.syncStatus = .unavailable
+        }
+    }
 
-        do {
-            self.container = try ModelContainer(for: schema, configurations: [configuration])
-            if shouldEnableCloudKit {
-                self.isCloudKitEnabled = true
-                #if !JABTRACKER_TEST_HARNESS
-                self.checkCloudKitStatus()
-                #endif
-            } else {
-                self.isCloudKitEnabled = false
-                self.syncStatus = .unavailable
-            }
-        } catch {
-            // If CloudKit setup fails, try without CloudKit as fallback
-            Self.logger.warning("CloudKit setup failed, falling back to local storage: \(error.localizedDescription)")
-            let fallbackConfiguration = ModelConfiguration(
-                schema: schema,
-                isStoredInMemoryOnly: inMemory,
-                cloudKitDatabase: .none)
-            do {
-                self.container = try ModelContainer(for: schema, configurations: [fallbackConfiguration])
-                self.isCloudKitEnabled = false
-                self.syncStatus = .unavailable
-            } catch let fallbackError {
-                // Local storage also failed - try in-memory as last resort
-                Self.logger.error(
-                    "Local storage failed, attempting in-memory fallback: \(fallbackError.localizedDescription)"
-                )
-                let inMemoryConfig = ModelConfiguration(
-                    "JabTracker-memory-\(UUID().uuidString)",
-                    schema: schema,
-                    isStoredInMemoryOnly: true,
-                    cloudKitDatabase: .none)
-                do {
-                    self.container = try ModelContainer(for: schema, configurations: [inMemoryConfig])
-                    self.isCloudKitEnabled = false
-                    self.syncStatus = .unavailable
-                    self.initializationError =
-                        "Unable to save data. Your changes will not persist after closing the app."
-                    Self.logger.error("Running in emergency in-memory mode - data will not persist")
-                } catch let finalError {
-                    // This should never happen - in-memory containers don't require disk access
-                    Self.logger.critical("Failed to create even in-memory ModelContainer: \(finalError)")
-                    preconditionFailure(
-                        "Unable to initialize data storage. Please reinstall the app or contact support."
-                    )
-                }
-            }
+    func retryStorage() {
+        guard case let .failed(failure) = storageState else { return }
+        let outcome = storeOpening.open(attempt: failure.attemptCount + 1)
+        self.storageState = outcome.state
+        self.isCloudKitEnabled = outcome.cloudKitEnabled
+        if outcome.cloudKitEnabled {
+            #if !JABTRACKER_TEST_HARNESS
+            self.checkCloudKitStatus()
+            #endif
+        } else {
+            self.syncStatus = .unavailable
         }
     }
 
