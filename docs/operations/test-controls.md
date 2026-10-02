@@ -52,14 +52,14 @@ Existing Debug-only dose, HealthKit and StoreKit test seams remain Debug-only. G
 The application post-build phase runs `scripts/release/build-controls.py generate`. It reads the built Info.plist and writes `JabTrackerBuildManifest.json` atomically into the application resources. The manifest contains only a schema version and raw resolved inputs:
 
 - `CONFIGURATION`, `PRODUCT_BUNDLE_IDENTIFIER`, `PLATFORM_NAME`.
-- `SWIFT_ACTIVE_COMPILATION_CONDITIONS`, `OTHER_SWIFT_FLAGS`, `TOOLCHAIN_DIR`.
+- `SWIFT_ACTIVE_COMPILATION_CONDITIONS`, `OTHER_SWIFT_FLAGS`, `DT_TOOLCHAIN_DIR` (recorded as `toolchain_dir`).
 - Effective `SWIFT_EXEC`, `SWIFT_FRONTEND_EXEC`, `SWIFT_DRIVER_SWIFT_FRONTEND_EXEC` values, including empty values.
 
 The phase declares the Python script and built Info.plist as inputs, and the final manifest plus its fixed `.tmp` sibling as outputs. It runs on each build to replace previous configuration metadata. Generation failure removes stale outputs.
 
 The same CLI verifies both app bundles through the existing five-argument `scripts/release/inspect-release-bundle.sh` entry point. It recomputes Swift definitions from raw conditions, both `-D` forms and `-Xfrontend` forwarding. Shipment preflight requires ordinary `Release`, exact production identifiers in both Info.plists and manifests, identical archive/IPA inputs, and an empty Swift-definition set. Unknown fields, invalid types, duplicate JSON keys, missing metadata, opaque response files and unresolved/ambiguous inputs fail.
 
-Xcode's standard compiler environment is supported: a nonempty compiler value must match the corresponding `swiftc` or `swift-frontend` path inside the selected `TOOLCHAIN_DIR`, whose name is `XcodeDefault.xctoolchain`. Custom compiler/toolchain overrides fail. Retained compiler commands must still establish what Xcode actually invoked.
+Xcode's standard compiler environment is supported: a nonempty compiler value must match the corresponding `swiftc` or `swift-frontend` path inside `DT_TOOLCHAIN_DIR`, whose name is `XcodeDefault.xctoolchain`. `TOOLCHAIN_DIR` is not used: Xcode 26.5 on CI lists the Metal toolchain first, so `TOOLCHAIN_DIR` points at `Metal.xctoolchain`. Generation also fails if `TOOLCHAINS` names anything other than `com.apple.dt.toolchain.XcodeDefault` or `com.apple.dt.toolchain.Metal.*`. Custom compiler/toolchain overrides fail. Retained compiler commands must still establish what Xcode actually invoked.
 
 The original version, build and food-database checks remain required. No stored boolean, binary-string scan or signature verdict substitutes for verification. The manifest records resolved build settings; it does not attest arbitrary binaries, per-file compiler flags or post-build tampering. KAT-3594 owns signing/profile/entitlement acceptance on the exact candidate archive and IPA.
 
