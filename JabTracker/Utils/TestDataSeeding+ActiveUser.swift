@@ -6,7 +6,7 @@
 //  with specific durations of food logging, weight entries, and medication doses.
 //
 
-#if DEBUG || TEST
+#if DEBUG || JABTRACKER_TEST_HARNESS
     import Foundation
     import OSLog
     import SwiftData

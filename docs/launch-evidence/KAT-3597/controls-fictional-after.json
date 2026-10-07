@@ -1,0 +1,17 @@
+{
+  "columns": [
+    "Z_PK",
+    "ZFOODNAME"
+  ],
+  "entries": [
+    [
+      46,
+      "Salmon, Atlantic, raw"
+    ]
+  ],
+  "counts": {
+    "ZUSER": 1,
+    "ZFOODENTRY": 1,
+    "ZDOSE": 0
+  }
+}

@@ -189,7 +189,7 @@ struct ScheduleSetupView: View {
 // MARK: - Preview
 
 #Preview {
-    let dataController = DataController.testContainer()
+    let dataController = DataController(inMemory: true)
     let authManager = AuthenticationManager(dataController: dataController)
     let viewModel = LegacyOnboardingViewModel(
         dataController: dataController,

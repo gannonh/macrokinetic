@@ -5,8 +5,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @ObservedObject private var dataController = DataController.shared
-    // Use real environment for Settings so status reflects actual entitlements during UI tests
-    @StateObject private var subscriptionManager = SubscriptionManager(isTestEnvironment: false)
+    @StateObject private var subscriptionManager = SubscriptionManager()
     @StateObject private var medicationManager: MedicationManager
     @ObservedObject private var appServices = AppServices.shared
 
@@ -198,12 +197,15 @@ struct NotificationToggleRow: View {
             )
             .accessibilityIdentifier("notifications-toggle")
             .onChange(of: notificationService.notificationsEnabled) { oldValue, newValue in
+                #if DEBUG || JABTRACKER_TEST_HARNESS
                 // In UI testing mode, skip async operations for faster test execution
                 let isUITesting = ProcessInfo.processInfo.arguments.contains("--ui-testing")
                 guard !isUITesting else {
                     logger.info("UI testing mode: Skipping async notification operations")
                     return
                 }
+
+                #endif
 
                 Task {
                     do {
