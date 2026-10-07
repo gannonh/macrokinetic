@@ -16,74 +16,55 @@ final class DoseHistorySwipeActionsUITests: XCTestCase {
     // MARK: - Swipe Actions
 
     func test_doseHistory_swipeActionsDeleteDose() throws {
-        // GIVEN: A dose exists in history
-
-        // Given: User has a medication profile and a dose for it
-        let app = TestUtilities.setupDoseHistoryTest(app: XCUIApplication(), doseCount: 1)
+        let app = TestUtilities.setupDoseHistoryTest(app: XCUIApplication(), doseCount: 2)
         TestUtilities.debugScreenshot(app, step: 1, description: "after-setup")
-
-        // Navigate to History tab
         TestUtilities.navigateToHistoryView(in: app)
         TestUtilities.debugScreenshot(app, step: 2, description: "after-navigate-history")
 
-        // Find the first dose row
-        let doseRows = TestUtilities.getDoseRows(from: app, minimumCount: 1)
-        let firstDoseRow = doseRows.element(boundBy: 0)
+        let rows = TestUtilities.getDoseRows(from: app, minimumCount: 2)
+        XCTAssertEqual(rows.count, 2)
+        let target = rows.element(boundBy: 0)
+        let survivor = rows.element(boundBy: 1)
+        XCTAssertEqual(target.staticTexts["dose-amount"].label, "0.25 mg")
+        XCTAssertEqual(target.staticTexts["dose-medication"].label, "Ozempic")
+        XCTAssertEqual(target.staticTexts["injection-site"].label, "Thigh")
+        XCTAssertEqual(survivor.staticTexts["injection-site"].label, "Abdomen")
+        let survivorLabel = survivor.label
+        let survivorDate = app.staticTexts.matching(identifier: "dose-date-section-header")
+            .element(boundBy: 1).label
 
-        // WHEN: User swipes left on dose row to reveal trailing actions
-        firstDoseRow.swipeLeft()
-
-        // THEN: Delete action appears
-        let deleteButton = app.buttons["Delete"]
-        XCTAssertTrue(
-            deleteButton.waitForExistence(timeout: 3),
-            "Delete button should appear after swipe")
-
-        // Tap the Delete button
-        deleteButton.tap()
-
-        // THEN: Delete confirmation alert appears
-        let deleteAlert = app.alerts["Delete Dose"]
-        XCTAssertTrue(
-            deleteAlert.waitForExistence(timeout: 5),
-            "Delete confirmation alert should appear")
-
-        // Verify alert has proper buttons
-        let cancelAlertButton = deleteAlert.buttons["Cancel"]
-        let deleteAlertButton = deleteAlert.buttons["Delete"]
-
-        XCTAssertTrue(cancelAlertButton.exists, "Cancel button should exist in alert")
-        XCTAssertTrue(deleteAlertButton.exists, "Delete button should exist in alert")
-
-        // Confirm deletion
-        deleteAlertButton.tap()
-
-        // THEN: Dose is removed from list
-        // Wait for alert to dismiss
-        let alertDismissed = !deleteAlert.waitForExistence(timeout: 3)
-        XCTAssertTrue(alertDismissed, "Delete alert should dismiss after confirmation")
-
-        // Debug screenshot after deletion
+        target.swipeLeft()
+        let delete = app.buttons["Delete"]
+        XCTAssertTrue(delete.waitForExistence(timeout: 3))
+        delete.tap()
+        let alert = app.alerts["Delete Dose"]
+        XCTAssertTrue(alert.waitForExistence(timeout: 5))
+        XCTAssertTrue(alert.buttons["Cancel"].exists)
+        alert.buttons["Delete"].tap()
+        XCTAssertTrue(alert.waitForNonExistence(timeout: 3))
         TestUtilities.debugScreenshot(app, step: 3, description: "after-delete-confirmed")
 
-        // Verify we're back on the History view (dose-history-container or dose-history-view)
-        let historyContainer = app.descendants(matching: .any)["dose-history-container"]
-        let historyView = app.descendants(matching: .any)["dose-history-view"]
-
-        // Debug: Print what we found
-        print("🔍 DEBUG: historyContainer exists: \(historyContainer.exists)")
-        print("🔍 DEBUG: historyView exists: \(historyView.exists)")
-
-        XCTAssertTrue(
-            historyContainer.waitForExistence(timeout: 3) || historyView.waitForExistence(timeout: 3),
-            "Should return to history view after deletion")
-
-        // Verify the dose row no longer exists (empty state or reduced count)
-        // Since we created 1 dose and deleted it, we should see empty state or no dose rows
-        let updatedDoseRows = app.buttons.matching(identifier: "dose-history-row")
+        XCTAssertTrue(app.staticTexts["1 of 1 doses shown"].waitForExistence(timeout: 5))
+        let remaining = TestUtilities.getDoseRows(from: app)
+        XCTAssertEqual(remaining.count, 1)
+        XCTAssertEqual(remaining.firstMatch.label, survivorLabel)
+        XCTAssertEqual(remaining.firstMatch.staticTexts["dose-amount"].label, "0.25 mg")
+        XCTAssertEqual(remaining.firstMatch.staticTexts["dose-medication"].label, "Ozempic")
+        XCTAssertEqual(remaining.firstMatch.staticTexts["injection-site"].label, "Abdomen")
         XCTAssertEqual(
-            updatedDoseRows.count, 0,
-            "Dose row should be removed after deletion")
+            app.staticTexts.matching(identifier: "dose-date-section-header").firstMatch.label,
+            survivorDate)
+
+        app.terminate()
+        let relaunched = TestUtilities.launchAppWithTestMode(resetData: false)
+        TestUtilities.navigateToHistoryView(in: relaunched)
+        XCTAssertTrue(relaunched.staticTexts["1 of 1 doses shown"].waitForExistence(timeout: 5))
+        let persisted = TestUtilities.getDoseRows(from: relaunched)
+        XCTAssertEqual(persisted.count, 1)
+        XCTAssertEqual(persisted.firstMatch.label, survivorLabel)
+        XCTAssertEqual(
+            relaunched.staticTexts.matching(identifier: "dose-date-section-header").firstMatch.label,
+            survivorDate)
     }
 
     func test_doseHistory_swipeActionsDuplicateDose() throws {
@@ -114,12 +95,9 @@ final class DoseHistorySwipeActionsUITests: XCTestCase {
 
         // THEN: New dose is created with same data but current timestamp
 
-        // Verify we're still on the History view (dose-history-container or dose-history-view)
-        let historyContainer = app.descendants(matching: .any)["dose-history-container"]
-        let historyView = app.descendants(matching: .any)["dose-history-view"]
-        XCTAssertTrue(
-            historyContainer.waitForExistence(timeout: 3) || historyView.waitForExistence(timeout: 3),
-            "Should remain on history view")
+        XCTAssertTrue(app.segmentedControls["analytics-section-picker"].buttons["History"].isSelected)
+        XCTAssertTrue(app.segmentedControls["history-view-mode-picker"].buttons["List"].isSelected)
+        XCTAssertTrue(app.staticTexts["2 of 2 doses shown"].waitForExistence(timeout: 5))
 
         // THEN: Dose count should increase to 2 (original + duplicate)
         let updatedDoseRows = app.buttons.matching(identifier: "dose-history-row")
@@ -134,9 +112,11 @@ final class DoseHistorySwipeActionsUITests: XCTestCase {
         XCTAssertTrue(
             updatedDoseRows.element(boundBy: 1).exists,
             "Second dose row (duplicate) should exist")
-
-        // Note: Success message validation would require the UI to show a success indicator
-        // The duplication action itself completing successfully is the main validation
+        for row in updatedDoseRows.allElementsBoundByIndex {
+            XCTAssertEqual(row.staticTexts["dose-amount"].label, "0.25 mg")
+            XCTAssertEqual(row.staticTexts["dose-medication"].label, "Ozempic")
+            XCTAssertEqual(row.staticTexts["injection-site"].label, "Abdomen")
+        }
     }
 
     func test_doseHistory_swipeActionsSkipDose() throws {
@@ -151,6 +131,7 @@ final class DoseHistorySwipeActionsUITests: XCTestCase {
         // Find the first dose row
         let doseRows = TestUtilities.getDoseRows(from: app, minimumCount: 1)
         let firstDoseRow = doseRows.element(boundBy: 0)
+        let timestamp = firstDoseRow.staticTexts["dose-timestamp"].label
 
         // WHEN: User swipes right on dose row to reveal leading actions
         firstDoseRow.swipeRight()
@@ -167,12 +148,8 @@ final class DoseHistorySwipeActionsUITests: XCTestCase {
         // THEN: Dose row shows skipped styling/indicator
         // Wait a moment for the skip status to update
 
-        // Verify we're still on the History view (dose-history-container or dose-history-view)
-        let historyContainer = app.descendants(matching: .any)["dose-history-container"]
-        let historyView = app.descendants(matching: .any)["dose-history-view"]
-        XCTAssertTrue(
-            historyContainer.waitForExistence(timeout: 3) || historyView.waitForExistence(timeout: 3),
-            "Should remain on history view")
+        XCTAssertTrue(app.segmentedControls["analytics-section-picker"].buttons["History"].isSelected)
+        XCTAssertTrue(app.segmentedControls["history-view-mode-picker"].buttons["List"].isSelected)
 
         // Verify the dose is still there (count should remain 1)
         let updatedDoseRows = TestUtilities.getDoseRows(from: app, minimumCount: 1)
@@ -190,69 +167,50 @@ final class DoseHistorySwipeActionsUITests: XCTestCase {
         XCTAssertTrue(
             skippedIndicator.waitForExistence(timeout: 3),
             "Skipped dose should show orange X mark indicator symbol")
+        XCTAssertEqual(
+            updatedDoseRows.firstMatch.label,
+            "0.25 milligrams, Ozempic, at \(timestamp), skipped, injection site Abdomen")
     }
 
     func test_doseHistory_deleteConfirmationPreventsAccidentalDeletion() throws {
-        // GIVEN: A dose exists in history
-
-        // Given: User has a medication profile and a dose for it
         let app = TestUtilities.setupDoseHistoryTest(app: XCUIApplication(), doseCount: 1)
-
-        // Navigate to History tab
         TestUtilities.navigateToHistoryView(in: app)
+        let original = TestUtilities.getDoseRows(from: app).firstMatch
+        XCTAssertEqual(original.staticTexts["dose-amount"].label, "0.25 mg")
+        XCTAssertEqual(original.staticTexts["dose-medication"].label, "Ozempic")
+        XCTAssertEqual(original.staticTexts["injection-site"].label, "Abdomen")
+        let originalLabel = original.label
+        let originalDate = app.staticTexts.matching(identifier: "dose-date-section-header").firstMatch.label
 
-        // Find the first dose row
-        let doseRows = TestUtilities.getDoseRows(from: app, minimumCount: 1)
-        let firstDoseRow = doseRows.element(boundBy: 0)
+        original.swipeLeft()
+        let delete = app.buttons["Delete"]
+        XCTAssertTrue(delete.waitForExistence(timeout: 3))
+        delete.tap()
+        let alert = app.alerts["Delete Dose"]
+        XCTAssertTrue(alert.waitForExistence(timeout: 5))
+        XCTAssertTrue(alert.buttons["Delete"].exists)
+        alert.buttons["Cancel"].tap()
+        XCTAssertTrue(alert.waitForNonExistence(timeout: 3))
 
-        // WHEN: User starts delete process but cancels confirmation
-        firstDoseRow.swipeLeft()
-
-        // THEN: Delete action appears
-        let deleteButton = app.buttons["Delete"]
-        XCTAssertTrue(
-            deleteButton.waitForExistence(timeout: 3),
-            "Delete button should appear after swipe")
-
-        // Tap the Delete button
-        deleteButton.tap()
-
-        // THEN: Delete confirmation alert appears
-        let deleteAlert = app.alerts["Delete Dose"]
-        XCTAssertTrue(
-            deleteAlert.waitForExistence(timeout: 5),
-            "Delete confirmation alert should appear")
-
-        // Verify alert has proper buttons
-        let cancelAlertButton = deleteAlert.buttons["Cancel"]
-        let deleteAlertButton = deleteAlert.buttons["Delete"]
-
-        XCTAssertTrue(cancelAlertButton.exists, "Cancel button should exist in alert")
-        XCTAssertTrue(deleteAlertButton.exists, "Delete button should exist in alert")
-
-        // WHEN: User cancels deletion
-        cancelAlertButton.tap()
-
-        // THEN: Alert dismisses and dose remains in list
-        let alertDismissed = !deleteAlert.waitForExistence(timeout: 3)
-        XCTAssertTrue(alertDismissed, "Delete alert should dismiss after cancellation")
-
-        // Verify we're back on the History view (dose-history-container or dose-history-view)
-        let historyContainer = app.descendants(matching: .any)["dose-history-container"]
-        let historyView = app.descendants(matching: .any)["dose-history-view"]
-        XCTAssertTrue(
-            historyContainer.waitForExistence(timeout: 3) || historyView.waitForExistence(timeout: 3),
-            "Should return to history view after canceling deletion")
-
-        // THEN: Dose remains in list (should still have the original dose)
-        let remainingDoseRows = TestUtilities.getDoseRows(from: app, minimumCount: 1)
+        let remaining = TestUtilities.getDoseRows(from: app)
+        XCTAssertEqual(remaining.count, 1)
+        XCTAssertEqual(remaining.firstMatch.label, originalLabel)
+        XCTAssertTrue(app.staticTexts["1 of 1 doses shown"].exists)
         XCTAssertEqual(
-            remainingDoseRows.count, 1,
-            "Dose row should remain after canceling deletion")
+            app.staticTexts.matching(identifier: "dose-date-section-header").firstMatch.label,
+            originalDate)
 
-        // Verify the dose row still exists and is accessible
-        XCTAssertTrue(
-            remainingDoseRows.element(boundBy: 0).exists,
-            "Original dose row should still exist after canceling deletion")
+        app.terminate()
+        let relaunched = TestUtilities.launchAppWithTestMode(resetData: false)
+        TestUtilities.navigateToHistoryView(in: relaunched)
+        let persisted = TestUtilities.getDoseRows(from: relaunched)
+        XCTAssertEqual(persisted.count, 1)
+        XCTAssertEqual(persisted.firstMatch.label, originalLabel)
+        XCTAssertEqual(persisted.firstMatch.staticTexts["dose-amount"].label, "0.25 mg")
+        XCTAssertEqual(persisted.firstMatch.staticTexts["dose-medication"].label, "Ozempic")
+        XCTAssertEqual(persisted.firstMatch.staticTexts["injection-site"].label, "Abdomen")
+        XCTAssertEqual(
+            relaunched.staticTexts.matching(identifier: "dose-date-section-header").firstMatch.label,
+            originalDate)
     }
 }
