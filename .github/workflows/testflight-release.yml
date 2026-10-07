@@ -262,6 +262,7 @@ jobs:
           command -v xcodegen >/dev/null || brew install xcodegen
           mkdir -p JabTracker/Resources
           cp candidate/usda_foods.sqlite JabTracker/Resources/usda_foods.sqlite
+          cp candidate/food-db-manifest.json JabTracker/Resources/food-db-manifest.json
           expected=$(jq -r .database_sha256 candidate/food-db-manifest.json)
           actual=$(shasum -a 256 JabTracker/Resources/usda_foods.sqlite | awk '{print $1}')
           test "$expected" = "$actual"
@@ -312,6 +313,7 @@ jobs:
           mkdir -p build-artifact
           cp "$RUNNER_TEMP/export/JabTracker.ipa" build-artifact/JabTracker.ipa
           cp candidate/food-db-manifest.json build-artifact/food-db-manifest.json
+          cp JabTracker/Resources/food-data-notices.json build-artifact/food-data-notices.json
           shasum -a 256 build-artifact/JabTracker.ipa > build-artifact/JabTracker.ipa.sha256
       - name: Upload exact build artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -513,10 +515,11 @@ jobs:
             --target '${{ needs.resolve.outputs.commit_sha }}' \
             --title "$tag" \
             --notes "Verified food database snapshot for ${{ needs.resolve.outputs.marketing_version }} (${{ needs.resolve.outputs.build_number }}), run $GITHUB_RUN_ID." \
-            candidate/usda_foods.sqlite.gz candidate/food-db-manifest.json
+            candidate/usda_foods.sqlite.gz candidate/food-db-manifest.json \
+            JabTracker/Resources/food-data-notices.json
           {
             echo "### Promoted food snapshot"
-            echo "- tag: `$tag`"
-            echo "- database SHA-256: `$(jq -r .database_sha256 "$manifest")`"
+            echo "- tag: $tag"
+            echo "- database SHA-256: $(jq -r .database_sha256 "$manifest")"
             echo "- release: https://github.com/$GITHUB_REPOSITORY/releases/tag/$tag"
           } >> "$GITHUB_STEP_SUMMARY"
