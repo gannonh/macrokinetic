@@ -1,0 +1,28 @@
+{
+  "state": "draft",
+  "baseline_sha": "35c7a1959a805331ccc09a2821b8d801f42efc3c",
+  "candidate": {
+    "sha": null,
+    "version": null,
+    "build": null,
+    "release_scope_evidence": null,
+    "release_scope_issue": "KAT-3580",
+    "excluded_features": ["subscriptions", "AI food tools", "recipes", "unfinished manual food creation", "progress photos", "manual onboarding", "drug-dose and reconstitution calculators"],
+    "scope_note": "Intended launch exclusions. Implementation and candidate validation are pending."
+  },
+  "icon": {
+    "source": "JabTracker/AppIcon.icon",
+    "path": null,
+    "sha256": null,
+    "candidate_sha": null,
+    "reviewed_by": null,
+    "evidence": null
+  },
+  "screenshots": [
+    {"id": "dashboard", "caption": "Your daily record, together", "claim": "nutrition_logging", "state": "pending", "path": null},
+    {"id": "food-search", "caption": "Log meals from a food library", "claim": "nutrition_logging", "state": "pending", "path": null},
+    {"id": "food-log", "caption": "Review calories and macros", "claim": "nutrition_logging", "state": "pending", "path": null},
+    {"id": "metrics", "caption": "Record your body measurements", "claim": "metrics_recording", "route": "Add (+) > Metrics > Log Metrics", "state": "pending", "path": null},
+    {"id": "dose-history", "caption": "Keep track of prescribed doses", "claim": "prescribed_dose_history", "state": "pending", "path": null}
+  ]
+}
