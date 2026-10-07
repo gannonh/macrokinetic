@@ -411,6 +411,7 @@
 		A2C793F4063834B3138C061B /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C74ED44FFF6344C1F7DD461 /* HistoryView.swift */; };
 		A42145D595814E0BF3905C7A /* PreviewHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89F2F17A6910B53D3C7274E5 /* PreviewHelpers.swift */; };
 		A42C8B19134FF790E58FE6A1 /* ScheduleServiceAdherenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DCC8203C65D1C3C6AD1CC3B /* ScheduleServiceAdherenceTests.swift */; };
+		A47D8A061DE4BCAAA732009A /* OnboardingLaunchContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8966A31BAD9F45C80CBBCE0D /* OnboardingLaunchContractTests.swift */; };
 		A4FE1E325B2682E58C00C15A /* NotificationServiceBackgroundTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D58DAD4261D9C3F7E970A9BF /* NotificationServiceBackgroundTests.swift */; };
 		A4FF1894CD5627F122FCB639 /* StandardWidgetGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 028A13484ECE65DBFAFE385D /* StandardWidgetGroup.swift */; };
 		A6603E904774CD82CABF7F7F /* AnalyticsServiceIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AA9DA110557507873F712DE /* AnalyticsServiceIntegrationTests.swift */; };
@@ -474,6 +475,7 @@
 		C24A8A61EAB23384FC48562D /* SubscriptionUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D30809BE84F01DA83E83F4C /* SubscriptionUITests.swift */; };
 		C2BFD42C0E357432B6FD0176 /* MedicationProfileViewModelScheduleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F61639608F79641ACAD7953 /* MedicationProfileViewModelScheduleTests.swift */; };
 		C3252EF5536143F82DE71261 /* WeeklyNutritionHeroWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2DF9CF387DB7C0A148A94B8 /* WeeklyNutritionHeroWidget.swift */; };
+		C3325F8D7A054AAD7649F4C3 /* OnboardingLaunchUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99EB906293E819E929D64434 /* OnboardingLaunchUITests.swift */; };
 		C37C33130408C521AE68DCBF /* CalendarAccessibilityUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD7C3B0C007CFE71B5FE56C1 /* CalendarAccessibilityUITests.swift */; };
 		C395CC75D4D807116357B138 /* usda_foods.sqlite in Resources */ = {isa = PBXBuildFile; fileRef = 104BEF2491A48A1F607A74A9 /* usda_foods.sqlite */; };
 		C43AA3E491B0B0898DBCBF91 /* MealSectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59D73FD66FDC6992764A72E8 /* MealSectionTests.swift */; };
@@ -1008,6 +1010,7 @@
 		87BADFC0A94A336BEF7A2C1A /* ScheduledDoseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduledDoseTests.swift; sourceTree = "<group>"; };
 		87C7C724CD867481C61FB433 /* ProfileFieldTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileFieldTests.swift; sourceTree = "<group>"; };
 		885F303830AF5C665A2B2455 /* CalendarScheduledDosesUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarScheduledDosesUITests.swift; sourceTree = "<group>"; };
+		8966A31BAD9F45C80CBBCE0D /* OnboardingLaunchContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingLaunchContractTests.swift; sourceTree = "<group>"; };
 		899445BC2BC7653CF8FDFA91 /* BarcodeScanningUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarcodeScanningUITests.swift; sourceTree = "<group>"; };
 		89F2F17A6910B53D3C7274E5 /* PreviewHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewHelpers.swift; sourceTree = "<group>"; };
 		8A6C4151B087398F5FD4E5A0 /* DoseEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseEvent.swift; sourceTree = "<group>"; };
@@ -1048,6 +1051,7 @@
 		99234A94DDA7AD9A89878536 /* CreateFoodViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateFoodViewModelTests.swift; sourceTree = "<group>"; };
 		994456F6ED1ED79F5C45296F /* AuthenticationResetAndEdgeCaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationResetAndEdgeCaseTests.swift; sourceTree = "<group>"; };
 		997D2785D96A3591D8050EE3 /* ExpenditureDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpenditureDetailView.swift; sourceTree = "<group>"; };
+		99EB906293E819E929D64434 /* OnboardingLaunchUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingLaunchUITests.swift; sourceTree = "<group>"; };
 		9B06578A524F0ACF575A1443 /* WeightTrendWidgetViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeightTrendWidgetViewModelTests.swift; sourceTree = "<group>"; };
 		9B1637616704902955FB4C78 /* MetricKey+ReleaseAvailability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MetricKey+ReleaseAvailability.swift"; sourceTree = "<group>"; };
 		9B3A5F049BA221ECFEAFA805 /* FoodServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodServiceTests.swift; sourceTree = "<group>"; };
@@ -1416,6 +1420,7 @@
 			children = (
 				B6BF07DD02813C719A348BA0 /* ConcentrationCurvePreviewTests.swift */,
 				71755FB3B65A50FDA1530C99 /* OnboardingCoordinatorTests.swift */,
+				8966A31BAD9F45C80CBBCE0D /* OnboardingLaunchContractTests.swift */,
 				BA4B2712F821B62E95607350 /* OnboardingMaintenanceGoalTests.swift */,
 				1ED772CA0C6C4452DE5A4901 /* OnboardingViewModelTests.swift */,
 			);
@@ -1560,6 +1565,7 @@
 		605773BAE871069FDA085CA4 /* Onboarding */ = {
 			isa = PBXGroup;
 			children = (
+				99EB906293E819E929D64434 /* OnboardingLaunchUITests.swift */,
 				197FA96613E8B505E4C9B6F0 /* OnboardingPermissionsUITests.swift */,
 				E5D1A686C4F54EADC7CAB76E /* OnboardingUITests.swift */,
 			);
@@ -2685,6 +2691,7 @@
 				D3148B78DC1F980CF4FB46E2 /* NotificationSettingsUITests.swift in Sources */,
 				1CBEBB4D0AC6C2E903D47874 /* NutritionDashboardUITests.swift in Sources */,
 				01599635E10A9B1ED4BE2CCB /* NutritionFlowUITests.swift in Sources */,
+				C3325F8D7A054AAD7649F4C3 /* OnboardingLaunchUITests.swift in Sources */,
 				0E2952129994D1A3224647B2 /* OnboardingPermissionsUITests.swift in Sources */,
 				17B390D46C6B77E9A5097E0F /* OnboardingUITests.swift in Sources */,
 				74E6DC7E13C647A9AAE7F362 /* PKEngineUITests.swift in Sources */,
@@ -3208,6 +3215,7 @@
 				5769750535FE16E9336F115A /* NutritionProgramTests.swift in Sources */,
 				B60DD4C3F881042D505C9099 /* NutritionSummaryViewModelTests.swift in Sources */,
 				06220C27201E8384E9C869D9 /* OnboardingCoordinatorTests.swift in Sources */,
+				A47D8A061DE4BCAAA732009A /* OnboardingLaunchContractTests.swift in Sources */,
 				599B73AA130B244816906394 /* OnboardingMaintenanceGoalTests.swift in Sources */,
 				9D9B20E1485FEB61A75358FD /* OnboardingViewModelTests.swift in Sources */,
 				F484DA783668AAE517071FD5 /* PauseScheduleSheetTests.swift in Sources */,
