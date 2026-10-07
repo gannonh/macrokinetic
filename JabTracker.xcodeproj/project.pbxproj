@@ -212,6 +212,7 @@
 		550AB3855CE4828313CE1B40 /* AuthenticationEnumTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C09E1878495CFF7D03ED9ADE /* AuthenticationEnumTests.swift */; };
 		552D426D137E4180D2F54EC1 /* QuickMetricsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 721B6C7CCE2BE60BB5BF378B /* QuickMetricsSheet.swift */; };
 		56347CD76BA1E658441D8D6F /* DesignSystemUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65714DDE038569FC5C471011 /* DesignSystemUITests.swift */; };
+		56C7AC51FB8B574828B3E522 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F558D3A4C004422B3C2F9960 /* PrivacyInfo.xcprivacy */; };
 		56D503FB4FDE0B4A8D3D4283 /* ReconstitutionCalculatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3920FFDC07806ABF17F4B65F /* ReconstitutionCalculatorTests.swift */; };
 		571A0962A47699E66A4BD51D /* AuthenticationEdgeCaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B36E8FEE567E008ADBD2FA91 /* AuthenticationEdgeCaseTests.swift */; };
 		573944B33F96BAC51138C1FE /* SummaryRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64E0C853856028A53F5D0588 /* SummaryRow.swift */; };
@@ -331,6 +332,7 @@
 		82F2C55F36CDCDD620F34A02 /* ScheduleServiceTitrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCA736FED86EAA65C843009E /* ScheduleServiceTitrationTests.swift */; };
 		83307A77A4269AAB52B57092 /* CustomFoodService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69F35D81E5C7FD2D03D95D30 /* CustomFoodService.swift */; };
 		8388C3B6CCF8915B93565B83 /* SettingsViewNotificationIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F70B4425884ACD872183473F /* SettingsViewNotificationIntegrationTests.swift */; };
+		83B3ECCD4D13C3A3B73BF5D5 /* PrivacyManifestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14383A594AF2C11E48E45D5F /* PrivacyManifestTests.swift */; };
 		84B006875EF5E8E69AB9F7BC /* ProgressPhotoServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AC5A4AC6357B513329A5A63 /* ProgressPhotoServiceTests.swift */; };
 		8549311FA2F1C2366F061581 /* SubscriptionManagerRestoreIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 424211E18A1C53CD1D5791D8 /* SubscriptionManagerRestoreIntegrationTests.swift */; };
 		857D9E2C0D6399A70E5FAC20 /* AdherenceProgressIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C45AF287FCA564EF5A70F3D /* AdherenceProgressIndicator.swift */; };
@@ -705,6 +707,7 @@
 		12EC9A418E69173C7ABC304C /* SubscriptionUIStateConsistencyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionUIStateConsistencyTests.swift; sourceTree = "<group>"; };
 		13564236920B6E14A4C69066 /* QuickAddContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickAddContentView.swift; sourceTree = "<group>"; };
 		1406B2D7A7339461ABC9F4BF /* MissedDosePatternViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MissedDosePatternViewTests.swift; sourceTree = "<group>"; };
+		14383A594AF2C11E48E45D5F /* PrivacyManifestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyManifestTests.swift; sourceTree = "<group>"; };
 		14B382F118842ADDDC5ACAE4 /* FoodSearchSheetViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodSearchSheetViewModelTests.swift; sourceTree = "<group>"; };
 		157A9DA1B2243A8A149DF479 /* ProgramWizard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramWizard.swift; sourceTree = "<group>"; };
 		158E7348E026DE970A4A022A /* FoodEntryCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodEntryCardView.swift; sourceTree = "<group>"; };
@@ -1250,6 +1253,7 @@
 		F46CAB1EB265743F8965E95E /* ShortcutButtonTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutButtonTests.swift; sourceTree = "<group>"; };
 		F4E4D068F86F003F40B10E71 /* CalendarDoseActionsUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarDoseActionsUITests.swift; sourceTree = "<group>"; };
 		F557EDDA6D9BA00312971726 /* NotificationAuthorizationStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationAuthorizationStatus.swift; sourceTree = "<group>"; };
+		F558D3A4C004422B3C2F9960 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		F5A7F0370CC40B618BFF2A9B /* FoodServingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodServingTests.swift; sourceTree = "<group>"; };
 		F70B4425884ACD872183473F /* SettingsViewNotificationIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewNotificationIntegrationTests.swift; sourceTree = "<group>"; };
 		F78094472F5DE7764EA9C5CA /* CalendarDisplayUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarDisplayUITests.swift; sourceTree = "<group>"; };
@@ -1720,6 +1724,7 @@
 		7CF8F87FC3E0C1ADFC478A4B /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				F558D3A4C004422B3C2F9960 /* PrivacyInfo.xcprivacy */,
 				104BEF2491A48A1F607A74A9 /* usda_foods.sqlite */,
 			);
 			path = Resources;
@@ -2233,6 +2238,7 @@
 			isa = PBXGroup;
 			children = (
 				028D798135616E1802D9F628 /* AppServicesTests.swift */,
+				14383A594AF2C11E48E45D5F /* PrivacyManifestTests.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -2601,6 +2607,7 @@
 				4F1FAEDED60404CF678ED8EA /* AppIcon.icon in Resources */,
 				666E70338436B5345B89C04B /* Assets.xcassets in Resources */,
 				B75439369EF479C6C7679BEF /* JabTrackerStoreKit.storekit in Resources */,
+				56C7AC51FB8B574828B3E522 /* PrivacyInfo.xcprivacy in Resources */,
 				C395CC75D4D807116357B138 /* usda_foods.sqlite in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3200,6 +3207,7 @@
 				E60DE3D5A06DC3BC93A66160 /* PharmacokineticsEngineTests.swift in Sources */,
 				C0F52175B22DC0F2A33BCF9A /* PredictiveActivityProviderTests.swift in Sources */,
 				112D3DBDA73287EAF908E78C /* PricingCalculatorTests.swift in Sources */,
+				83B3ECCD4D13C3A3B73BF5D5 /* PrivacyManifestTests.swift in Sources */,
 				6326087D7583A73387D14F1C /* ProfileFieldTests.swift in Sources */,
 				428A01E33EB1A49C1EF3DB03 /* ProfileValidationTests.swift in Sources */,
 				26E1B1310AFF98CAD3AE1FF2 /* ProgramConfigurationTests.swift in Sources */,
