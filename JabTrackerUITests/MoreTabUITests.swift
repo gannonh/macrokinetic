@@ -129,9 +129,13 @@ final class MoreTabUITests: XCTestCase {
         XCTAssertTrue(medicationsButton.exists, "Medications segment should exist")
 
         // Analytics sub-picker should be visible with its segments
-        let concentrationButton = app.buttons["Concentration"]
-        XCTAssertTrue(concentrationButton.waitForExistence(timeout: 3), "Concentration segment should be visible")
-        XCTAssertTrue(concentrationButton.isSelected, "Concentration should be selected by default")
+        let historyButton = app.buttons["History"]
+        TestUtilities.debugScreenshot(app, name: "release-medication-analytics")
+        print(app.debugDescription)
+        XCTAssertTrue(historyButton.waitForExistence(timeout: 3), "History segment should be visible")
+        XCTAssertTrue(historyButton.isSelected, "History should be selected by default")
+        XCTAssertTrue(app.buttons["Adherence"].exists)
+        XCTAssertFalse(app.buttons["Concentration"].exists)
     }
 
     func testGLP1ProgramsSwitchToMedications() throws {
@@ -149,8 +153,8 @@ final class MoreTabUITests: XCTestCase {
         XCTAssertTrue(glp1View.waitForExistence(timeout: 5))
 
         // Verify Analytics sub-picker is visible initially
-        let concentrationButton = app.buttons["Concentration"]
-        XCTAssertTrue(concentrationButton.waitForExistence(timeout: 3), "Concentration should be visible initially")
+        let historyButton = app.buttons["History"]
+        XCTAssertTrue(historyButton.waitForExistence(timeout: 3), "History should be visible initially")
 
         // Tap Medications button in the section picker
         let medicationsButton = app.buttons["Medications"]
@@ -161,12 +165,14 @@ final class MoreTabUITests: XCTestCase {
         let disappearPredicate = NSPredicate(format: "exists == false")
         let disappearExpectation = XCTNSPredicateExpectation(
             predicate: disappearPredicate,
-            object: concentrationButton
+            object: historyButton
         )
         let result = XCTWaiter().wait(for: [disappearExpectation], timeout: 3)
 
         // Analytics sub-picker segments should NOT be visible anymore
-        XCTAssertEqual(result, .completed, "Concentration button should hide when Medications selected")
+        TestUtilities.debugScreenshot(app, name: "release-medication-profile-list")
+        print(app.debugDescription)
+        XCTAssertEqual(result, .completed, "History button should hide when Medications selected")
     }
 
     func testNavigateToFoodLibrary() throws {

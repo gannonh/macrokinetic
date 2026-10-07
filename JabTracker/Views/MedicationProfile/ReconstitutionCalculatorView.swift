@@ -51,6 +51,12 @@ struct ReconstitutionCalculatorView: View {
     }
 
     var body: some View {
+        if ReleasePolicy.isEnabled(.medicalCalculators) {
+            calculatorContent
+        }
+    }
+
+    private var calculatorContent: some View {
         NavigationStack {
             Form {
                 if let profile {
@@ -151,6 +157,7 @@ struct ReconstitutionCalculatorView: View {
     }
 
     private func calculateReconstitution() {
+        guard ReleasePolicy.isEnabled(.medicalCalculators) else { return }
         guard let vialStrengthValue = Double(vialStrength),
             let targetDoseValue = Double(targetDose),
             let waterVolumeValue = Double(waterVolume)
@@ -178,6 +185,7 @@ struct ReconstitutionCalculatorView: View {
     }
 
     private func saveCalculationToProfile(result: ReconstitutionCalculator.ReconstitutionResult) {
+        guard ReleasePolicy.isEnabled(.medicalCalculators) else { return }
         guard let vialStrengthValue = Double(vialStrength),
             let targetDoseValue = Double(targetDose),
             let waterVolumeValue = Double(waterVolume)

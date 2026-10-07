@@ -30,7 +30,7 @@ struct DoseEntrySheet: View {
     // UI State
     @State private var medicationProfiles: [MedicationProfile] = []
     @State private var selectedMedicationProfile: MedicationProfile?
-    @State private var doseAmount: Double = 0.0
+    @State private var doseAmountText = "0"
     @State private var doseTime: Date = .init()
     @State private var selectedInjectionSite: String = ""
     @State private var notes: String = ""
@@ -82,7 +82,7 @@ struct DoseEntrySheet: View {
 
                 // Dose Details Section
                 DoseEntryFormSections.DoseDetailsSection(
-                    doseAmount: self.$doseAmount,
+                    doseAmountText: self.$doseAmountText,
                     selectedInjectionSite: self.$selectedInjectionSite,
                     isSkipped: self.$isSkipped,
                     dosePhotoData: self.$dosePhotoData,
@@ -102,7 +102,7 @@ struct DoseEntrySheet: View {
                     isSkipped: self.isSkipped)
 
                 // PK Integration Info
-                if let selectedProfile = selectedMedicationProfile {
+                if ReleasePolicy.isEnabled(.concentrationEstimates), let selectedProfile = selectedMedicationProfile {
                     DoseEntryPKSection(
                         medicationProfile: selectedProfile,
                         isSkipped: self.isSkipped)
@@ -141,10 +141,14 @@ struct DoseEntrySheet: View {
 
     private var canSaveDose: Bool {
         guard self.selectedMedicationProfile != nil else { return false }
-        guard self.doseAmount > 0 || self.isSkipped else { return false }
+        guard self.amountToSave != nil else { return false }
         guard !self.selectedInjectionSite.isEmpty || self.isSkipped else { return false }
         guard !self.doseService.isProcessingDose else { return false }
         return true
+    }
+
+    private var amountToSave: Double? {
+        RecordedAmountInput.parse(self.doseAmountText, allowZero: self.isSkipped)
     }
 
     // MARK: - Data Loading
@@ -159,7 +163,7 @@ struct DoseEntrySheet: View {
                 if self.mode == .edit, let editData = editingDose {
                     // Load editing data
                     self.selectedMedicationProfile = editData.medicationProfile
-                    self.doseAmount = editData.amount
+                    self.doseAmountText = RecordedAmountInput.text(for: editData.amount)
                     self.doseTime = editData.timestamp
                     self.selectedInjectionSite = editData.site ?? ""
                     self.notes = editData.notes ?? ""
@@ -169,7 +173,7 @@ struct DoseEntrySheet: View {
                     // Set defaults for new dose
                     self.selectedMedicationProfile = self.medicationProfiles.first
                     if let profile = selectedMedicationProfile {
-                        self.doseAmount = profile.currentDose
+                        self.doseAmountText = RecordedAmountInput.text(for: profile.currentDose)
                         self.selectedInjectionSite = DoseDefaults.nextRecommendedSite(
                             for: profile.medication ?? .semaglutide,
                             recentDoses: Array((profile.doses ?? []).suffix(5)),
@@ -192,6 +196,10 @@ struct DoseEntrySheet: View {
 
     @MainActor
     private func saveDose() async {
+        guard self.canSaveDose, let amount = self.amountToSave else {
+            self.errorMessage = "Enter a valid amount. Zero is allowed for a skipped dose."
+            return
+        }
         guard let profile = selectedMedicationProfile else { return }
 
         self.isSubmitting = true
@@ -202,7 +210,7 @@ struct DoseEntrySheet: View {
                 // Update existing dose
                 let updatedEditData = DoseEditData(
                     id: editData.id,
-                    amount: self.doseAmount,
+                    amount: amount,
                     timestamp: self.doseTime,
                     site: self.isSkipped ? nil : self.selectedInjectionSite,
                     notes: self.notes.isEmpty ? nil : self.notes,
@@ -214,7 +222,7 @@ struct DoseEntrySheet: View {
             } else {
                 // Create new dose
                 _ = try await self.doseService.saveDose(
-                    amount: self.doseAmount,
+                    amount: amount,
                     timestamp: self.doseTime,
                     medicationProfile: profile,
                     site: self.isSkipped ? nil : self.selectedInjectionSite,

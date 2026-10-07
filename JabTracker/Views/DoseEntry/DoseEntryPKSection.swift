@@ -14,6 +14,12 @@ struct DoseEntryPKSection: View {
     let isSkipped: Bool
 
     var body: some View {
+        if ReleasePolicy.isEnabled(.concentrationEstimates) {
+            impactContent
+        }
+    }
+
+    private var impactContent: some View {
         Section {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {

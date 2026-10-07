@@ -80,7 +80,8 @@ final class DoseService {
                 timestamp: timestamp,
                 medicationProfile: medicationProfile,
                 site: site,
-                notes: notes)
+                notes: notes,
+                skipped: skipped)
 
             // Create new dose
             let newDose = Dose(
@@ -161,7 +162,8 @@ final class DoseService {
                 timestamp: editData.timestamp,
                 medicationProfile: editData.medicationProfile,
                 site: editData.site,
-                notes: editData.notes)
+                notes: editData.notes,
+                skipped: editData.skipped)
 
             // Update dose properties
             existingDose.amount = editData.amount
@@ -290,14 +292,15 @@ final class DoseService {
         timestamp: Date,
         medicationProfile: MedicationProfile,
         site: String? = nil,
-        notes: String? = nil
+        notes: String? = nil,
+        skipped: Bool = false
     ) throws {
         // Validate dose amount
-        guard amount >= 0 else {
-            throw DoseServiceError.invalidDoseAmount("Dose amount cannot be negative")
+        guard amount.isFinite, amount > 0 || (skipped && amount == 0) else {
+            throw DoseServiceError.invalidDoseAmount("Enter a finite prescribed amount greater than zero")
         }
 
-        guard amount <= 1000 else {
+        if ReleasePolicy.isEnabled(.medicalCalculators), amount > 1000 {
             throw DoseServiceError.invalidDoseAmount("Dose amount cannot exceed 1000mg")
         }
 
@@ -315,7 +318,7 @@ final class DoseService {
         }
 
         // Validate PK calculation inputs if not skipped dose
-        if amount > 0 {
+        if ReleasePolicy.isEnabled(.medicalCalculators), amount > 0 {
             guard let medication = medicationProfile.medication else {
                 throw DoseServiceError.invalidMedicationProfile("Missing medication for PK calculations")
             }

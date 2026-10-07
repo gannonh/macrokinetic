@@ -34,6 +34,8 @@ final class MockNotificationCenter: NotificationCenterProtocol {
     /// All notification requests that have been added
     var addedRequests: [UNNotificationRequest] = []
 
+    private(set) var addCallCount = 0
+
     /// All identifier arrays passed to removePendingNotificationRequests
     var removedIdentifiers: [[String]] = []
 
@@ -86,6 +88,7 @@ final class MockNotificationCenter: NotificationCenterProtocol {
     }
 
     func add(_ request: UNNotificationRequest) async throws {
+        addCallCount += 1
         addedRequests.append(request)
     }
 
@@ -115,6 +118,7 @@ final class MockNotificationCenter: NotificationCenterProtocol {
     /// Reset all tracked state (useful between tests)
     func reset() {
         addedRequests.removeAll()
+        addCallCount = 0
         removedIdentifiers.removeAll()
         didRemoveAll = false
         authorizationStatus = .authorized

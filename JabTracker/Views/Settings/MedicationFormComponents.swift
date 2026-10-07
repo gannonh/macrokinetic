@@ -34,6 +34,7 @@ struct MedicationBrandSection: View {
 struct MedicationDosingSection: View {
     let selectedMedication: Medication
     @Binding var selectedDose: Double
+    @Binding var prescribedAmountText: String
     @Binding var isCompounded: Bool
     @Binding var vialStrength: Double
     let accessibilityPrefix: String
@@ -46,7 +47,19 @@ struct MedicationDosingSection: View {
                 .accessibilityLabel("Compounded Medication")
                 .accessibilityValue(self.isCompounded ? "On" : "Off")
 
-            if self.isCompounded {
+            if !ReleasePolicy.isEnabled(.medicalCalculators) {
+                HStack {
+                    Text("Prescribed Amount (mg)")
+                    Spacer()
+                    TextField("Amount", text: self.$prescribedAmountText)
+                        .keyboardType(.decimalPad)
+                        .multilineTextAlignment(.trailing)
+                        .accessibilityIdentifier("\(self.accessibilityPrefix)-prescribed-dose-input")
+                }
+                Text("Record the amount prescribed by your clinician. Check with your clinician before changing it.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            } else if self.isCompounded {
                 HStack {
                     Text("Vial Strength (mg)")
                     Spacer()
@@ -70,6 +83,7 @@ struct MedicationDosingSection: View {
                 // Show reconstitution calculation
                 if self.vialStrength > 0, self.selectedDose > 0 {
                     Button("Calculate Reconstitution") {
+                        guard ReleasePolicy.isEnabled(.medicalCalculators) else { return }
                         self.onCalculateReconstitution()
                     }
                     .accessibilityIdentifier("\(self.accessibilityPrefix)-calculate-reconstitution")
@@ -99,7 +113,10 @@ struct ReconstitutionCalculatorSheet: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .sheet(isPresented: self.$isPresented) {
+            .sheet(isPresented: Binding(
+                get: { isPresented && ReleasePolicy.isEnabled(.medicalCalculators) },
+                set: { isPresented = $0 && ReleasePolicy.isEnabled(.medicalCalculators) }
+            )) {
                 ReconstitutionCalculatorView(
                     vialStrength: self.vialStrength,
                     targetDose: self.targetDose,

@@ -122,7 +122,7 @@ private struct DoseDetailRow: View {
                         .font(.headline)
                         .foregroundColor(.primary)
 
-                    Text("\(self.dose.amount, specifier: "%.1f") mg")
+                    Text("\(RecordedAmountInput.displayText(for: self.dose.amount)) mg")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }

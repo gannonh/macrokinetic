@@ -24,7 +24,7 @@ enum DoseEntryFormSections {
             Section {
                 Picker("Medication", selection: self.$selectedMedicationProfile) {
                     ForEach(self.medicationProfiles, id: \.id) { profile in
-                        Text("\(profile.displayName) (\(profile.currentDose, specifier: "%.2f") mg)")
+                        Text("\(profile.displayName) (\(RecordedAmountInput.displayText(for: profile.currentDose)) mg)")
                             .tag(profile as MedicationProfile?)
                     }
                 }
@@ -57,7 +57,7 @@ enum DoseEntryFormSections {
     // MARK: - Dose Details Section
 
     struct DoseDetailsSection: View {
-        @Binding var doseAmount: Double
+        @Binding var doseAmountText: String
         @Binding var selectedInjectionSite: String
         @Binding var isSkipped: Bool
         @Binding var dosePhotoData: Data?
@@ -69,9 +69,7 @@ enum DoseEntryFormSections {
                 HStack {
                     Text("Amount")
                     Spacer()
-                    TextField(
-                        "Amount", value: self.$doseAmount, format: .number.precision(.fractionLength(2))
-                    )
+                    TextField("Amount", text: self.$doseAmountText)
                     .multilineTextAlignment(.trailing)
                     .keyboardType(.decimalPad)
                     .accessibilityIdentifier("dose-entry-amount-field")
@@ -104,7 +102,7 @@ enum DoseEntryFormSections {
             } footer: {
                 if self.isSkipped {
                     Text(
-                        "Skipped doses are recorded for tracking but don't affect concentration calculations"
+                        "Skipped doses are recorded for tracking"
                     )
                     .font(.caption)
                     .foregroundColor(.secondary)
