@@ -19,6 +19,20 @@ final class FoodSearchV08UITests: XCTestCase {
         app = TestUtilities.launchAppWithTestMode(resetData: true)
     }
 
+    override func tearDownWithError() throws {
+        if testRun?.hasSucceeded == false, let app {
+            TestUtilities.captureFailureScreenshot(app, testName: name)
+            let hierarchy = app.debugDescription
+            print(hierarchy)
+            let attachment = XCTAttachment(string: hierarchy)
+            attachment.name = "failure-element-hierarchy"
+            attachment.lifetime = .keepAlways
+            add(attachment)
+        }
+        app = nil
+        try super.tearDownWithError()
+    }
+
     // MARK: - Phase 35: Search UX Improvements
 
     /// Test that search field auto-focuses when opening food search sheet
