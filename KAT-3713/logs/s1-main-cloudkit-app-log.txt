@@ -1,0 +1,63 @@
+2026-10-19 12:07:58.690241-0700 0x3d3b594  Error       0x0                  95116  14   JabTracker: (CoreData) [com.apple.coredata:error] CoreData: error: Store failed to load.  <NSPersistentStoreDescription: 0x101c40cc0> (type: SQLite, url: file:///Users/gann
+DayStatus: date} with userInfo {
+    NSLocalizedFailureReason = "CloudKit integration requires that all attributes be optional, or have a default value set. The following attributes are marked non-optional but do not have a default value:\nDayStatus: date";
+}
+2026-10-19 12:07:58.692231-0700 0x3d3b594  Error       0x0                  95116  0    JabTracker: (SwiftData) [com.apple.swiftdata:DataStore] Unresolved error loading container Error Domain=NSCocoaErrorDomain Code=134060 "A Core Data error occurred." UserInf
+DayStatus: date}
+2026-10-19 12:07:58.694903-0700 0x3d3b594  Error       0x0                  95116  0    JabTracker: (JabTracker.debug.dylib) [com.gannonhall.JabTracker:DataController] CloudKit setup failed, falling back to local storage: The operation couldn’t be completed. (
+2026-10-19 12:08:17.972539-0700 0x3d3c27e  Error       0x0                  95639  14   JabTracker: (CoreData) [com.apple.coredata:error] CoreData: error: Store failed to load.  <NSPersistentStoreDescription: 0x106440cc0> (type: SQLite, url: file:///Users/gann
+DayStatus: date} with userInfo {
+    NSLocalizedFailureReason = "CloudKit integration requires that all attributes be optional, or have a default value set. The following attributes are marked non-optional but do not have a default value:\nDayStatus: date";
+}
+2026-10-19 12:08:17.974899-0700 0x3d3c27e  Error       0x0                  95639  0    JabTracker: (SwiftData) [com.apple.swiftdata:DataStore] Unresolved error loading container Error Domain=NSCocoaErrorDomain Code=134060 "A Core Data error occurred." UserInf
+DayStatus: date}
+2026-10-19 12:08:17.977989-0700 0x3d3c27e  Error       0x0                  95639  0    JabTracker: (JabTracker.debug.dylib) [com.gannonhall.JabTracker:DataController] CloudKit setup failed, falling back to local storage: The operation couldn’t be completed. (
+2026-10-19 12:08:48.441170-0700 0x3d3cf2f  Error       0x0                  96211  14   JabTracker: (CoreData) [com.apple.coredata:error] CoreData: error: Store failed to load.  <NSPersistentStoreDescription: 0x104440cc0> (type: SQLite, url: file:///Users/gann
+DayStatus: date} with userInfo {
+    NSLocalizedFailureReason = "CloudKit integration requires that all attributes be optional, or have a default value set. The following attributes are marked non-optional but do not have a default value:\nDayStatus: date";
+}
+2026-10-19 12:08:48.443027-0700 0x3d3cf2f  Error       0x0                  96211  0    JabTracker: (SwiftData) [com.apple.swiftdata:DataStore] Unresolved error loading container Error Domain=NSCocoaErrorDomain Code=134060 "A Core Data error occurred." UserInf
+DayStatus: date}
+2026-10-19 12:08:48.445585-0700 0x3d3cf2f  Error       0x0                  96211  0    JabTracker: (JabTracker.debug.dylib) [com.gannonhall.JabTracker:DataController] CloudKit setup failed, falling back to local storage: The operation couldn’t be completed. (
+2026-10-19 12:09:12.016442-0700 0x3d3dd2b  Info        0x0                  96863  0    JabTracker: (JabTracker.debug.dylib) [com.gannonhall.JabTracker:DataController] ☁️ DataController CloudKit config:
+- isTestEnvironment: false
+- isUITesting: true
+- isCloudKitDisabled: false
+- isCloudKitTesting: false
+- inMemory: false
+- shouldEnableCloudKit: false
+2026-10-19 12:10:00.503887-0700 0x3d3f761  Info        0x0                  98201  0    JabTracker: (JabTracker.debug.dylib) [com.gannonhall.JabTracker:DataController] ☁️ DataController CloudKit config:
+- isTestEnvironment: false
+- isUITesting: true
+- isCloudKitDisabled: false
+- isCloudKitTesting: false
+- inMemory: false
+- shouldEnableCloudKit: false
+2026-10-19 12:10:48.935342-0700 0x3d40c57  Info        0x0                  98745  0    JabTracker: (JabTracker.debug.dylib) [com.gannonhall.JabTracker:DataController] ☁️ DataController CloudKit config:
+- isTestEnvironment: false
+- isUITesting: true
+- isCloudKitDisabled: false
+- isCloudKitTesting: true
+- inMemory: false
+- shouldEnableCloudKit: true
+2026-10-19 12:10:48.963942-0700 0x3d40c57  Error       0x0                  98745  14   JabTracker: (CoreData) [com.apple.coredata:error] CoreData: error: Store failed to load.  <NSPersistentStoreDescription: 0x101c40cc0> (type: SQLite, url: file:///Users/gann
+DayStatus: date} with userInfo {
+    NSLocalizedFailureReason = "CloudKit integration requires that all attributes be optional, or have a default value set. The following attributes are marked non-optional but do not have a default value:\nDayStatus: date";
+}
+2026-10-19 12:10:48.965996-0700 0x3d40c57  Error       0x0                  98745  0    JabTracker: (SwiftData) [com.apple.swiftdata:DataStore] Unresolved error loading container Error Domain=NSCocoaErrorDomain Code=134060 "A Core Data error occurred." UserInf
+DayStatus: date}
+2026-10-19 12:10:48.968877-0700 0x3d40c57  Error       0x0                  98745  0    JabTracker: (JabTracker.debug.dylib) [com.gannonhall.JabTracker:DataController] CloudKit setup failed, falling back to local storage: The operation couldn’t be completed. (
+2026-10-19 12:11:19.263598-0700 0x3d41a58  Info        0x0                  99482  0    JabTracker: (JabTracker.debug.dylib) [com.gannonhall.JabTracker:DataController] ☁️ DataController CloudKit config:
+- isTestEnvironment: false
+- isUITesting: true
+- isCloudKitDisabled: false
+- isCloudKitTesting: true
+- inMemory: false
+- shouldEnableCloudKit: true
+2026-10-19 12:11:19.286968-0700 0x3d41a58  Error       0x0                  99482  14   JabTracker: (CoreData) [com.apple.coredata:error] CoreData: error: Store failed to load.  <NSPersistentStoreDescription: 0x103840cc0> (type: SQLite, url: file:///Users/gann
+DayStatus: date} with userInfo {
+    NSLocalizedFailureReason = "CloudKit integration requires that all attributes be optional, or have a default value set. The following attributes are marked non-optional but do not have a default value:\nDayStatus: date";
+}
+2026-10-19 12:11:19.289460-0700 0x3d41a58  Error       0x0                  99482  0    JabTracker: (SwiftData) [com.apple.swiftdata:DataStore] Unresolved error loading container Error Domain=NSCocoaErrorDomain Code=134060 "A Core Data error occurred." UserInf
+DayStatus: date}
+2026-10-19 12:11:19.292204-0700 0x3d41a58  Error       0x0                  99482  0    JabTracker: (JabTracker.debug.dylib) [com.gannonhall.JabTracker:DataController] CloudKit setup failed, falling back to local storage: The operation couldn’t be completed. (

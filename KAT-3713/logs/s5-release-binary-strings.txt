@@ -1,0 +1,4 @@
+# Release (Release-iphonesimulator) vs Debug binaries, strings -a | grep
+release: '--cloudkit-testing' x0, 'Syncing with iCloud|Synced with iCloud|sync across' x0
+branch-debug-dylib: '--cloudkit-testing' x2, 'Syncing with iCloud|Synced with iCloud|sync across' x0
+main-debug-dylib: '--cloudkit-testing' x2, 'Syncing with iCloud|Synced with iCloud|sync across' x12

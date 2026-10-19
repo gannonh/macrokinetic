@@ -1,0 +1,13 @@
+appId: com.gannonhall.JabTracker
+---
+- launchApp:
+    stopApp: true
+    arguments:
+      --reset-app-data: true
+- extendedWaitUntil:
+    visible: "Welcome to MacroKinetic"
+    timeout: 30000
+- assertVisible: "Stored on this iPhone"
+- assertNotVisible: ".*[iI][cC]loud.*"
+- assertNotVisible: ".*across (your )?devices.*"
+- takeScreenshot: /tmp/kat3713/shots/branch-5-sign-in-screen

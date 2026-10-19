@@ -1,0 +1,26 @@
+appId: com.gannonhall.JabTracker
+---
+- launchApp:
+    clearState: false
+    arguments:
+      --ui-testing: true
+      --reset-app-data: true
+      --seed-2-week-active: true
+- extendedWaitUntil:
+    visible: "Dashboard"
+    timeout: 30000
+- tapOn: "More"
+- tapOn: "Security & Privacy"
+- assertVisible: "Stored on this iPhone"
+- assertNotVisible: ".*[iI][cC]loud.*"
+- assertNotVisible: ".*across (your )?devices.*"
+- assertNotVisible: ".*Syncing.*"
+- takeScreenshot: /tmp/kat3713/shots/c1-security-privacy
+- launchApp:
+    arguments:
+      --ui-testing: true
+- tapOn: "More"
+- tapOn: "Profile"
+- assertNotVisible: ".*[iI][cC]loud.*"
+- assertNotVisible: ".*across (your )?devices.*"
+- takeScreenshot: /tmp/kat3713/shots/c2-profile-account

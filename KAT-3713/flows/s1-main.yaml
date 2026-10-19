@@ -1,0 +1,62 @@
+appId: com.gannonhall.JabTracker
+---
+- launchApp:
+    stopApp: true
+    arguments:
+      --cloudkit-testing: true
+      --ui-testing: true
+      --reset-app-data: true
+      --seed-2-week-active: true
+- extendedWaitUntil:
+    visible: "Dashboard"
+    timeout: 30000
+- takeScreenshot: /tmp/kat3713/shots/main-1-before
+- tapOn:
+    id: "add-button"
+- swipe:
+    direction: UP
+    duration: 400
+- tapOn: "Weight"
+- extendedWaitUntil:
+    visible: "Log Weight"
+    timeout: 15000
+- tapOn: "Save"
+- waitForAnimationToEnd
+- tapOn:
+    id: "add-button"
+- tapOn: "Shots"
+- extendedWaitUntil:
+    visible: "Quick Add Dose"
+    timeout: 15000
+- tapOn: "Save dose"
+- waitForAnimationToEnd
+- tapOn:
+    id: "add-button"
+- swipe:
+    direction: UP
+    duration: 400
+- tapOn: "Quick Add"
+- extendedWaitUntil:
+    visible: "Energy"
+    timeout: 15000
+- repeat:
+    times: 3
+    commands:
+      - waitForAnimationToEnd:
+          timeout: 2000
+- tapOn:
+    point: "40%,26%"
+- inputText: "321"
+- tapOn:
+    id: "quick-add-add-button"
+- waitForAnimationToEnd
+- takeScreenshot: /tmp/kat3713/shots/main-2-after-logging
+- stopApp
+- launchApp:
+    arguments:
+      --ui-testing: true
+      --cloudkit-testing: true
+- extendedWaitUntil:
+    visible: "Dashboard"
+    timeout: 30000
+- takeScreenshot: /tmp/kat3713/shots/main-3-after-relaunch
