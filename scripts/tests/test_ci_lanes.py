@@ -271,6 +271,21 @@ class ManifestContractTests(unittest.TestCase):
             )
         )
 
+    def test_swift_testing_function_filters_end_with_call_parens(self) -> None:
+        # xcodebuild only matches Swift Testing functions as "Suite/name()"; a bare name
+        # silently matches nothing, so the timing test runs in the integration lane.
+        for entry in lanes.load_lane_config(ROOT)["performance_only_testing"]:
+            if entry.count("/") == 2:
+                self.assertTrue(entry.endswith("()"), entry)
+        manifest = lanes.build_source_manifest(ROOT)
+        lane_by_id = {item["identifier"]: item["lane"] for item in manifest["tests"]}
+        self.assertEqual(
+            lane_by_id[
+                "JabTrackerIntegrationTests/CalendarPerformanceTests/testCalendarRenderingPerformanceMinimal"
+            ],
+            "performance",
+        )
+
     def test_dashboard_performance_identifier_is_in_performance_lane(self) -> None:
         manifest = lanes.build_source_manifest(ROOT)
         matches = [
