@@ -44,11 +44,11 @@
   ],
   "performance_only_testing": [
     "JabTrackerIntegrationTests/ChartDataProcessorPerformanceTests",
-    "JabTrackerIntegrationTests/CalendarPerformanceTests/testCalendarRenderingPerformance",
-    "JabTrackerIntegrationTests/CalendarPerformanceTests/testCalendarRenderingPerformanceMinimal",
-    "JabTrackerIntegrationTests/AnalyticsServiceIntegrationTests/performanceWithLargeDoseHistory",
+    "JabTrackerIntegrationTests/CalendarPerformanceTests/testCalendarRenderingPerformance()",
+    "JabTrackerIntegrationTests/CalendarPerformanceTests/testCalendarRenderingPerformanceMinimal()",
+    "JabTrackerIntegrationTests/AnalyticsServiceIntegrationTests/performanceWithLargeDoseHistory()",
     "JabTrackerIntegrationTests/PKDashboardPerformanceTests",
-    "JabTrackerIntegrationTests/LocalFoodDatabaseTests/testSearchPerformance"
+    "JabTrackerIntegrationTests/LocalFoodDatabaseTests/testSearchPerformance()"
   ],
   "out_of_scope": [
     {

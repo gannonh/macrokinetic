@@ -119,7 +119,9 @@ def _lane_for_identifier(identifier: str, config: dict[str, Any], file_lane: str
     for prefix in config["storekit_only_testing"]:
         if identifier == prefix or identifier.startswith(f"{prefix}/"):
             return "storekit"
-    for prefix in config["performance_only_testing"]:
+    for entry in config["performance_only_testing"]:
+        # Swift Testing function filters carry a trailing "()" that manifest identifiers lack.
+        prefix = entry.removesuffix("()")
         if identifier == prefix or identifier.startswith(f"{prefix}/"):
             return "performance"
         # Suite-level filters also match every test in that suite.
