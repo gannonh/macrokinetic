@@ -75,7 +75,7 @@ class DataController: ObservableObject {
     let container: ModelContainer
 
     /// All SwiftData model types registered with the app
-    private static let modelTypes: [any PersistentModel.Type] = [
+    static let modelTypes: [any PersistentModel.Type] = [
         User.self,
         Dose.self,
         MedicationProfile.self,

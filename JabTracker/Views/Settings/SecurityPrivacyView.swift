@@ -84,7 +84,7 @@ struct SecurityPrivacyView: View {
                         .frame(width: 28)
 
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Data Storage")
+                        Text("Your data")
                             .font(.body)
 
                         Text("Stored on this iPhone")

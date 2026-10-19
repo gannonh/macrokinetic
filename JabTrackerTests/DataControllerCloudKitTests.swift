@@ -52,4 +52,18 @@ struct DataControllerCloudKitTests {
         #expect(doses.first?.id == doseID)
         #expect(doses.first?.amount == 2.5)
     }
+
+    @Test("Every model passes CloudKit schema validation so sync can return later")
+    func schemaIsCloudKitCompatible() throws {
+        // SwiftData validates the schema against CloudKit rules (defaults or optionals, no
+        // unique constraints) when it builds a CloudKit-backed container, even without an account.
+        let schema = Schema(DataController.modelTypes)
+        let configuration = ModelConfiguration(
+            "kat3713-cloudkit-schema-\(UUID().uuidString)",
+            schema: schema,
+            isStoredInMemoryOnly: true,
+            cloudKitDatabase: .private("iCloud.com.gannonhall.JabTracker"))
+
+        _ = try ModelContainer(for: schema, configurations: [configuration])
+    }
 }
