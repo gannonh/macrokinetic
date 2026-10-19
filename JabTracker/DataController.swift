@@ -3,97 +3,15 @@
 //  JabTracker
 //
 
-import CloudKit
 import Foundation
 import OSLog
 import SwiftData
-
-enum SyncStatus {
-    case unknown
-    case available
-    case unavailable
-    case accountNotSignedIn
-    case restricted
-    case noNetwork
-}
-
-/// Encapsulates CloudKit configuration logic for DataController initialization
-private struct CloudKitConfig {
-    let inMemory: Bool
-    let shouldEnableCloudKit: Bool
-    let isTestEnvironment: Bool
-    let isUITesting: Bool
-    let isCloudKitDisabled: Bool
-    let isCloudKitTesting: Bool
-
-    static func determine(inMemory requestedInMemory: Bool) -> CloudKitConfig {
-        #if DEBUG || JABTRACKER_TEST_HARNESS
-        let isTestEnvironment =
-            ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
-            || ProcessInfo.processInfo.environment["XCTestSessionIdentifier"] != nil
-        let isUITesting = ProcessInfo.processInfo.arguments.contains("--ui-testing")
-        #if DEBUG
-        let inMemory = requestedInMemory || ProcessInfo.processInfo.arguments.contains("-inMemory")
-        #else
-        let inMemory = requestedInMemory
-        #endif
-        let isCloudKitDisabled = ProcessInfo.processInfo.arguments.contains("--disable-cloudkit")
-        let isCloudKitTesting = ProcessInfo.processInfo.arguments.contains("--cloudkit-testing")
-
-        #if JABTRACKER_TEST_HARNESS
-        let shouldEnableCloudKit = false
-        #else
-        let shouldEnableCloudKit: Bool
-        if isCloudKitTesting {
-            shouldEnableCloudKit = !inMemory
-        } else if isTestEnvironment || isUITesting {
-            shouldEnableCloudKit = false
-        } else {
-            shouldEnableCloudKit = !inMemory && !isCloudKitDisabled
-        }
-
-        #endif
-        #else
-        let inMemory = requestedInMemory
-        let isTestEnvironment = false
-        let isUITesting = false
-        let isCloudKitDisabled = false
-        let isCloudKitTesting = false
-        let shouldEnableCloudKit = !inMemory
-        #endif
-
-        return CloudKitConfig(
-            inMemory: inMemory,
-            shouldEnableCloudKit: shouldEnableCloudKit,
-            isTestEnvironment: isTestEnvironment,
-            isUITesting: isUITesting,
-            isCloudKitDisabled: isCloudKitDisabled,
-            isCloudKitTesting: isCloudKitTesting
-        )
-    }
-
-    func log(with logger: Logger) {
-        logger.info(
-            """
-            ☁️ DataController CloudKit config:
-            - isTestEnvironment: \(isTestEnvironment)
-            - isUITesting: \(isUITesting)
-            - isCloudKitDisabled: \(isCloudKitDisabled)
-            - isCloudKitTesting: \(isCloudKitTesting)
-            - inMemory: \(inMemory)
-            - shouldEnableCloudKit: \(shouldEnableCloudKit)
-            """)
-    }
-}
 
 @MainActor
 class DataController: ObservableObject {
     static let shared = DataController()
 
     private static let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "DataController")
-
-    @Published var syncStatus: SyncStatus = .unknown
-    @Published var isCloudKitEnabled: Bool = false
 
     /// Error that occurred during initialization, if any
     /// Views can check this to display appropriate error UI
@@ -176,17 +94,25 @@ class DataController: ObservableObject {
         FoodSchedule.self,
     ]
 
-    init(inMemory: Bool = false) {
-        let schema = Schema(Self.modelTypes)
-        #if !JABTRACKER_TEST_HARNESS
-        let cloudKitContainerIdentifier = "iCloud.com.gannonhall.JabTracker"
+    /// Health data stays on the device for 1.0 (App Review 5.1.3(ii)), so every store opens with
+    /// `cloudKitDatabase: .none`. Models stay CloudKit-compatible so sync can return later.
+    /// Only debug builds launched with `--cloudkit-testing` may opt in, for development.
+    static func shouldEnableCloudKit(arguments: [String]) -> Bool {
+        #if DEBUG && !JABTRACKER_TEST_HARNESS
+        return arguments.contains("--cloudkit-testing")
+        #else
+        return false
         #endif
+    }
 
-        // Determine CloudKit configuration based on environment
-        let config = CloudKitConfig.determine(inMemory: inMemory)
-        let inMemory = config.inMemory
-        let shouldEnableCloudKit = config.shouldEnableCloudKit
-        config.log(with: Self.logger)
+    init(inMemory requestedInMemory: Bool = false) {
+        let schema = Schema(Self.modelTypes)
+        let arguments = ProcessInfo.processInfo.arguments
+        #if DEBUG
+        let inMemory = requestedInMemory || arguments.contains("-inMemory")
+        #else
+        let inMemory = requestedInMemory
+        #endif
 
         let configuration: ModelConfiguration
         if inMemory {
@@ -208,34 +134,22 @@ class DataController: ObservableObject {
             configuration = ModelConfiguration(
                 schema: schema,
                 isStoredInMemoryOnly: false,
-                cloudKitDatabase: shouldEnableCloudKit
-                    ? .private(cloudKitContainerIdentifier)
+                cloudKitDatabase: Self.shouldEnableCloudKit(arguments: arguments)
+                    ? .private("iCloud.com.gannonhall.JabTracker")
                     : .none)
             #endif
         }
 
         do {
             self.container = try ModelContainer(for: schema, configurations: [configuration])
-            if shouldEnableCloudKit {
-                self.isCloudKitEnabled = true
-                #if !JABTRACKER_TEST_HARNESS
-                self.checkCloudKitStatus()
-                #endif
-            } else {
-                self.isCloudKitEnabled = false
-                self.syncStatus = .unavailable
-            }
         } catch {
-            // If CloudKit setup fails, try without CloudKit as fallback
-            Self.logger.warning("CloudKit setup failed, falling back to local storage: \(error.localizedDescription)")
+            Self.logger.warning("Primary store failed, falling back to local storage: \(error.localizedDescription)")
             let fallbackConfiguration = ModelConfiguration(
                 schema: schema,
                 isStoredInMemoryOnly: inMemory,
                 cloudKitDatabase: .none)
             do {
                 self.container = try ModelContainer(for: schema, configurations: [fallbackConfiguration])
-                self.isCloudKitEnabled = false
-                self.syncStatus = .unavailable
             } catch let fallbackError {
                 // Local storage also failed - try in-memory as last resort
                 Self.logger.error(
@@ -248,8 +162,6 @@ class DataController: ObservableObject {
                     cloudKitDatabase: .none)
                 do {
                     self.container = try ModelContainer(for: schema, configurations: [inMemoryConfig])
-                    self.isCloudKitEnabled = false
-                    self.syncStatus = .unavailable
                     self.initializationError =
                         "Unable to save data. Your changes will not persist after closing the app."
                     Self.logger.error("Running in emergency in-memory mode - data will not persist")
@@ -271,80 +183,6 @@ class DataController: ObservableObject {
     }
 
     #endif
-
-    #if !JABTRACKER_TEST_HARNESS
-    /// Check CloudKit availability status
-    private func checkCloudKitStatus() {
-        Task {
-            await self.checkiCloudStatus()
-        }
-    }
-
-    /// Check if iCloud is available and user is signed in
-    @MainActor
-    private func checkiCloudStatus() async {
-        guard self.isCloudKitEnabled else {
-            self.syncStatus = .unavailable
-            return
-        }
-
-        let container = CKContainer(identifier: "iCloud.com.gannonhall.JabTracker")
-
-        do {
-            let accountStatus = try await container.accountStatus()
-
-            switch accountStatus {
-            case .available:
-                self.syncStatus = .available
-            case .noAccount:
-                self.syncStatus = .accountNotSignedIn
-            case .restricted:
-                self.syncStatus = .restricted
-            case .couldNotDetermine:
-                self.syncStatus = .unknown
-            case .temporarilyUnavailable:
-                self.syncStatus = .noNetwork
-            @unknown default:
-                self.syncStatus = .unknown
-            }
-        } catch {
-            Self.logger.error("Error checking CloudKit status: \(error.localizedDescription)")
-            self.syncStatus = .unavailable
-        }
-    }
-
-    #endif
-
-    /// Retry CloudKit setup - useful when user fixes iCloud issues
-    func retryCloudKitSetup() {
-        guard self.isCloudKitEnabled else { return }
-        #if !JABTRACKER_TEST_HARNESS
-        self.checkCloudKitStatus()
-        #endif
-    }
-
-    /// Get user-friendly sync status message
-    var syncStatusMessage: String {
-        switch self.syncStatus {
-        case .unknown:
-            return "Checking sync status..."
-        case .available:
-            return "Syncing with iCloud"
-        case .unavailable:
-            return "Sync unavailable - using local storage"
-        case .accountNotSignedIn:
-            return "Sign in to iCloud to sync across devices"
-        case .restricted:
-            return "iCloud sync restricted"
-        case .noNetwork:
-            return "No network connection for sync"
-        }
-    }
-
-    /// Check if data will sync across devices
-    var willSyncAcrossDevices: Bool {
-        self.syncStatus == .available
-    }
 
     #if DEBUG || JABTRACKER_TEST_HARNESS
     /// Seed test data for titration workflow testing

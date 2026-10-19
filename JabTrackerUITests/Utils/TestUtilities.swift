@@ -25,27 +25,6 @@ enum TestUtilities {
         return app
     }
 
-    /// Launch app with CloudKit testing mode enabled
-    /// - Enables CloudKit sync for testing CloudKit integration
-    /// - Uses sandbox CloudKit environment (safe for testing)
-    /// - Bypasses real Sign in with Apple authentication with mock user
-    /// - Provides full CloudKit sync functionality for integration tests
-    /// - Parameters:
-    ///   - resetData: Whether to reset app data for clean state (default: true)
-    static func launchAppWithCloudKitTestMode(resetData: Bool = true) -> XCUIApplication {
-        let app = XCUIApplication()
-        app.launchEnvironment["UI_TESTING"] = "true"
-
-        if resetData {
-            app.launchArguments = ["--cloudkit-testing", "--ui-testing", "--reset-app-data"]
-        } else {
-            app.launchArguments = ["--cloudkit-testing", "--ui-testing"]
-        }
-
-        app.launch()
-        return app
-    }
-
     /// Preset test data configurations for E2E performance testing
     enum TestDataPreset {
         case sevenDays  // 7 days

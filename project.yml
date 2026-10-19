@@ -96,7 +96,6 @@ targets:
           - DataControllerCloudKitTests.swift
           - DataControllerInitializationTests.swift
           - DataControllerPreviewTests.swift
-          - DataControllerSyncTests.swift
           - DataControllerTestDataTests.swift
           - DataControllerTests.swift
           - Integration/CalendarPerformanceTests.swift
@@ -133,7 +132,6 @@ targets:
           - DataControllerCloudKitTests.swift
           - DataControllerInitializationTests.swift
           - DataControllerPreviewTests.swift
-          - DataControllerSyncTests.swift
           - DataControllerTestDataTests.swift
           - DataControllerTests.swift
           - Helpers/CustomFoodTestHelpers.swift
@@ -239,7 +237,6 @@ schemes:
         "--force-onboarding": false # resets onboarding if true
         "--reset-app-data": true # seeding only works if true
         "--ui-testing": true # Enable to bypasses auth AND auto-complete onboarding
-        "--disable-cloudkit": false # Disable iCloud sync for local debugging 
         "--seed-test-7d": false # medication history seeding 
         "--seed-test-30d": false # medication history seeding 
         "--seed-test-90d": false # medication history seeding 
@@ -264,7 +261,6 @@ schemes:
       #   "--force-onboarding": false # resets onboarding if true
       #   "--reset-app-data": false # seeding only works if true
       #   "--ui-testing": false # Enable to bypasses auth AND auto-complete onboarding
-      #   "--disable-cloudkit": false # Disable iCloud sync for local debugging 
       #   "--seed-test-7d": false # medication history seeding 
       #   "--seed-test-30d": false # medication history seeding 
       #   "--seed-test-90d": false # medication history seeding 

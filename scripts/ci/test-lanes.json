@@ -19,7 +19,6 @@
     "DataControllerCloudKitTests.swift",
     "DataControllerInitializationTests.swift",
     "DataControllerPreviewTests.swift",
-    "DataControllerSyncTests.swift",
     "DataControllerTestDataTests.swift",
     "DataControllerTests.swift",
     "Integration/CalendarPerformanceTests.swift",

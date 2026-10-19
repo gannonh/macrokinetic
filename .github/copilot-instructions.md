@@ -90,7 +90,7 @@ open logs/latest/screenshots/
 `AuthenticationManager` handles Sign in with Apple. UI testing mode (`--ui-testing` flag) bypasses real auth with mock data.
 
 ### CloudKit Sync
-SwiftData models sync automatically via `DataController.container`. Test CloudKit with `TestUtilities.launchAppWithCloudKitTestMode()`.
+SwiftData models persist on-device only via `DataController.container` (CloudKit is off for 1.0).
 
 ## Project Generation
 Uses XcodeGen (`project.yml`) - regenerate project with `xcodegen generate` after modifying project structure.
