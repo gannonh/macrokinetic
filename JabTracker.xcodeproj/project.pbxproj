@@ -473,6 +473,7 @@
 		BE46F9C8077D4D1833F7BE79 /* DoseHistoryViewModelFilterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55682325C79E148EEFC3A88F /* DoseHistoryViewModelFilterTests.swift */; };
 		BE4AC1BF4AECCF861195C834 /* ConcentrationLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFB9257BC5DC47A3515E3F3D /* ConcentrationLabel.swift */; };
 		BF8C651CAB2F92E2C151A7B7 /* Colors+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92209045E4347373E0C9BCAB /* Colors+Extensions.swift */; };
+		C091D55EEA3F670A7D6E2A79 /* NoSignInLiveCheckUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F53253C3E0B03C0737E7C8F /* NoSignInLiveCheckUITests.swift */; };
 		C0F52175B22DC0F2A33BCF9A /* PredictiveActivityProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E26E0B44F6E60FDC3C1DDBA /* PredictiveActivityProviderTests.swift */; };
 		C1FE26145A403D3B0142EFC3 /* AuthenticationManagerCoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C674E4765D92902550F3421B /* AuthenticationManagerCoreTests.swift */; };
 		C24A8A61EAB23384FC48562D /* SubscriptionUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D30809BE84F01DA83E83F4C /* SubscriptionUITests.swift */; };
@@ -704,6 +705,7 @@
 		0D0B4625956A1B270B09DCC1 /* DayStatusServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayStatusServiceTests.swift; sourceTree = "<group>"; };
 		0E66064080F4AC5CCFAECF96 /* NutritionSummaryCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionSummaryCard.swift; sourceTree = "<group>"; };
 		0F292274217A0F48E6C450EC /* FoodDataSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodDataSettingsView.swift; sourceTree = "<group>"; };
+		0F53253C3E0B03C0737E7C8F /* NoSignInLiveCheckUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoSignInLiveCheckUITests.swift; sourceTree = "<group>"; };
 		103BC0C5A928D9F16AE014D8 /* PricingCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PricingCalculator.swift; sourceTree = "<group>"; };
 		104BEF2491A48A1F607A74A9 /* usda_foods.sqlite */ = {isa = PBXFileReference; lastKnownFileType = file; path = usda_foods.sqlite; sourceTree = "<group>"; };
 		106421FCA575BB46D42EEA98 /* ChartControlsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartControlsView.swift; sourceTree = "<group>"; };
@@ -2307,6 +2309,7 @@
 				B64F0B00ED2C1D0738CE9FF5 /* MedicationProfileScheduleUITests.swift */,
 				C6BE0C35C4D1108A2EF47550 /* MedicationProfileSettingsUITests.swift */,
 				5D6BF28F30DB57EEA0119DE5 /* MoreTabUITests.swift */,
+				0F53253C3E0B03C0737E7C8F /* NoSignInLiveCheckUITests.swift */,
 				9F81719ADFAC87574C14B861 /* NotificationDeeplinkUITests.swift */,
 				BB5507316BB69978C0BFABDA /* NotificationSettingsUITests.swift */,
 				6E7CAC44C9BE663CB47FBF47 /* NutritionFlowUITests.swift */,
@@ -2723,6 +2726,7 @@
 				12420F813296C114A08EB2BF /* MedicationProfileScheduleUITests.swift in Sources */,
 				93C1FA37A9F85C86E8524070 /* MedicationProfileSettingsUITests.swift in Sources */,
 				9CFE6CE3DCC208404B16A082 /* MoreTabUITests.swift in Sources */,
+				C091D55EEA3F670A7D6E2A79 /* NoSignInLiveCheckUITests.swift in Sources */,
 				6BB9D67171AE216B5744936F /* NotificationDeeplinkUITests.swift in Sources */,
 				D3148B78DC1F980CF4FB46E2 /* NotificationSettingsUITests.swift in Sources */,
 				1CBEBB4D0AC6C2E903D47874 /* NutritionDashboardUITests.swift in Sources */,

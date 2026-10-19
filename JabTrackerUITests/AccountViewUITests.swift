@@ -34,12 +34,12 @@ final class AccountViewUITests: XCTestCase {
         moreTab.tap()
 
         // Tap Account link
-        let accountLink = app.buttons["account-link"]
+        let accountLink = app.buttons["profile-link"]
         XCTAssertTrue(accountLink.waitForExistence(timeout: timeout), "Account link should exist in More view")
         accountLink.tap()
 
         // Verify Account view loaded
-        let accountView = app.otherElements["account-view"]
+        let accountView = app.descendants(matching: .any)["account-view"]
         XCTAssertTrue(accountView.waitForExistence(timeout: timeout), "Account view should appear")
     }
 
@@ -71,7 +71,7 @@ final class AccountViewUITests: XCTestCase {
         // THEN: Account actions should exist
         XCTAssertFalse(app.buttons["log-out-button"].exists, "Log Out button should not exist (no sign-in)")
         XCTAssertTrue(
-            app.staticTexts["on-device-storage-note"].exists, "On-device storage note should exist")
+            app.descendants(matching: .any)["on-device-storage-note"].exists, "On-device storage note should exist")
         XCTAssertTrue(app.buttons["restart-onboarding-button"].exists, "Restart Onboarding button should exist")
     }
 
@@ -422,12 +422,12 @@ final class AccountViewUITests: XCTestCase {
         navigateToAccountView()
 
         // THEN: Verify all key accessibility identifiers exist
-        XCTAssertTrue(app.otherElements["account-view"].exists, "account-view identifier should exist")
+        XCTAssertTrue(app.descendants(matching: .any)["account-view"].exists, "account-view identifier should exist")
         XCTAssertTrue(app.otherElements["profile-header"].exists, "profile-header identifier should exist")
         XCTAssertTrue(app.otherElements["health-toggle-row"].exists, "health-toggle-row identifier should exist")
         XCTAssertFalse(app.buttons["log-out-button"].exists, "log-out-button should not exist (no sign-in)")
         XCTAssertTrue(
-            app.staticTexts["on-device-storage-note"].exists, "on-device-storage-note identifier should exist")
+            app.descendants(matching: .any)["on-device-storage-note"].exists, "on-device-storage-note identifier should exist")
         XCTAssertTrue(
             app.buttons["restart-onboarding-button"].exists, "restart-onboarding-button identifier should exist")
 
