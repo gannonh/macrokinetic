@@ -1,8 +1,8 @@
 # Prepare the App Store packet
 
-This is the draft submission packet for [KAT-3591](https://linear.app/kata-sh/issue/KAT-3591), under [KAT-3185](https://linear.app/kata-sh/issue/KAT-3185). It is **IN PROGRESS**. No authentic candidate screenshots or signed icon output have been supplied. Public identity, contact, domain, and health-sync policy remain unresolved.
+This is the draft submission packet for [KAT-3591](https://linear.app/kata-sh/issue/KAT-3591), under [KAT-3185](https://linear.app/kata-sh/issue/KAT-3185). It is **IN PROGRESS**. No authentic candidate screenshots or signed icon output have been supplied. The owner answered the name, seller, support contact, public URLs, storage, pricing, and reviewer-access inputs on 2026-10-19. Privacy-label approval, regions, age rating, medical-device status, EU trader status, export compliance, and the App Review contact remain unresolved.
 
-The current app displays **MacroKinetic**. The repository and stable bundle identifier retain JabTracker. Copy uses MacroKinetic pending the owner's branding decision. `metadata.json` proposes 1.0.0; it does not change `project.yml` or assign a build number.
+The app displays **MacroKinetic**, confirmed by the owner. The repository and stable bundle identifier retain JabTracker. `metadata.json` proposes 1.0.0; it does not change `project.yml` or assign a build number.
 
 The [launch readiness plan](../launch-readiness.md) records ticket order, gate conditions, existing-ticket disposition, dated PR states, verified evidence, and the owner/candidate blockers. Refresh its status snapshot when work advances.
 

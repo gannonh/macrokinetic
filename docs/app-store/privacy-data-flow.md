@@ -1,6 +1,6 @@
 # Privacy data-flow worksheet
 
-**DRAFT. Storage policy, retention, deletion, processor access, and App Store privacy answers are unresolved.** This inventory describes source behavior at audit baseline `35c7a1959a805331ccc09a2821b8d801f42efc3c`. Reconcile it against the final candidate and release flags.
+**DRAFT. Owner decisions of 2026-10-19 set on-device storage only, no iCloud sync (KAT-3713), and no sign-in (KAT-3586). The App Store privacy answers need owner approval and verification on the candidate.** The table below still describes the audit baseline, before those changes. This inventory describes source behavior at audit baseline `35c7a1959a805331ccc09a2821b8d801f42efc3c`. Reconcile it against the final candidate and release flags.
 
 | Data | Source and current handling | Candidate questions |
 | --- | --- | --- |
@@ -14,10 +14,23 @@
 | Settings | UserDefaults for onboarding and notifications. | Required-reason manifest under KAT-3585. Document actual reasons and bundle inclusion. |
 | Diagnostic logs | AuthenticationManager uses public email/UUID log interpolation. | Remove unnecessary personal logging or restrict privacy. Confirm actual log capture and retention. |
 
-The current DataController puts health and medication models into one CloudKit private database. KAT-3584 must resolve the conflict with Apple's guideline 5.1.3(ii) and the repository sync invariant. Do not publish a promise that all data stays on-device, that iCloud is compliant, or that the developer cannot access data without confirming the final design. [Apple review guidelines](https://developer.apple.com/app-store/review/guidelines/).
+At the audit baseline DataController put health and medication models into one CloudKit private database. The owner resolved KAT-3584 as option A: on-device storage only, no iCloud sync, so the developer has no access to user data and deleting the app removes the data. KAT-3713 implements that and updates the repository sync invariant. Do not publish the on-device promise until the candidate proves CloudKit is off. iPhone backups the user makes under their own Apple settings can still contain app data. [Apple review guidelines](https://developer.apple.com/app-store/review/guidelines/).
 
 Apple's privacy label definition of collection depends on off-device transmission and access/retention. On-device processing alone does not mean collection. Conversely, functionality-only collection still needs disclosure. Inventory developer access and third-party access before choosing answers. [Apple privacy details](https://developer.apple.com/app-store/app-privacy-details/).
 
 Record each final data type, whether collected, linked to a person, used for tracking, purpose, recipients, retention, consent withdrawal, and deletion path. Check actual SDKs and network behavior from the signed candidate. A source scan found no declared third-party package dependencies, but it is not a compiled privacy report.
 
 HealthKit samples in Apple's Health app and app-owned copies are separate records. Deletion copy must state which are removed and which remain. Do not imply app deletion cancels any future Apple subscription.
+
+## Privacy label draft (pending owner approval)
+
+**Draft answer: Data Not Collected.** Status: **PENDING OWNER APPROVAL.** Nothing leaves the device under the 2026-10-19 decisions, and a source scan found no declared third-party packages.
+
+| Condition to verify on the candidate | Owner / ticket |
+| --- | --- |
+| CloudKit and iCloud sync are off and no health model reaches a cloud store. | KAT-3713 |
+| No sign-in, so no name, email, or Apple user ID is stored or sent. | KAT-3586 |
+| No network call carries user data, and no third-party SDK collects data. | Candidate network and SDK inspection |
+| Diagnostic logs do not leave the device. | Candidate inspection |
+
+The owner approves or changes this answer after those checks pass. Until then the label stays a draft and nothing is entered in App Store Connect.
