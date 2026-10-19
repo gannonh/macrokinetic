@@ -26,13 +26,6 @@ final class SettingsUITests: XCTestCase {
             XCTAssertTrue(editProfileButton.isHittable, "Edit Profile button should be interactive")
         }
 
-        // Test for sign out functionality
-        let signOutButton = app.buttons["sign-out-button"]
-        if signOutButton.exists {
-            XCTAssertTrue(
-                signOutButton.isEnabled, "Sign out button should be enabled when user is authenticated")
-        }
-
         // Test biometric toggle if available
         let biometricToggle = app.switches["biometric-auth-toggle"]
         if biometricToggle.exists {

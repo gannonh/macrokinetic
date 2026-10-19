@@ -265,7 +265,6 @@
       "Views/Analytics/MissedDosePatternView.swift",
       "Views/Analytics/StreakCounterView.swift",
       "Views/Analytics/TimePeriodSelector.swift",
-      "Views/AuthenticationView.swift",
       "Views/Dashboard/ConcentrationCard.swift",
       "Views/Dashboard/ConcentrationDisplay.swift",
       "Views/Dashboard/DetailViews/DetailTimePeriodSelector.swift",

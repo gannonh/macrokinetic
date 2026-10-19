@@ -98,11 +98,7 @@ case "$TEST_TYPE" in
     ui)
         EXPECTED_TEST="JabTrackerUITests${TEST_FILE:+/$TEST_FILE}"
         TEST_ARGS=("-only-testing:$EXPECTED_TEST")
-        if [ -z "$TEST_FILE" ]; then
-            TEST_ARGS+=("-skip-testing:JabTrackerUITests/ManualAuthenticationUITests")
-        fi
         ;;
-    all) TEST_ARGS=("-skip-testing:JabTrackerUITests/ManualAuthenticationUITests") ;;
 esac
 
 if [ -n "$LOG_DIR" ]; then
@@ -134,7 +130,7 @@ if [ "$RESET_DEVICE" = true ]; then
 fi
 
 BUILD_ARGS=(test -project "$SCRIPT_DIR/../JabTracker.xcodeproj" -scheme "$SCHEME"
-    -destination "$DESTINATION" "${TEST_ARGS[@]}" -resultBundlePath "$XCRESULT_PATH"
+    -destination "$DESTINATION" ${TEST_ARGS[@]+"${TEST_ARGS[@]}"} -resultBundlePath "$XCRESULT_PATH"
     -disable-concurrent-destination-testing -parallel-testing-enabled NO)
 if [ "$ENABLE_COVERAGE" = true ]; then
     BUILD_ARGS+=(-enableCodeCoverage YES)

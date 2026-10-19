@@ -25,7 +25,6 @@ enum ExperienceLevel: String, CaseIterable {
 
 struct AccountView: View {
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var authManager: AuthenticationManager
     @EnvironmentObject private var biometricManager: BiometricAuthManager
 
     private static let logger = Logger(
@@ -47,7 +46,6 @@ struct AccountView: View {
     @State private var editCardioExperience: String = "intermediate"
     @State private var editLiftingExperience: String = "intermediate"
 
-    @State private var showingLogOutConfirmation = false
     @State private var showingRestartOnboarding = false
     @State private var showingDisableHealthSync = false
     @State private var errorMessage: String?
@@ -75,8 +73,13 @@ struct AccountView: View {
     var body: some View {
         List {
             // MARK: - Profile Header
-            Section("Profile") {
+            Section {
                 profileHeaderCard
+            } header: {
+                Text("Profile")
+            } footer: {
+                Text("Your data is stored on this iPhone. Deleting the app removes it.")
+                    .accessibilityIdentifier("on-device-storage-note")
             }
 
             // MARK: - Profile Details
@@ -156,18 +159,6 @@ struct AccountView: View {
 
             // MARK: - Account Actions
             Section {
-                Button(role: .destructive) {
-                    showingLogOutConfirmation = true
-                } label: {
-                    HStack(spacing: 12) {
-                        Image(systemName: "rectangle.portrait.and.arrow.right")
-                            .font(.title3)
-                            .frame(width: 28)
-                        Text("Log Out")
-                    }
-                }
-                .accessibilityIdentifier("log-out-button")
-
                 Button {
                     showingRestartOnboarding = true
                 } label: {
@@ -193,14 +184,6 @@ struct AccountView: View {
         .onAppear { refreshTrigger = UUID() }
         .sheet(item: $editingField) { field in
             editSheet(for: field)
-        }
-        .confirmationDialog("Log Out", isPresented: $showingLogOutConfirmation) {
-            Button("Log Out", role: .destructive) {
-                Task { await signOut() }
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("Your data will remain on this device.")
         }
         .confirmationDialog("Restart Onboarding", isPresented: $showingRestartOnboarding) {
             Button("Restart", role: .destructive) {
@@ -255,7 +238,7 @@ struct AccountView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(users.first?.name ?? "User")
                     .font(.headline)
-                Text(authManager.authenticationState == .authenticated ? "Signed in" : "Not signed in")
+                Text("Stored on this iPhone")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
@@ -664,15 +647,6 @@ extension AccountView {
         }
     }
 
-    func signOut() async {
-        do {
-            try await authManager.signOut()
-        } catch {
-            errorMessage = "Sign out failed: \(error.localizedDescription)"
-            showingError = true
-        }
-    }
-
     func restartOnboarding() {
         guard let user = users.first else { return }
         // Reset all onboarding-related flags on the user model
@@ -761,7 +735,6 @@ extension String: @retroactive Identifiable {
     NavigationStack {
         AccountView()
             .modelContainer(DataController.preview.container)
-            .environmentObject(AuthenticationManager())
             .environmentObject(BiometricAuthManager())
     }
 }

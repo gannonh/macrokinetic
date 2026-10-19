@@ -1,4 +1,3 @@
-import AuthenticationServices
 import Foundation
 import SwiftData
 import Testing
@@ -96,39 +95,6 @@ struct AuthenticationResetAndEdgeCaseTests {
         }
     }
 
-    @Test("Authentication handleSignInWithAppleResult success path")
-    @MainActor
-    func authHandleSignInWithAppleResultSuccess() throws {
-        let dataController = DataController.testContainer()
-        let authManager = AuthenticationManager(dataController: dataController)
-
-        // Create a mock Apple ID credential
-        // Note: We can't easily create a real ASAuthorizationAppleIDCredential in tests
-        // So we'll test the method indirectly by testing the expected behavior
-
-        Task {
-            // Test the success path by calling handleSignInWithAppleResult with a valid credential
-            // Since we can't mock ASAuthorizationAppleIDCredential easily, we test the error case
-
-            _ = AuthenticationError.authorizationDenied
-            var caughtError: Error?
-
-            do {
-                // This should throw since we're not providing a real credential
-                _ = try await authManager.signInWithApple()
-            } catch {
-                caughtError = error
-            }
-
-            #expect(caughtError != nil, "Should catch authentication error")
-            #expect(caughtError is AuthenticationError, "Should be AuthenticationError type")
-
-            if let authError = caughtError as? AuthenticationError {
-                #expect(authError == .notImplemented, "Should throw notImplemented error")
-            }
-        }
-    }
-
     @Test("Authentication manager processInfo arguments reset app data trigger")
     @MainActor
     func authManagerProcessInfoArgsResetAppDataTrigger() throws {
@@ -191,65 +157,6 @@ struct AuthenticationResetAndEdgeCaseTests {
             #expect(
                 validStates.contains(authManager.authenticationState),
                 "Should have valid authentication state")
-        }
-    }
-
-    @Test("Authentication handleSignInWithAppleResult guard clause testing")
-    @MainActor
-    func authHandleSignInWithAppleResultGuardClause() throws {
-        let dataController = DataController.testContainer()
-        let authManager = AuthenticationManager(dataController: dataController)
-
-        Task {
-            // Test the guard clause in handleSignInWithAppleResult
-            // This method should handle the case where authorization is not ASAuthorizationAppleIDCredential
-
-            var threwError = false
-            do {
-                _ = try await authManager.signInWithApple()
-            } catch {
-                threwError = true
-                #expect(error is AuthenticationError, "Should throw AuthenticationError")
-            }
-
-            #expect(threwError, "Should throw error when no valid authorization provided")
-            #expect(
-                authManager.authenticationState == .notDetermined,
-                "State should remain notDetermined after failed auth")
-        }
-    }
-
-    @Test("Authentication private method invocation through reflection")
-    @MainActor
-    func authPrivateMethodInvocationReflection() throws {
-        let dataController = DataController.testContainer()
-        let authManager = AuthenticationManager(dataController: dataController)
-
-        // Test that private methods exist and can be referenced (for coverage)
-        // We can't directly call private methods, but we can test their expected effects
-
-        Task {
-            // Test the path that would call processAppleIDCredential
-            // by attempting sign in (which will fail but exercise the code path)
-
-            var caughtError: Error?
-            do {
-                _ = try await authManager.signInWithApple()
-            } catch {
-                caughtError = error
-            }
-
-            #expect(
-                caughtError is AuthenticationError,
-                "Should catch AuthenticationError from private method path")
-
-            // Test the path that would call resetAppData
-            // by testing checkAuthenticationStatus
-            await authManager.checkAuthenticationStatus()
-
-            #expect(
-                authManager.authenticationState != .notDetermined,
-                "Should complete authentication check")
         }
     }
 
@@ -340,8 +247,10 @@ struct AuthenticationResetAndEdgeCaseTests {
         // Call checkAuthenticationStatus with empty database
         await authManager.checkAuthenticationStatus()
 
-        // Verify state
-        #expect(authManager.authenticationState == .notAuthenticated, "Should be notAuthenticated with no users")
-        #expect(authManager.currentUser == nil, "Should have no current user")
+        // No sign-in: a blank local User is created and the app is authenticated
+        #expect(authManager.authenticationState == .authenticated, "Should be authenticated with no users")
+        #expect(authManager.currentUser != nil, "Should create a blank local user")
+        let users = try dataController.container.mainContext.fetch(FetchDescriptor<User>())
+        #expect(users.count == 1, "Should have created exactly one User")
     }
 }

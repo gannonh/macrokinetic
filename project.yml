@@ -91,7 +91,6 @@ targets:
           - "Onboarding/Legacy/**"
           - AnalyticsServiceIntegrationTests.swift
           - AuthenticationDatabaseIntegrationTests.swift
-          - AuthenticationDelegateIntegrationTests.swift
           - DataControllerBasicTests.swift
           - DataControllerCloudKitTests.swift
           - DataControllerInitializationTests.swift
@@ -127,7 +126,6 @@ targets:
         includes:
           - AnalyticsServiceIntegrationTests.swift
           - AuthenticationDatabaseIntegrationTests.swift
-          - AuthenticationDelegateIntegrationTests.swift
           - DataControllerBasicTests.swift
           - DataControllerCloudKitTests.swift
           - DataControllerInitializationTests.swift

@@ -5,8 +5,14 @@ final class AuthenticationUITests: XCTestCase {
         continueAfterFailure = false
     }
 
-    // NOTE: Real Sign in with Apple testing has been moved to ManualAuthenticationUITests.swift
-    // This allows for manual testing in Xcode while keeping automated tests reliable
+    @MainActor
+    func testLaunchReachesMainAppWithoutSignIn() throws {
+        let app = TestUtilities.launchAppWithTestMode()
+
+        TestUtilities.verifyAuthenticatedState(app)
+        XCTAssertFalse(
+            app.buttons["sign-in-with-apple-button"].exists, "There is no sign-in button in 1.0")
+    }
 
     @MainActor
     func testBiometricAuthenticationUI() throws {
@@ -14,11 +20,6 @@ final class AuthenticationUITests: XCTestCase {
 
         // Navigate to Settings (via More tab)
         TestUtilities.navigateToSettings(app)
-
-        // Ensure user is authenticated first
-        if app.buttons["sign-in-with-apple-button"].waitForExistence(timeout: 2) {
-            XCTFail("User must be authenticated to test biometric settings. Please sign in first.")
-        }
 
         // Verify biometric section exists (in test mode, biometrics are mocked as available)
         let biometricToggle = app.switches["biometric-auth-toggle"]
@@ -87,30 +88,6 @@ final class AuthenticationUITests: XCTestCase {
         weightField.clearAndEnterText("70")
         XCTAssertFalse(errorMessage.exists, "Error message should disappear with valid weight")
         XCTAssertTrue(saveButton.isEnabled, "Save button should be enabled with valid data")
-    }
-
-    @MainActor
-    func testSignOutFlow() throws {
-        let app = TestUtilities.launchAppWithTestMode()
-
-        // Navigate to Settings and verify authentication
-        try TestUtilities.navigateToSettingsAndVerifyAuth(app)
-
-        // Find and tap sign out button
-        let signOutButton = app.buttons["sign-out-button"]
-        XCTAssertTrue(signOutButton.waitForExistence(timeout: 2), "Sign out button should exist")
-        XCTAssertTrue(signOutButton.isEnabled, "Sign out button should be enabled")
-
-        signOutButton.tap()
-
-        // Verify sign in button appears after sign out
-        let signInButton = app.buttons["sign-in-with-apple-button"]
-        XCTAssertTrue(
-            signInButton.waitForExistence(timeout: 3), "Sign in button should appear after sign out")
-
-        // Verify profile is no longer visible
-        XCTAssertFalse(
-            app.staticTexts["User Profile"].exists, "User Profile should not be visible after sign out")
     }
 
     @MainActor

@@ -69,7 +69,9 @@ final class AccountViewUITests: XCTestCase {
         XCTAssertTrue(healthToggleRow.exists, "Health toggle row should exist")
 
         // THEN: Account actions should exist
-        XCTAssertTrue(app.buttons["log-out-button"].exists, "Log Out button should exist")
+        XCTAssertFalse(app.buttons["log-out-button"].exists, "Log Out button should not exist (no sign-in)")
+        XCTAssertTrue(
+            app.staticTexts["on-device-storage-note"].exists, "On-device storage note should exist")
         XCTAssertTrue(app.buttons["restart-onboarding-button"].exists, "Restart Onboarding button should exist")
     }
 
@@ -382,36 +384,6 @@ final class AccountViewUITests: XCTestCase {
 
     // MARK: - 11. Account Actions
 
-    /// User can trigger Log Out with confirmation
-    /// Smoketest: 11. Account Actions - Log Out
-    func testLogOutShowsConfirmation() throws {
-        // GIVEN: Navigate to Account view
-        navigateToAccountView()
-
-        // WHEN: Tap Log Out button
-        let logOutButton = app.buttons["log-out-button"]
-        XCTAssertTrue(logOutButton.waitForExistence(timeout: 3), "Log Out button should exist")
-        logOutButton.tap()
-
-        // THEN: Confirmation dialog should appear
-        let confirmationDialog = app.sheets["Log Out"]
-        XCTAssertTrue(
-            confirmationDialog.waitForExistence(timeout: 3),
-            "Log Out confirmation dialog should appear"
-        )
-
-        // Verify dialog has expected buttons
-        XCTAssertTrue(confirmationDialog.buttons["Log Out"].exists, "Log Out button should exist in dialog")
-        XCTAssertTrue(confirmationDialog.buttons["Cancel"].exists, "Cancel button should exist")
-
-        // WHEN: Tap Cancel
-        confirmationDialog.buttons["Cancel"].tap()
-
-        // THEN: Dialog should dismiss, still on Account view
-        XCTAssertFalse(confirmationDialog.exists, "Dialog should dismiss after cancel")
-        XCTAssertTrue(app.otherElements["account-view"].exists, "Should still be on Account view")
-    }
-
     /// User can trigger Restart Onboarding with confirmation
     /// Smoketest: 11. Account Actions - Restart Onboarding
     func testRestartOnboardingShowsConfirmation() throws {
@@ -453,7 +425,9 @@ final class AccountViewUITests: XCTestCase {
         XCTAssertTrue(app.otherElements["account-view"].exists, "account-view identifier should exist")
         XCTAssertTrue(app.otherElements["profile-header"].exists, "profile-header identifier should exist")
         XCTAssertTrue(app.otherElements["health-toggle-row"].exists, "health-toggle-row identifier should exist")
-        XCTAssertTrue(app.buttons["log-out-button"].exists, "log-out-button identifier should exist")
+        XCTAssertFalse(app.buttons["log-out-button"].exists, "log-out-button should not exist (no sign-in)")
+        XCTAssertTrue(
+            app.staticTexts["on-device-storage-note"].exists, "on-device-storage-note identifier should exist")
         XCTAssertTrue(
             app.buttons["restart-onboarding-button"].exists, "restart-onboarding-button identifier should exist")
 
