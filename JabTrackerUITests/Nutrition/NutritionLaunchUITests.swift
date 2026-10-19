@@ -130,6 +130,8 @@ final class NutritionLaunchUITests: XCTestCase {
         let foods = try [1, 2].map { try ProductionFood(index: $0, environment: env) }
         let first = foods[0], second = foods[1]
         let totals = ProductionFood.totals(foods)
+        // The Food Log and Dashboard round the sum, while the detail sheet truncates each food's value.
+        expect(totals.isUnambiguous, "The combined totals have values whose display rounding is unambiguous")
 
         addProductionFood(first, meal: "Breakfast")
         expectProductionRows([first])
@@ -338,6 +340,8 @@ final class NutritionLaunchUITests: XCTestCase {
     private func setQuantity(_ value: String, in sheet: XCUIElement) {
         let input = sheet.textFields["quantity-input"]
         tap(input, "Edit the serving quantity")
+        // The tap can leave the caret mid-text; tap past the text so every delete removes a trailing character.
+        input.coordinate(withNormalizedOffset: CGVector(dx: 0.98, dy: 0.5)).tap()
         guard let previous = input.value as? String else {
             expect(false, "Quantity has a readable value")
             return

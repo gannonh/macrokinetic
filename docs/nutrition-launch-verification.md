@@ -1,6 +1,6 @@
 # Verify nutrition-only launch behavior
 
-[KAT-3587](https://linear.app/kata-sh/issue/KAT-3587) owns this verification slice under [KAT-3185](https://linear.app/kata-sh/issue/KAT-3185). The implementation starts from food-details commit `4bf867e03a62ca37683ee203cac17d258a711b71`. The three UI tests run and pass on the CI fixture database; see [launch evidence](launch-evidence/KAT-3587/README.md) for results, the disk-identity check, and the open production-database/offline gate. No production-database or offline result is claimed.
+[KAT-3587](https://linear.app/kata-sh/issue/KAT-3587) owns this verification slice under [KAT-3185](https://linear.app/kata-sh/issue/KAT-3185). The implementation starts from food-details commit `4bf867e03a62ca37683ee203cac17d258a711b71`. The three UI tests run and pass on the CI fixture database; `testProductionDatabaseJourneyWithDatabaseValues` also passed on the full production database with zero network sockets observed for the app process; see [launch evidence](launch-evidence/KAT-3587/README.md) for results, the disk-identity check, and its limits. The offline gate (network verifiably unavailable, such as airplane mode on an isolated device) is still open: observed zero network use is not a run with the network disabled.
 
 ## Run the three exact UI selectors
 
