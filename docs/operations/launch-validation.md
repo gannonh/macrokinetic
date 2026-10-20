@@ -2,16 +2,18 @@
 
 KAT-3589 adds two jobs to CI and Full Validation. `ReleaseHarnessUI` runs selected UI methods serially in the optimized `ReleaseTestHarness` configuration. `Ordinary Release compile` builds the production bundle identifier with the ordinary `Release` compiler inputs. Existing unit, integration, StoreKit, performance, lint and tooling jobs remain enabled.
 
-`scripts/ci/launch-suite.json` selects the Release-harness tests for nutrition-only logging and relaunch (KAT-3587), prescribed medication and History (KAT-3186, KAT-3581), unfinished-feature absence (KAT-3580, KAT-3581) and disk-backed relaunch (KAT-3583), plus the KAT-3597 retry control.
+`scripts/ci/launch-suite.json` selects the Release-harness tests for nutrition-only logging and relaunch (KAT-3587), prescribed medication and History (KAT-3186, KAT-3581), unfinished-feature absence (KAT-3580, KAT-3581) and disk-backed relaunch (KAT-3583), first-run onboarding and relaunch (KAT-3588), plus the KAT-3597 retry control.
 
-Onboarding and relaunch (KAT-3588) is listed under `missing_critical_journeys` until its harness test lands. The gate has two modes:
+A critical journey without a selected test can be listed under `missing_critical_journeys` while its slice is in flight. The list is empty now. The gate has two modes:
 
 | Mode | Where | Pending journey | Uncovered journey not listed as pending |
 | --- | --- | --- | --- |
 | `pr` (`LAUNCH_GATE_MODE=pr`) | CI on pull requests | Reported, job passes | Fails |
 | `release` (default) | Full Validation, which TestFlight calls | Fails | Fails |
 
-A pending entry whose journey is already covered, or is not a critical journey, fails both modes, so a stale entry cannot linger. To finish the suite, add the KAT-3588 test entries to `tests` with `"journeys": ["onboarding-skip-relaunch"]` and delete its `missing_critical_journeys` entry.
+A pending entry whose journey is already covered, or is not a critical journey, fails both modes, so a stale entry cannot linger.
+
+`OnboardingLaunchUITests/testDeniedSystemPromptsForHealthKitAndNotificationsLeaveNutritionUsable` is not selected. It needs the system permission prompts, which appear only once per erased simulator, so it cannot share the serial suite run.
 
 ## Selected methods and quarantine
 

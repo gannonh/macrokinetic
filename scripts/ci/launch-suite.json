@@ -121,14 +121,49 @@
         "test-controls-retry"
       ],
       "verified_evidence": "/tmp/jabtracker-launch-20260930/controls-harness-retry.xcresult (prior local Release harness pass; CI fixture/integrated candidate rerun required)"
-    }
-  ],
-  "missing_critical_journeys": [
+    },
     {
+      "selector": "JabTrackerUITests/OnboardingLaunchUITests/testCompletionRetainsNutritionGoalProfileAndLogAfterRelaunch",
+      "source": "JabTrackerUITests/Onboarding/OnboardingLaunchUITests.swift",
       "issue": "KAT-3588",
-      "journey": "onboarding-skip-relaunch",
-      "reason": "Pending PR #375: integrated harness proof of first run, skipped permissions, usable nutrition and exact saved profile/goals. PR CI reports this; Full Validation blocks release until it is selected."
+      "purpose": "First run completes nutrition-only onboarding; goal, profile and a food log survive relaunch without repeating onboarding.",
+      "journeys": [
+        "onboarding-skip-relaunch"
+      ],
+      "verified_evidence": "PR #375 independent verification: JabTrackerReleaseTestHarness 5/5 (https://github.com/gannonh/macrokinetic/pull/375#issuecomment-6297837595)"
+    },
+    {
+      "selector": "JabTrackerUITests/OnboardingLaunchUITests/testExplicitSkipRetainsNoGoalAndManualLogAfterRelaunch",
+      "source": "JabTrackerUITests/Onboarding/OnboardingLaunchUITests.swift",
+      "issue": "KAT-3588",
+      "purpose": "Skipping onboarding reaches a usable app with no goal created; a manual log survives relaunch.",
+      "journeys": [
+        "onboarding-skip-relaunch"
+      ],
+      "verified_evidence": "PR #375 independent verification: JabTrackerReleaseTestHarness 5/5 (https://github.com/gannonh/macrokinetic/pull/375#issuecomment-6297837595)"
+    },
+    {
+      "selector": "JabTrackerUITests/OnboardingLaunchUITests/testCancelSkipKeepsGoalSetupAndHiddenRoutesAbsent",
+      "source": "JabTrackerUITests/Onboarding/OnboardingLaunchUITests.swift",
+      "issue": "KAT-3588",
+      "purpose": "Cancelling skip keeps goal setup, and onboarding never exposes hidden features.",
+      "journeys": [
+        "onboarding-skip-relaunch",
+        "unfinished-feature-absence"
+      ],
+      "verified_evidence": "PR #375 independent verification: JabTrackerReleaseTestHarness 5/5 (https://github.com/gannonh/macrokinetic/pull/375#issuecomment-6297837595)"
+    },
+    {
+      "selector": "JabTrackerUITests/OnboardingLaunchUITests/testSkippedPermissionsLeaveSettingsRecoveryRoutesReachable",
+      "source": "JabTrackerUITests/Onboarding/OnboardingLaunchUITests.swift",
+      "issue": "KAT-3588",
+      "purpose": "Skipped Health, notification and biometric permissions leave Settings recovery routes reachable.",
+      "journeys": [
+        "onboarding-skip-relaunch"
+      ],
+      "verified_evidence": "PR #375 independent verification: JabTrackerReleaseTestHarness 5/5 (https://github.com/gannonh/macrokinetic/pull/375#issuecomment-6297837595)"
     }
   ],
+  "missing_critical_journeys": [],
   "quarantine_file": "scripts/ci/launch-quarantine.json"
 }
