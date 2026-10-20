@@ -17,115 +17,120 @@ final class DoseHistoryBasicUITests: XCTestCase {
 
     @MainActor
     func test_doseHistory_displaysInReverseChronologicalOrder() throws {
-        let preset = TestUtilities.TestDataPreset.thirtyDays
-        let app = TestUtilities.launchAppWithSeededData(preset: preset)
-
-        // When: User navigates to History tab
+        let today = Date()
+        let app = TestUtilities.setupDoseHistoryTest(app: XCUIApplication(), doseCount: 3)
         TestUtilities.navigateToHistoryView(in: app)
-
-        // Then: History list should display doses in reverse chronological order
         let doseRows = TestUtilities.getDoseRows(from: app, minimumCount: 3)
+        XCTAssertEqual(doseRows.count, 3)
+        XCTAssertTrue(app.staticTexts["3 of 3 doses shown"].exists)
 
-        // Verify the doses are displayed (newest first)
-        // Note: Without specific timestamp display verification, we verify the list exists and has content
-        // The actual chronological ordering would be verified by the view model logic
-        XCTAssertTrue(
-            doseRows.element(boundBy: 0).exists,
-            "Most recent dose should be displayed first")
-        XCTAssertTrue(
-            doseRows.element(boundBy: 1).exists,
-            "Second most recent dose should be displayed")
-        XCTAssertTrue(
-            doseRows.element(boundBy: 2).exists,
-            "Oldest dose should be displayed last")
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        let expectedDates = [0, 7, 14].map { daysAgo in
+            formatter.string(from: Calendar.current.date(byAdding: .day, value: -daysAgo, to: today)!)
+        }
+        XCTAssertEqual(
+            app.staticTexts.matching(identifier: "dose-date-section-header")
+                .allElementsBoundByIndex.map(\.label), expectedDates)
+        for row in doseRows.allElementsBoundByIndex {
+            XCTAssertEqual(row.staticTexts["dose-amount"].label, "0.25 mg")
+            XCTAssertEqual(row.staticTexts["dose-medication"].label, "Ozempic")
+        }
+        XCTAssertEqual(doseRows.element(boundBy: 0).staticTexts["injection-site"].label, "Abdomen")
+        XCTAssertEqual(doseRows.element(boundBy: 1).staticTexts["injection-site"].label, "Thigh")
+        XCTAssertEqual(doseRows.element(boundBy: 2).staticTexts["injection-site"].label, "Abdomen")
     }
 
     func test_doseHistory_swipeActionsEditDose() throws {
-
-        // Given: User has 2 medication profiles and a dose for the first one
-        let app = TestUtilities.setupDoseHistoryTest(app: XCUIApplication(), doseCount: 1, medicationProfiles: 2)
-
-        // Navigate to History tab
+        let app = TestUtilities.setupDoseHistoryTest(app: XCUIApplication(), doseCount: 1)
         TestUtilities.navigateToHistoryView(in: app)
+        let original = TestUtilities.getDoseRows(from: app).firstMatch
+        XCTAssertEqual(original.staticTexts["dose-amount"].label, "0.25 mg")
+        XCTAssertEqual(original.staticTexts["dose-medication"].label, "Ozempic")
+        XCTAssertEqual(original.staticTexts["injection-site"].label, "Abdomen")
+        let originalTime = original.staticTexts["dose-timestamp"].label
+        let originalDate = app.staticTexts.matching(identifier: "dose-date-section-header").firstMatch.label
 
-        // Find the first dose row
-        let doseRows = TestUtilities.getDoseRows(from: app, minimumCount: 1)
-        let firstDoseRow = doseRows.element(boundBy: 0)
+        original.swipeLeft()
+        let edit = app.buttons["Edit"]
+        XCTAssertTrue(edit.waitForExistence(timeout: 3))
+        edit.tap()
+        let sheet = app.navigationBars["Edit Dose"]
+        XCTAssertTrue(sheet.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["quick-dose-medication-picker"].staticTexts["Ozempic (0.25 mg)"].exists)
+        let amount = app.textFields["quick-dose-prescribed-amount-input"]
+        TestUtilities.debugScreenshot(app, name: "history-prescribed-amount-prepopulation")
+        print(app.debugDescription)
+        XCTAssertTrue(amount.exists)
+        XCTAssertEqual(amount.value as? String, "0.25")
+        XCTAssertTrue(app.datePickers["quick-dose-datetime-picker"].buttons[originalDate].exists)
+        XCTAssertTrue(app.datePickers["quick-dose-datetime-picker"].buttons[originalTime].exists)
 
-        // WHEN: User swipes left on dose row to reveal trailing actions
-        firstDoseRow.swipeLeft()
+        TestUtilities.replaceHistoryPrescribedAmount(
+            in: app, with: "0.50", evidenceName: "history-save-prescribed-amount-edit")
+        let notes = app.textFields["quick-dose-notes"]
+        notes.tap()
+        notes.typeText("History edit persistence")
+        let save = app.buttons["quick-dose-save-button"]
+        XCTAssertTrue(save.isEnabled)
+        save.tap()
+        XCTAssertTrue(sheet.waitForNonExistence(timeout: 5))
+        TestUtilities.debugScreenshot(app, name: "history-edited-dose")
+        print(app.debugDescription)
 
-        // THEN: Edit action appears and functions correctly
-        let editButton = app.buttons["Edit"]
-        XCTAssertTrue(
-            editButton.waitForExistence(timeout: 3),
-            "Edit button should appear after swipe")
+        let expectedLabel = "0.50 milligrams, Ozempic, at \(originalTime), injection site Abdomen, with notes"
+        let updated = TestUtilities.getDoseRows(from: app)
+        XCTAssertEqual(updated.count, 1)
+        XCTAssertEqual(updated.firstMatch.label, expectedLabel)
+        XCTAssertEqual(updated.firstMatch.staticTexts["dose-amount"].label, "0.50 mg")
+        XCTAssertTrue(updated.firstMatch.staticTexts["History edit persistence"].exists)
+        XCTAssertEqual(
+            app.staticTexts.matching(identifier: "dose-date-section-header").firstMatch.label,
+            originalDate)
 
-        // Tap the Edit button
-        editButton.tap()
+        app.terminate()
+        let relaunched = TestUtilities.launchAppWithTestMode(resetData: false)
+        TestUtilities.navigateToHistoryView(in: relaunched)
+        let persisted = TestUtilities.getDoseRows(from: relaunched)
+        XCTAssertEqual(persisted.count, 1)
+        XCTAssertEqual(persisted.firstMatch.label, expectedLabel)
+        XCTAssertEqual(persisted.firstMatch.staticTexts["dose-amount"].label, "0.50 mg")
+        XCTAssertTrue(persisted.firstMatch.staticTexts["History edit persistence"].exists)
+        XCTAssertEqual(
+            relaunched.staticTexts.matching(identifier: "dose-date-section-header").firstMatch.label,
+            originalDate)
+    }
 
-        // THEN: Dose entry sheet opens with pre-populated data
-        // Wait for the edit sheet to appear
-        let editSheet = app.navigationBars["Edit Dose"]
-        XCTAssertTrue(
-            editSheet.waitForExistence(timeout: 5),
-            "Edit dose sheet should appear")
-
-        // Use the correct accessibility identifiers found through testing
-        let cancelButton = app.buttons["quick-dose-cancel-button"]
-        let saveButton = app.buttons["quick-dose-save-button"]
-
-        XCTAssertTrue(cancelButton.exists, "Cancel button should be present")
-        XCTAssertTrue(saveButton.exists, "Save button should be present")
-
-        // WHEN: User changes the medication from first to second profile
-        // Use the correct medication picker identifier from the accessibility hierarchy
-        let medicationPicker = app.buttons["quick-dose-medication-picker"]
-        XCTAssertTrue(
-            medicationPicker.waitForExistence(timeout: 3),
-            "Medication picker should be available")
-        medicationPicker.tap()
-
-        // Try to select a different medication profile if available
-        // Look for any medication option that's not the current one (Tirzepatide/Mounjaro)
-        let medicationOptions = app.buttons.matching(
-            NSPredicate(format: "label CONTAINS 'Mounjaro' OR label CONTAINS 'Tirzepatide'")
-        )
-        if medicationOptions.count > 0 {
-            medicationOptions.firstMatch.tap()
-        } else {
-            // If we can't find a second medication, just close the picker and save as-is
-            // This tests that the edit flow works even if we don't change anything
-            medicationPicker.tap()  // Tap again to close picker
+    func test_doseHistory_searchMatchesMedicationName() throws {
+        let app = TestUtilities.setupDoseHistoryTest(app: XCUIApplication(), doseCount: 2)
+        TestUtilities.navigateToHistoryView(in: app)
+        let search = app.textFields["history-section"]
+        XCTAssertTrue(search.exists)
+        search.tap()
+        search.typeText("Ozempic")
+        XCTAssertTrue(app.staticTexts["2 of 2 doses shown"].waitForExistence(timeout: 5))
+        let matches = TestUtilities.getDoseRows(from: app, minimumCount: 2)
+        XCTAssertEqual(matches.count, 2)
+        for row in matches.allElementsBoundByIndex {
+            XCTAssertEqual(row.staticTexts["dose-amount"].label, "0.25 mg")
+            XCTAssertEqual(row.staticTexts["dose-medication"].label, "Ozempic")
         }
 
-        // WHEN: User changes the date/time using the DatePicker
-        let dateTimePicker = app.datePickers["quick-dose-datetime-picker"]
-        XCTAssertTrue(
-            dateTimePicker.waitForExistence(timeout: 3),
-            "Date/time picker should be available in edit mode")
+        app.buttons["Clear text"].tap()
+        search.tap()
+        search.typeText("Mounjaro")
+        let noMatches = app.staticTexts["0 of 2 doses shown"]
+        if !noMatches.waitForExistence(timeout: 5) {
+            TestUtilities.debugScreenshot(app, name: "history-search-no-matches")
+            print(app.debugDescription)
+            XCTFail("Searching for Mounjaro should match none of the Ozempic doses")
+        }
+        XCTAssertEqual(app.buttons.matching(identifier: "dose-history-row").count, 0)
+        XCTAssertTrue(app.staticTexts["No doses match your current filters."].exists)
+        XCTAssertFalse(app.buttons["Log Your First Dose"].exists)
 
-        // Verify picker is interactable by tapping on it (this will open date/time selection)
-        XCTAssertTrue(dateTimePicker.isHittable, "Date/time picker should be interactable")
-
-        // For UI testing, we verify the picker exists and is functional
-        // Actual date selection would be complex and device-dependent in UI tests
-        // The important validation is that the picker is present and accessible
-
-        // Save the changes
-        saveButton.tap()
-
-        // THEN: Sheet dismisses and dose is updated
-        // Wait a moment for the sheet to dismiss
-        let sheetDismissed = !editSheet.waitForExistence(timeout: 3)
-        XCTAssertTrue(sheetDismissed, "Edit sheet should dismiss after saving changes")
-
-        // Verify we're back on the History view and the dose row still exists
-        let historyView = app.cells.containing(.staticText, identifier: "dose-date-section-header").firstMatch
-        XCTAssertTrue(historyView.waitForExistence(timeout: 3), "Should return to history view")
-
-        // Verify the dose row still exists after edit
-        let updatedDoseRow = TestUtilities.getDoseRows(from: app, minimumCount: 1).element(boundBy: 0)
-        XCTAssertTrue(updatedDoseRow.exists, "Updated dose row should still exist after edit")
+        app.buttons["Clear text"].tap()
+        XCTAssertTrue(app.staticTexts["2 of 2 doses shown"].waitForExistence(timeout: 5))
+        XCTAssertEqual(TestUtilities.getDoseRows(from: app, minimumCount: 2).count, 2)
     }
 }

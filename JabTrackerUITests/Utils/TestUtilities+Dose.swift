@@ -86,6 +86,48 @@ extension TestUtilities {
         return TestUtilities.launchAppWithSeededData(preset: customPreset, resetData: true)
     }
 
+    /// Finds an element by exact accessibility label (and value). Parent identifiers such as
+    /// `adherence-section` replace child identifiers, so labels are the stable handle.
+    /// On a miss it captures a screenshot and the hierarchy before failing.
+    @discardableResult
+    static func requireLabeled(
+        _ app: XCUIApplication, _ label: String, value: String? = nil,
+        timeout: TimeInterval = 5, file: StaticString = #filePath, line: UInt = #line
+    ) -> XCUIElement {
+        let predicate =
+            value.map { NSPredicate(format: "label == %@ AND value == %@", label, $0) }
+            ?? NSPredicate(format: "label == %@", label)
+        let element = app.descendants(matching: .any).matching(predicate).firstMatch
+        if !element.waitForExistence(timeout: timeout) {
+            debugScreenshot(app, name: "missing-\(label.prefix(40))")
+            print(app.debugDescription)
+            XCTFail("Missing element labeled '\(label)' value \(value ?? "any")", file: file, line: line)
+        }
+        return element
+    }
+
+    static func replaceHistoryPrescribedAmount(
+        in app: XCUIApplication, with value: String, evidenceName: String,
+        file: StaticString = #filePath, line: UInt = #line
+    ) {
+        let amount = app.textFields["quick-dose-prescribed-amount-input"]
+        let save = app.buttons["quick-dose-save-button"]
+        amount.coordinate(withNormalizedOffset: CGVector(dx: 0.98, dy: 0.5)).tap()
+        let previous = amount.value as? String ?? ""
+        amount.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: previous.count))
+        debugScreenshot(app, name: "\(evidenceName)-cleared")
+        print(app.debugDescription)
+        // An empty text field reports its placeholder as its value.
+        XCTAssertEqual(amount.value as? String, amount.placeholderValue, file: file, line: line)
+        XCTAssertEqual(amount.placeholderValue, "Amount", file: file, line: line)
+        XCTAssertFalse(save.isEnabled, file: file, line: line)
+        amount.typeText(value)
+        debugScreenshot(app, name: "\(evidenceName)-entered")
+        print(app.debugDescription)
+        XCTAssertEqual(amount.value as? String, value, file: file, line: line)
+        XCTAssertTrue(save.isEnabled, file: file, line: line)
+    }
+
     /// Creates a medication profile using default dose (doesn't select a specific dose)
     /// - Parameters:
     ///   - app: The XCUIApplication instance
@@ -161,109 +203,36 @@ extension TestUtilities {
     {
         navigateToHistory(app, timeout: timeout)
 
-        let listContainer = app.descendants(matching: .any)["dose-history-container"]
-        let historyView = app.descendants(matching: .any)["dose-history-view"]
-        let searchField = app.descendants(matching: .any)["dose-history-search"]
-        let listView = app.descendants(matching: .any)["dose-history-list"]
-        let emptyState = app.descendants(matching: .any)["dose-history-empty-state"]
-        let filterButton = app.buttons["filter-button"]
-        let doseRows = app.buttons.matching(identifier: "dose-history-row")
-
-        if listContainer.waitForExistence(timeout: timeout) {
-            _ = listView.waitForExistence(timeout: 2)
-            return listContainer
+        let viewModePicker = app.segmentedControls["history-view-mode-picker"]
+        if !viewModePicker.waitForExistence(timeout: timeout) {
+            debugScreenshot(app, name: "history-navigation-failure")
+            print(app.debugDescription)
+            XCTFail("History view mode picker should exist")
         }
-
-        if historyView.waitForExistence(timeout: timeout) {
-            return historyView
+        XCTAssertTrue(app.segmentedControls["analytics-section-picker"].buttons["History"].isSelected)
+        let list = viewModePicker.buttons["List"]
+        if !list.isSelected {
+            list.tap()
         }
-
-        if searchField.waitForExistence(timeout: timeout) {
-            return searchField
-        }
-
-        if filterButton.waitForExistence(timeout: timeout) {
-            return filterButton
-        }
-
-        let historyLoaded = XCTNSPredicateExpectation(
-            predicate: NSPredicate(format: "count >= 1"),
-            object: doseRows
-        )
-        if XCTWaiter().wait(for: [historyLoaded], timeout: timeout) == .completed {
-            return doseRows.firstMatch
-        }
-
-        if listView.waitForExistence(timeout: timeout) {
-            return listView
-        }
-
-        if emptyState.waitForExistence(timeout: timeout) {
-            return emptyState
-        }
-
-        // Check for segmented control to switch to list mode if in calendar mode
-        let listToggle = app.buttons["List"]
-        if listToggle.waitForExistence(timeout: 2), !listToggle.isSelected {
-            listToggle.tap()
-            if filterButton.waitForExistence(timeout: 2)
-                || XCTWaiter().wait(for: [historyLoaded], timeout: 2) == .completed
-            {
-                return filterButton.exists ? filterButton : doseRows.firstMatch
-            }
-        }
-
-        debugScreenshot(app, name: "history-navigation-failure")
-        print(app.debugDescription)
-        XCTFail("Could not navigate to history list view within \(timeout) seconds")
-        return historyView
+        XCTAssertTrue(list.isSelected)
+        return viewModePicker
     }
 
-    /// Gets dose rows from the history list
-    /// - Parameters:
-    ///   - app: The XCUIApplication instance
-    ///   - minimumCount: Minimum expected number of dose rows (default: 1)
-    ///   - timeout: Time to wait for rows to appear (default: 10 seconds)
-    /// - Returns: XCUIElementQuery for dose rows
+    /// Gets currently instantiated dose rows from the history list.
     static func getDoseRows(
         from app: XCUIApplication,
         minimumCount: Int = 1,
         timeout: TimeInterval = 10
     ) -> XCUIElementQuery {
-        // First, wait for any loading indicator to disappear
-        let loadingIndicator = app.activityIndicators.firstMatch
-        if loadingIndicator.exists {
-            let loadingDisappeared = !loadingIndicator.waitForExistence(timeout: timeout / 2)
-            if !loadingDisappeared {
-                // Still loading - wait more
-                Thread.sleep(forTimeInterval: 1)
-            }
+        let doseRows = app.buttons.matching(identifier: "dose-history-row")
+        if !doseRows.firstMatch.waitForExistence(timeout: timeout) {
+            debugScreenshot(app, name: "before-missing-dose-rows")
+            print(app.debugDescription)
+            XCTFail("Dose rows should appear within \(timeout) seconds")
         }
-
-        // Check for empty state - if present, data seeding may have failed
-        let emptyState = app.otherElements["dose-history-empty-state"]
-        if emptyState.exists {
-            XCTFail("History view shows empty state - data seeding may have failed")
-        }
-
-        // In SwiftUI Lists with .buttonStyle(.plain), buttons may be exposed as cells
-        // Try buttons first, then cells as fallback
-        var doseRows = app.buttons.matching(identifier: "dose-history-row")
-        var firstRow = doseRows.firstMatch
-
-        if !firstRow.waitForExistence(timeout: timeout / 2) {
-            // Try cells instead
-            doseRows = app.cells.matching(identifier: "dose-history-row")
-            firstRow = doseRows.firstMatch
-        }
-
-        let rowsAppeared = firstRow.waitForExistence(timeout: timeout / 2)
-        XCTAssertTrue(rowsAppeared, "Dose rows should appear within \(timeout) seconds")
-
-        // Verify minimum count after waiting
         XCTAssertGreaterThanOrEqual(
             doseRows.count, minimumCount,
-            "Should have at least \(minimumCount) dose row(s)")
+            "Should have at least \(minimumCount) visible dose row(s)")
         return doseRows
     }
 
