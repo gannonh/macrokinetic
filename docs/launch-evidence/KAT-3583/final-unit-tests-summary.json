@@ -1,0 +1,68 @@
+{
+  "devicesAndConfigurations" : [
+    {
+      "device" : {
+        "architecture" : "arm64",
+        "deviceId" : "E3DA1ABE-F2CC-4F1D-B4CB-F94E57F09ADA",
+        "deviceName" : "jab-storage",
+        "modelName" : "iPhone 18 Pro Max",
+        "osBuildNumber" : "24A434",
+        "osVersion" : "27.0",
+        "platform" : "iOS Simulator"
+      },
+      "expectedFailures" : 0,
+      "failedTests" : 2,
+      "passedTests" : 3065,
+      "skippedTests" : 1,
+      "testPlanConfiguration" : {
+        "configurationId" : "1",
+        "configurationName" : "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription" : "JabTrackerUnitTests · Built with macOS 27.0",
+  "expectedFailures" : 0,
+  "failedTests" : 2,
+  "finishTime" : 1790822505.468,
+  "passedTests" : 3065,
+  "result" : "Failed",
+  "runtimeWarnings" : [
+    {
+      "issueType" : "Runtime Warning",
+      "message" : "Accessing State<ConcentrationChartGestureHandler>'s value without being installed on a View. This will create a new ConcentrationChartGestureHandler instance each time.",
+      "sourceURL" : "file:///Users/gannonhall/.codex/worktrees/jab-launch-storage/jab-tracker-ios/JabTrackerTests/Views/ConcentrationTimelineChartTests.swift"
+    }
+  ],
+  "skippedTests" : 1,
+  "startTime" : 1790822369.341,
+  "statistics" : [
+
+  ],
+  "testFailures" : [
+    {
+      "failureText" : "Caught error: Error Domain=UNErrorDomain Code=2003 \"Repository could not save notification. Source is not authorized.\" UserInfo={NSLocalizedDescription=Repository could not save notification. Source is not authorized., UNAuthorizationStatus=Denied}",
+      "targetName" : "JabTrackerUnitTests",
+      "testIdentifier" : 1859,
+      "testIdentifierString" : "NotificationServiceActionTests/testHandleRemindLaterTitrationAction()",
+      "testIdentifierURL" : "test://com.apple.xcode/JabTracker/JabTrackerUnitTests/NotificationServiceActionTests/testHandleRemindLaterTitrationAction()",
+      "testName" : "Handle REMIND_LATER_TITRATION action"
+    },
+    {
+      "failureText" : "Caught error: .schedulingFailed",
+      "targetName" : "JabTrackerUnitTests",
+      "testIdentifier" : 1858,
+      "testIdentifierString" : "NotificationServiceActionTests/testHandleRescheduleTitrationAction()",
+      "testIdentifierURL" : "test://com.apple.xcode/JabTracker/JabTrackerUnitTests/NotificationServiceActionTests/testHandleRescheduleTitrationAction()",
+      "testName" : "Handle RESCHEDULE_TITRATION action"
+    }
+  ],
+  "title" : "Test - JabTrackerUnitTests",
+  "topInsights" : [
+    {
+      "category" : "Longest Test Runs",
+      "impact" : "43% of duration",
+      "text" : "4 longest test runs with outlier durations exceeding 0.98s (three standard deviations)"
+    }
+  ],
+  "totalTestCount" : 3068
+}
