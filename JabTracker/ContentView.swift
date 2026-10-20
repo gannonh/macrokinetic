@@ -8,6 +8,7 @@ struct ContentView: View {
     @Query private var users: [User]
     @StateObject private var quickDoseViewModel = QuickDoseViewModel()
     @State private var showingQuickDoseSheet = false
+    @State private var quickDoseScheduledId: UUID?
     @State private var showingTitrationDialog = false
     @State private var pendingTitration: DoseTitration?
     @State private var showingSuccessMessage = false
@@ -162,6 +163,7 @@ struct ContentView: View {
             onDismiss: {
                 // Clear pending titration state to avoid stale references
                 self.pendingTitration = nil
+                self.quickDoseScheduledId = nil
 
                 // Reset remind-later flag when quick dose sheet is dismissed
                 if self.quickDoseViewModel.titrationRemindLater {
@@ -172,13 +174,14 @@ struct ContentView: View {
                 QuickDoseSheet(
                     viewModel: self.quickDoseViewModel,
                     doseService: self.doseService,
-                    showingSuccessMessage: self.$showingSuccessMessage)
+                    showingSuccessMessage: self.$showingSuccessMessage,
+                    scheduledDoseId: self.quickDoseScheduledId)
             }
         )
         .sheet(
             isPresented: self.$showingTitrationDialog,
             content: {
-                if let titration = pendingTitration {
+                if ReleasePolicy.isEnabled(.medicalCalculators), let titration = pendingTitration {
                     TitrationConfirmationDialog(
                         titration: titration,
                         onComplete: handleTitrationComplete,
@@ -282,10 +285,7 @@ struct ContentView: View {
             if let scheduledDoseId = notification.userInfo?["scheduledDoseId"] as? UUID {
                 logger.info("Received deeplink notification to show QuickDoseSheet for dose: \(scheduledDoseId)")
 
-                // Pre-populate QuickDoseViewModel with scheduled dose data
-                quickDoseViewModel.prepareForScheduledDose(scheduledDoseId: scheduledDoseId, context: modelContext)
-
-                // Show the QuickDoseSheet
+                quickDoseScheduledId = scheduledDoseId
                 showingQuickDoseSheet = true
             }
         }
@@ -479,7 +479,8 @@ struct DashboardView: View {
 
     @ViewBuilder
     private func concentrationSection(for user: User) -> some View {
-        if let medicationProfiles = user.medicationProfiles,
+        if ReleasePolicy.isEnabled(.concentrationEstimates),
+            let medicationProfiles = user.medicationProfiles,
             !medicationProfiles.isEmpty
         {
             ConcentrationList(

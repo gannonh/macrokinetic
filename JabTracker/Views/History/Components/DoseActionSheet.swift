@@ -48,7 +48,7 @@ struct DoseActionSheet: View {
                             .foregroundColor(.secondary)
                             .accessibilityIdentifier("dose-action-scheduled-time")
 
-                        Text("\(event.doseAmount, specifier: "%.2f") mg")
+                        Text("\(RecordedAmountInput.displayText(for: event.doseAmount)) mg")
                             .font(.caption)
                             .foregroundColor(.secondary)
                             .accessibilityIdentifier("dose-action-amount")
@@ -259,7 +259,7 @@ private struct QuickDoseEntrySheet: View {
                     HStack {
                         Text("Dose Amount")
                         Spacer()
-                        Text("\(prePopulatedAmount, specifier: "%.2f") mg")
+                        Text("\(RecordedAmountInput.displayText(for: prePopulatedAmount)) mg")
                             .foregroundColor(.secondary)
                     }
                     .accessibilityIdentifier("quick-dose-entry-amount")

@@ -38,6 +38,12 @@ struct ConcentrationCard: View {
     }
 
     var body: some View {
+        if ReleasePolicy.isEnabled(.concentrationEstimates) {
+            concentrationContent
+        }
+    }
+
+    private var concentrationContent: some View {
         DesignCard {
             VStack(alignment: .leading, spacing: 16) {
                 // Header with medication name

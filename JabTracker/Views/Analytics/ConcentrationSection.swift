@@ -29,6 +29,12 @@ struct ConcentrationSection: View {
     // MARK: - Body
 
     var body: some View {
+        if ReleasePolicy.isEnabled(.concentrationEstimates) {
+            concentrationContent
+        }
+    }
+
+    private var concentrationContent: some View {
         Group {
             if user != nil, !medicationProfiles.isEmpty {
                 if let dataset = viewModel.chartDataset {

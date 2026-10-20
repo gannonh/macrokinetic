@@ -261,6 +261,7 @@ final class MedicationProfileViewModel {
 
     /// Navigate to dose titration view
     func navigateToTitrationPlan() {
+        guard ReleasePolicy.isEnabled(.medicalCalculators) else { return }
         showDoseTitration = true
     }
 
@@ -273,6 +274,7 @@ final class MedicationProfileViewModel {
     ///
     /// - Returns: Formatted warning message, or nil if no upcoming titration
     func getTitrationWarning() -> String? {
+        guard ReleasePolicy.isEnabled(.medicalCalculators) else { return nil }
         guard let schedule = activeSchedule else {
             logger.debug("No active schedule - returning nil for titration warning")
             return nil
