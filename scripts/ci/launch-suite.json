@@ -53,16 +53,6 @@
       "verified_evidence": "CI ReleaseHarnessUI run on the integrated KAT-3589 candidate (see PR #374 evidence)"
     },
     {
-      "selector": "JabTrackerUITests/MedicalReleaseUITests/testManualDailyScheduleAndQuickDoseHistoryKeepExactRecordedAmounts",
-      "source": "JabTrackerUITests/MedicalReleaseUITests.swift",
-      "issue": "KAT-3581",
-      "purpose": "Manual schedule and Quick Dose keep exact recorded amounts in History.",
-      "journeys": [
-        "prescribed-medication-history"
-      ],
-      "verified_evidence": "CI ReleaseHarnessUI run on the integrated KAT-3589 candidate (see PR #374 evidence)"
-    },
-    {
       "selector": "JabTrackerUITests/DoseHistoryBasicUITests/test_doseHistory_displaysInReverseChronologicalOrder",
       "source": "JabTrackerUITests/DoseHistoryBasicUITests.swift",
       "issue": "KAT-3186",

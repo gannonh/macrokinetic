@@ -145,6 +145,11 @@
       "selector": "JabTrackerUITests/ChartControlsUITests",
       "reason": "Known failure: tests navigate to a Shots tab that no longer exists under the launch navigation.",
       "issue": "https://linear.app/kata-sh/issue/KAT-3786"
+    },
+    {
+      "selector": "JabTrackerUITests/MedicalReleaseUITests/testManualDailyScheduleAndQuickDoseHistoryKeepExactRecordedAmounts",
+      "reason": "Compounded toggle tap did not register on the CI iOS 26.2 runtime (switch value 0, expected 1).",
+      "issue": "https://linear.app/kata-sh/issue/KAT-3787"
     }
   ]
 }
