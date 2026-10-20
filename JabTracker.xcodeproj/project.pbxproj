@@ -476,6 +476,7 @@
 		C2BFD42C0E357432B6FD0176 /* MedicationProfileViewModelScheduleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F61639608F79641ACAD7953 /* MedicationProfileViewModelScheduleTests.swift */; };
 		C3252EF5536143F82DE71261 /* WeeklyNutritionHeroWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2DF9CF387DB7C0A148A94B8 /* WeeklyNutritionHeroWidget.swift */; };
 		C37C33130408C521AE68DCBF /* CalendarAccessibilityUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD7C3B0C007CFE71B5FE56C1 /* CalendarAccessibilityUITests.swift */; };
+		C395CC75D4D807116357B138 /* usda_foods.sqlite in Resources */ = {isa = PBXBuildFile; fileRef = 104BEF2491A48A1F607A74A9 /* usda_foods.sqlite */; };
 		C43AA3E491B0B0898DBCBF91 /* MealSectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59D73FD66FDC6992764A72E8 /* MealSectionTests.swift */; };
 		C4E16659592C94BA10C17384 /* TestUtilities+Schedule.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23133480CAEB59ED1B12CA8 /* TestUtilities+Schedule.swift */; };
 		C546D818B928824F86AFB78E /* DataControllerCloudKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C4433DD327E2F788B4D4E1 /* DataControllerCloudKitTests.swift */; };
@@ -702,6 +703,7 @@
 		0E66064080F4AC5CCFAECF96 /* NutritionSummaryCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionSummaryCard.swift; sourceTree = "<group>"; };
 		0F292274217A0F48E6C450EC /* FoodDataSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodDataSettingsView.swift; sourceTree = "<group>"; };
 		103BC0C5A928D9F16AE014D8 /* PricingCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PricingCalculator.swift; sourceTree = "<group>"; };
+		104BEF2491A48A1F607A74A9 /* usda_foods.sqlite */ = {isa = PBXFileReference; lastKnownFileType = file; path = usda_foods.sqlite; sourceTree = "<group>"; };
 		106421FCA575BB46D42EEA98 /* ChartControlsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartControlsView.swift; sourceTree = "<group>"; };
 		108AB2061EDFE0F41AED28A0 /* EnergyBalanceHeroViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnergyBalanceHeroViewModel.swift; sourceTree = "<group>"; };
 		113B703C94F1177A2435ECD9 /* food-data-notices.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "food-data-notices.json"; sourceTree = "<group>"; };
@@ -1734,6 +1736,7 @@
 			children = (
 				113B703C94F1177A2435ECD9 /* food-data-notices.json */,
 				F558D3A4C004422B3C2F9960 /* PrivacyInfo.xcprivacy */,
+				104BEF2491A48A1F607A74A9 /* usda_foods.sqlite */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -2621,6 +2624,7 @@
 				B75439369EF479C6C7679BEF /* JabTrackerStoreKit.storekit in Resources */,
 				56C7AC51FB8B574828B3E522 /* PrivacyInfo.xcprivacy in Resources */,
 				3881B6E30DAE614B313E4969 /* food-data-notices.json in Resources */,
+				C395CC75D4D807116357B138 /* usda_foods.sqlite in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
