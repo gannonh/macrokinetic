@@ -131,18 +131,18 @@ struct OnboardingView: View {
 
                 Spacer()
 
-                // Skip for now link (centered between Back and Continue)
-                Button("Skip for now") {
-                    showingSkipConfirmation = true
-                }
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .opacity(viewModel.canSkip ? 1 : 0)
-                .disabled(!viewModel.canSkip)
-                .accessibilityIdentifier("onboarding-skip-button")
-                .accessibilityHidden(!viewModel.canSkip)
+                // Skip for now link (centered between Back and Continue). Inserted rather than faded in:
+                // flipping accessibilityHidden mid-transition left it intermittently not hittable.
+                if viewModel.canSkip {
+                    Button("Skip for now") {
+                        showingSkipConfirmation = true
+                    }
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .accessibilityIdentifier("onboarding-skip-button")
 
-                Spacer()
+                    Spacer()
+                }
             }
 
             // Continue or Get Started button (centered when alone)
