@@ -127,7 +127,7 @@ struct DataControllerInitializationTests {
         #expect(attempted.map(\.cloudKitContainerIdentifier) == [nil, nil, nil])
     }
 
-    @Test("Configured CloudKit failure tries the unchanged default local identity")
+    @Test("Debug CloudKit failure falls back to the same store local-only")
     func cloudKitFallbackOrderingAndProductionIdentity() throws {
         let schema = DataController(inMemory: true).container.schema
         let directory = try directory()
@@ -156,7 +156,7 @@ struct DataControllerInitializationTests {
         #expect(users.map(\.email) == ["local-fallback@example.invalid"])
     }
 
-    @Test("Production retry retains both default configurations and safe stages")
+    @Test("Debug CloudKit retry retains both default configurations and safe stages")
     func productionFailurePlanIsStableAcrossRetry() throws {
         let schema = DataController(inMemory: true).container.schema
         var attempted: [ModelConfiguration] = []
