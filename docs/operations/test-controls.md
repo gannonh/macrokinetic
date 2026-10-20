@@ -10,7 +10,7 @@
 | Release | `com.gannonhall.JabTracker` | Test readers, reset/seed helpers and mock branches excluded | Existing persistent production storage and CloudKit selection |
 | ReleaseTestHarness | `com.gannonhall.JabTrackerTestHarness` | Explicit `JABTRACKER_TEST_HARNESS` condition; no `DEBUG` | Persistent disk store; compiled CloudKit `.none` |
 
-Local owners retain their existing test-detection predicates inside `#if DEBUG || JABTRACKER_TEST_HARNESS`. The harness ignores `-inMemory` and cannot enable CloudKit with `--cloudkit-testing`. Its entitlements retain HealthKit and Sign in with Apple, with all iCloud/CloudKit/ubiquity entries removed. Installing it on a device requires provisioning for its separate identifier.
+Local owners retain their existing test-detection predicates inside `#if DEBUG || JABTRACKER_TEST_HARNESS`. The harness ignores `-inMemory` and cannot enable CloudKit with `--cloudkit-testing`. Its entitlements retain HealthKit only (Sign in with Apple was removed in KAT-3586), with all iCloud/CloudKit/ubiquity entries removed. Installing it on a device requires provisioning for its separate identifier.
 
 `JabTrackerReleaseTestHarness` includes UI tests, without Debug-only unit/integration targets. `JabTrackerFoodSearchBenchmark` and `scripts/benchmark-food-search.sh` use the harness configuration. The main scheme's archive action remains ordinary Release. The harness is never eligible for shipment.
 
@@ -21,7 +21,7 @@ The following readers and their test-only implementations are excluded from ordi
 | Controls | Owner | Effect |
 | --- | --- | --- |
 | `--reset-app-data` | `AuthenticationManager.swift` | Deletes SwiftData records, test-reset defaults, chart cache and notifications; clears authentication state |
-| `--ui-testing`, `UI_TESTING=true`, `--manual-ui-testing` | `AuthenticationManager.swift` | Creates/reuses a fictional user, bypasses authentication, or simulates the manual sign-in result |
+| `--ui-testing`, `UI_TESTING=true` | `AuthenticationManager.swift` | Creates/reuses a fictional user and seeds fixtures (`--manual-ui-testing` was removed with sign-in in KAT-3586) |
 | `--bypass-onboarding`, `--force-onboarding`, UI-test detection | `AuthenticationManager.swift`, `Onboarding/OnboardingCoordinator.swift` | Changes fixture completion fields/defaults and onboarding routing |
 | `--seed-test-7d`, `--seed-test-30d`, `--seed-test-90d`, `--seed-test-1y`; quality/new-user, check-in and active-user controls listed below | `AuthenticationManager.swift`, `Utils/TestDataSeeding*.swift` | Creates fictional medication, dose, schedule, food, weight, goal, program and metric history |
 | `TEST_DATA_*` variables listed below | `AuthenticationManager.swift`, `Utils/TestDataSeeding.swift` | Selects fictional seed content, counts and timing |

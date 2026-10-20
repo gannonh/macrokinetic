@@ -87,7 +87,7 @@ open logs/latest/screenshots/
 1.7M+ foods via bundled SQLite (`usda_foods.sqlite`) with FTS5 search. `LocalFoodDatabase.swift` is an actor for thread-safe SQLite access. `FoodService.swift` orchestrates local DB + API results.
 
 ### Authentication
-`AuthenticationManager` handles Sign in with Apple. UI testing mode (`--ui-testing` flag) bypasses real auth with mock data.
+The app has no sign-in or accounts in 1.0. `AuthenticationManager` uses the existing local `User` (or creates a blank one on first launch). UI testing mode (`--ui-testing` flag) creates a mock `User`.
 
 ### CloudKit Sync
 SwiftData models persist on-device only via `DataController.container` (CloudKit is off for 1.0).

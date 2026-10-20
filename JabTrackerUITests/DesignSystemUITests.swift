@@ -69,14 +69,6 @@ final class DesignSystemUITests: XCTestCase {
         // Verify accessibility properties of design system components
         XCTAssertFalse(editButton.label.isEmpty, "Edit button should have accessibility label")
         XCTAssertTrue(editButton.exists, "Edit button should exist for accessibility")
-
-        // Test sign out button accessibility
-        if app.buttons["sign-out-button"].waitForExistence(timeout: 2) {
-            let signOutButton = app.buttons["sign-out-button"]
-            XCTAssertFalse(signOutButton.label.isEmpty, "Sign out button should have accessibility label")
-            XCTAssertTrue(
-                signOutButton.isHittable, "Sign out button should be hittable for accessibility")
-        }
     }
 
     @MainActor

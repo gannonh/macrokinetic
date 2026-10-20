@@ -12,7 +12,7 @@ struct JabTrackerApp: App {
     @State private var showingOnboarding = false
 
     /// Track if app is locked by biometric authentication
-    @State private var isAppLocked = false
+    @State private var isAppLocked: Bool
 
     init() {
         Task {
@@ -22,6 +22,8 @@ struct JabTrackerApp: App {
         let dataController = DataController.shared
         self.dataController = dataController
         self._authManager = StateObject(wrappedValue: authManager)
+        // Start locked when the lock is on so ContentView never renders unlocked before the first check completes.
+        self._isAppLocked = State(initialValue: BiometricAuthManager.shared.isBiometricEnabled)
         self._onboardingCoordinator = StateObject(
             wrappedValue: OnboardingCoordinator(
                 authManager: authManager,
@@ -32,8 +34,8 @@ struct JabTrackerApp: App {
         WindowGroup {
             ZStack {
                 Group {
-                    switch self.authManager.authenticationState {
-                    case .authenticated:
+                    // No sign-in in 1.0: the app is either loading the local profile or showing it.
+                    if self.authManager.authenticationState == .authenticated {
                         // Show onboarding fullscreen if needed, otherwise ContentView
                         if showingOnboarding {
                             OnboardingView(isPresented: self.$showingOnboarding, authManager: self.authManager)
@@ -47,17 +49,9 @@ struct JabTrackerApp: App {
                                 .environmentObject(self.biometricManager)
                                 .transition(.opacity)
                         }
-                    case .notAuthenticated:
-                        AuthenticationView()
-                            .environmentObject(self.authManager)
-                            .environmentObject(self.biometricManager)
-                    case .notDetermined:
+                    } else {
                         SplashView()
                             .environmentObject(self.authManager)
-                    case .restricted, .expired:
-                        AuthenticationView()
-                            .environmentObject(self.authManager)
-                            .environmentObject(self.biometricManager)
                     }
                 }
 
