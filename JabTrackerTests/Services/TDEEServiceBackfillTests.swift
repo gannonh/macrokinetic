@@ -380,6 +380,38 @@ struct TDEEServiceBackfillTests {
         #expect(allSnapshots.count == 6)  // 1 original + 5 new
     }
 
+    @Test("Release backfill holds the previous estimate even with sufficient historical data")
+    @MainActor
+    func sufficientDataStillProducesHoldingSnapshot() async throws {
+        let container = try createTestContainer()
+        let context = container.mainContext
+        let (_, goal) = createTestUserWithGoal(in: context)
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
+        context.insert(TDEESnapshot(timestamp: yesterday, tdeeValue: 2200, confidence: 0.8, source: .adaptive))
+        for offset in 1...4 {
+            createFoodEntry(in: context, on: calendar.date(byAdding: .day, value: -offset, to: today)!)
+        }
+        createWeightEntry(in: context, on: yesterday)
+        try context.save()
+        let service = TDEEService(context: context)
+        #expect(service.hasSufficientData(asOf: today) == true)
+
+        try await service.ensureDailySnapshots(for: goal)
+        try await service.ensureDailySnapshots(for: goal)
+
+        let snapshots = try context.fetch(FetchDescriptor<TDEESnapshot>(sortBy: [SortDescriptor(\.timestamp)]))
+        #expect(snapshots.count == 2)
+        let held = try #require(snapshots.last)
+        #expect(held.timestamp == today)
+        #expect(held.sourceType == .holding)
+        #expect(held.tdeeValue == 2200)
+        #expect(abs(held.confidence - 0.784) < 0.000001)
+        #expect(snapshots.first?.sourceType == .adaptive)
+        #expect(goal.lastCalculatedTDEE == 2200)
+    }
+
     @Test("Confidence decays for consecutive holding snapshots")
     @MainActor
     func confidenceDecaysForHoldingSnapshots() async throws {

@@ -9,6 +9,12 @@ import SwiftUI
 
 struct SubscriptionSettingsView: View {
     var body: some View {
+        if ReleasePolicy.isEnabled(.subscriptions) {
+            subscriptionContent
+        }
+    }
+
+    private var subscriptionContent: some View {
         ScrollView {
             VStack(spacing: 24) {
                 // Coming Soon Banner
@@ -95,6 +101,7 @@ struct SubscriptionSettingsView: View {
 
                         Button(
                             action: {
+                                guard ReleasePolicy.isEnabled(.subscriptions) else { return }
                                 if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
                                     UIApplication.shared.open(url)
                                 }

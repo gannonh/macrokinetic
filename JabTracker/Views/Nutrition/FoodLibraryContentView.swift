@@ -30,12 +30,14 @@ struct FoodLibraryContentView: View {
     @State private var selectedTab: LibraryTab = .foods
     @State private var selectedSort: FoodLibrarySortOption = .dateAdded
     @State private var customFoods: [Food] = []
-    @State private var showingComingSoon = false
-    @State private var comingSoonFeature = ""
     @State private var schedulingFood: Food?
     @State private var existingScheduleForFood: FoodSchedule?
     @State private var scheduledFoods: [FoodSchedule] = []
     @State private var selectedScheduleForEdit: FoodSchedule?
+
+    private var activeTab: LibraryTab {
+        selectedTab.isEnabled ? selectedTab : .foods
+    }
 
     // MARK: - Body
 
@@ -45,9 +47,9 @@ struct FoodLibraryContentView: View {
             tabBarSection
 
             // Tab content
-            if selectedTab == .foods {
+            if activeTab == .foods {
                 foodsTabContent
-            } else if selectedTab == .scheduled {
+            } else if activeTab == .scheduled {
                 scheduledTabContent
             }
         }
@@ -101,11 +103,6 @@ struct FoodLibraryContentView: View {
                 }
             }
         }
-        .alert("Coming Soon", isPresented: $showingComingSoon) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text("\(comingSoonFeature) will be available in a future update.")
-        }
     }
 
     // MARK: - Tab Bar Section
@@ -113,7 +110,7 @@ struct FoodLibraryContentView: View {
     private var tabBarSection: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                ForEach(LibraryTab.allCases, id: \.rawValue) { tab in
+                ForEach(LibraryTab.allCases.filter { $0.isEnabled }, id: \.rawValue) { tab in
                     tabButton(tab)
                 }
             }
@@ -125,19 +122,15 @@ struct FoodLibraryContentView: View {
 
     private func tabButton(_ tab: LibraryTab) -> some View {
         Button {
-            if tab.isEnabled {
-                selectedTab = tab
-            } else {
-                comingSoonFeature = tab.displayName
-                showingComingSoon = true
-            }
+            guard tab.isEnabled else { return }
+            selectedTab = tab
         } label: {
             Text(tab.displayName)
                 .font(.caption.weight(.medium))
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
                 .background(
-                    selectedTab == tab
+                    activeTab == tab
                         ? Color.primary.opacity(0.1)
                         : Color.clear
                 )
@@ -148,7 +141,7 @@ struct FoodLibraryContentView: View {
                 .overlay(
                     RoundedRectangle(cornerRadius: 16)
                         .stroke(
-                            selectedTab == tab
+                            activeTab == tab
                                 ? Color.primary.opacity(0.3)
                                 : Color.clear,
                             lineWidth: 1

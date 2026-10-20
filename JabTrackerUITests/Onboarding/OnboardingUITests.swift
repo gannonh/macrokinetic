@@ -84,6 +84,10 @@ final class NewOnboardingUITests: XCTestCase {
         // Step 7: Program Style - Select Coached
         XCTAssertTrue(
             waitForElement(identifier: "onboarding-programStyle-step", timeout: 3), "Program Style step should appear")
+        TestUtilities.debugScreenshot(app, name: "release-onboarding-program-styles")
+        print(app.debugDescription)
+        XCTAssertFalse(app.buttons["program-wizard-programStyle-manual"].exists)
+        XCTAssertTrue(app.buttons["program-wizard-programStyle-collaborative"].exists)
         let coachedOption = app.buttons["program-wizard-programStyle-coached"]
         if coachedOption.waitForExistence(timeout: 2) {
             coachedOption.tap()

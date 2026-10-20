@@ -37,15 +37,17 @@ struct MoreView: View {
 
                 // Feature Settings Section
                 Section("Feature Settings") {
-                    // Dashboard - inactive placeholder
-                    Label("Dashboard", systemImage: "square.grid.2x2")
-                        .foregroundColor(.secondary)
-                        .accessibilityIdentifier("dashboard-settings-placeholder")
+                    if ReleasePolicy.isEnabled(.dashboardCustomization) {
+                        Label("Dashboard", systemImage: "square.grid.2x2")
+                            .foregroundColor(.secondary)
+                            .accessibilityIdentifier("dashboard-settings-placeholder")
+                    }
 
-                    // Food Log - inactive placeholder
-                    Label("Food Log", systemImage: "fork.knife")
-                        .foregroundColor(.secondary)
-                        .accessibilityIdentifier("food-log-placeholder")
+                    if ReleasePolicy.isEnabled(.foodLogCustomization) {
+                        Label("Food Log", systemImage: "fork.knife")
+                            .foregroundColor(.secondary)
+                            .accessibilityIdentifier("food-log-placeholder")
+                    }
 
                     NavigationLink(destination: BodyMetricsVisibilityView()) {
                         Label("Metrics", systemImage: "chart.bar")
@@ -62,10 +64,11 @@ struct MoreView: View {
                     }
                     .accessibilityIdentifier("calorie-expenditure-row")
 
-                    // Shortcuts & Tabs - inactive placeholder
-                    Label("Shortcuts & Tabs", systemImage: "bolt.horizontal")
-                        .foregroundColor(.secondary)
-                        .accessibilityIdentifier("shortcuts-placeholder")
+                    if ReleasePolicy.isEnabled(.shortcutCustomization) {
+                        Label("Shortcuts & Tabs", systemImage: "bolt.horizontal")
+                            .foregroundColor(.secondary)
+                            .accessibilityIdentifier("shortcuts-placeholder")
+                    }
                 }
 
                 // Account Settings Section
@@ -75,10 +78,12 @@ struct MoreView: View {
                     }
                     .accessibilityIdentifier("profile-link")
 
-                    NavigationLink(destination: SubscriptionSettingsView()) {
-                        Label("Subscription", systemImage: "tag")
+                    if ReleasePolicy.isEnabled(.subscriptions) {
+                        NavigationLink(destination: SubscriptionSettingsView()) {
+                            Label("Subscription", systemImage: "tag")
+                        }
+                        .accessibilityIdentifier("subscription-row")
                     }
-                    .accessibilityIdentifier("subscription-row")
 
                     NavigationLink(destination: SecurityPrivacyView()) {
                         Label("Security & Privacy", systemImage: "lock.shield")
@@ -93,15 +98,15 @@ struct MoreView: View {
 
                 // Support Section
                 Section("Support") {
-                    // FAQ - inactive placeholder
-                    Label("FAQ", systemImage: "questionmark.circle")
-                        .foregroundColor(.secondary)
-                        .accessibilityIdentifier("faq-placeholder")
+                    if ReleasePolicy.isEnabled(.helpCenter) {
+                        Label("FAQ", systemImage: "questionmark.circle")
+                            .foregroundColor(.secondary)
+                            .accessibilityIdentifier("faq-placeholder")
 
-                    // Help & Support - inactive placeholder
-                    Label("Help & Support", systemImage: "lifepreserver")
-                        .foregroundColor(.secondary)
-                        .accessibilityIdentifier("help-support-placeholder")
+                        Label("Help & Support", systemImage: "lifepreserver")
+                            .foregroundColor(.secondary)
+                            .accessibilityIdentifier("help-support-placeholder")
+                    }
 
                     NavigationLink(destination: GeneralSettingsView()) {
                         Label("General", systemImage: "info.circle")

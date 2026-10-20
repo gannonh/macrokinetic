@@ -52,8 +52,12 @@ final class FoodSearchSheetViewModel {
     /// Current search text
     var searchText = ""
 
-    /// Selected search method (only .search is functional)
-    var selectedMethod: SearchMethod = .search
+    private var currentMethod: SearchMethod = .search
+
+    var selectedMethod: SearchMethod {
+        get { currentMethod }
+        set { currentMethod = newValue.isEnabled ? newValue : .search }
+    }
 
     /// Selected time for the food entry
     var selectedTime: Date = Date()

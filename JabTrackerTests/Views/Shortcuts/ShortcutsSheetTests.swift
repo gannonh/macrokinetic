@@ -149,7 +149,7 @@ struct ShortcutsSheetTests {
         let photosShortcut = shortcuts.first { $0.label == "Progress Photos" }
         #expect(photosShortcut != nil)
         #expect(photosShortcut?.icon == "camera.fill")
-        #expect(photosShortcut?.isEnabled == true)
+        #expect(photosShortcut?.isEnabled == false)
     }
 
     @Test("ShortcutsSheet list rows include Your Foods")
@@ -184,6 +184,16 @@ struct ShortcutsSheetTests {
 
     // MARK: - Accessibility Tests
 
+    @Test("Release shortcuts contain only supported destinations")
+    @MainActor
+    func releaseShortcutsContainSupportedDestinations() {
+        #expect(ShortcutsSheet.visibleTopRowShortcuts.map(\.label) == ["Search", "Barcode", "Shots"])
+        #expect(ShortcutsSheet.visibleListRowShortcuts.map(\.label) == ["Weight", "Quick Add", "Metrics", "Your Foods"])
+        #expect(ShortcutDestination.quickPhoto.isEnabled == false)
+        #expect(ShortcutDestination.foodSearch.isEnabled == true)
+        #expect(ShortcutDestination.quickMetrics.isEnabled == true)
+    }
+
     @Test("ShortcutsSheet has correct accessibility identifier")
     @MainActor
     func hasCorrectAccessibilityIdentifier() {
@@ -201,8 +211,7 @@ struct ShortcutItemTests {
     func shortcutItemInitializesCorrectly() {
         let item = ShortcutItem(
             icon: "magnifyingglass",
-            label: "Search",
-            isEnabled: true
+            label: "Search"
         )
 
         #expect(item.icon == "magnifyingglass")
@@ -215,8 +224,7 @@ struct ShortcutItemTests {
     func shortcutItemIsIdentifiableByLabel() {
         let item = ShortcutItem(
             icon: "magnifyingglass",
-            label: "Search",
-            isEnabled: true
+            label: "Search"
         )
 
         #expect(item.id == "Search")

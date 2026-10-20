@@ -136,6 +136,31 @@ struct FoodSearchSheetViewModelTests {
 
     // MARK: - Search Results Tests
 
+    @Test("Unsupported AI requests fall back to Search without affecting stored foods")
+    @MainActor
+    func unsupportedMethodFallsBackToSearch() throws {
+        let (context, container) = createTestContext()
+        _ = container
+        let food = Food(name: "Saved custom food", source: .userCreated, caloriesPer100g: 100, proteinPer100g: 10, carbsPer100g: 10, fatPer100g: 2)
+        context.insert(food)
+        try context.save()
+        let viewModel = FoodSearchSheetViewModel(
+            foodService: FoodService(context: context),
+            mealLogService: MealLogService(context: context)
+        )
+
+        viewModel.selectedMethod = .ai
+
+        #expect(viewModel.selectedMethod == .search)
+        #expect(try context.fetchCount(FetchDescriptor<Food>()) == 1)
+        #expect(food.name == "Saved custom food")
+        for method: SearchMethod in [.scan, .library, .quickAdd, .search] {
+            viewModel.selectedMethod = method
+            #expect(viewModel.selectedMethod == method)
+        }
+        #expect(SearchMethod.allCases.filter(\.isEnabled) == [.scan, .search, .quickAdd, .library])
+    }
+
     @Test("ViewModel results arrays initialize empty")
     @MainActor
     func viewModelResultsArraysInitializeEmpty() async {
