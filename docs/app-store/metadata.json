@@ -1,0 +1,60 @@
+{
+  "issue": "KAT-3591",
+  "state": "ready",
+  "locale": "en-US",
+  "proposed_version": "1.0.0",
+  "name": "MacroKinetic",
+  "subtitle": "Food, weight & dose tracking",
+  "promotional_text": "Keep food logs, body measurements, and prescribed-dose history together in one daily record.",
+  "keywords": "nutrition,calorie,macro,meal,food log,measurement,waist,GLP-1,medication,dose,history",
+  "description": "MacroKinetic helps you keep a daily record of food, body measurements, and prescribed medication doses.\n\nSearch the bundled food library, log meals, and review daily calories and macros. Record body measurements such as waist size. If you use GLP-1 medication, keep a history of the doses prescribed by your healthcare professional. Nutrition tracking can be used on its own.\n\nMacroKinetic does not diagnose conditions or prescribe medication. Follow your healthcare professional's instructions and consult them before making medical decisions.",
+  "whats_new": "Initial release with food logging, body measurements, and optional prescribed-dose tracking.",
+  "marketing_url": "https://macrokinetic.app",
+  "support_url": "https://macrokinetic.app/support",
+  "privacy_url": "https://macrokinetic.app/privacy",
+  "terms_url": "https://macrokinetic.app/terms",
+  "support_email": "support@macrokinetic.app",
+  "seller": "Gannon Hall (individual)",
+  "copyright": "© 2026 Gannon Hall",
+  "pricing": {
+    "price": "Free",
+    "in_app_purchases": false
+  },
+  "privacy_label": {
+    "draft_answer": "Data Not Collected",
+    "status": "pending owner approval"
+  },
+  "claims": [
+    {
+      "id": "nutrition_logging",
+      "issue": "KAT-3587",
+      "evidence": "evidence/capture-run.json",
+      "merged_evidence": "docs/launch-evidence/KAT-3587/README.md"
+    },
+    {
+      "id": "nutrition_without_medication",
+      "issue": "KAT-3587",
+      "evidence": "evidence/capture-run.json",
+      "merged_evidence": "docs/launch-evidence/KAT-3587/README.md (scenario 2)"
+    },
+    {
+      "id": "metrics_recording",
+      "issue": "KAT-3591",
+      "evidence": "evidence/capture-run.json",
+      "merged_evidence": "docs/app-store/evidence/capture-store-query.txt (waist 32 in saved as 81.28 cm)"
+    },
+    {
+      "id": "prescribed_dose_history",
+      "issue": "KAT-3186",
+      "evidence": "evidence/capture-run.json",
+      "merged_evidence": "docs/launch-evidence/KAT-3186/README.md"
+    }
+  ],
+  "removed_claims": [
+    {
+      "id": "offline_logging",
+      "issue": "KAT-3590",
+      "reason": "KAT-3590 (Todo) has not verified offline behavior on a device. KAT-3587 scenario 10 observed zero sockets but did not disable the network. Copy no longer mentions offline use."
+    }
+  ]
+}

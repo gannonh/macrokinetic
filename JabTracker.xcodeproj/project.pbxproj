@@ -121,6 +121,7 @@
 		23C2AA41A7EF4B5D79DE8C23 /* DoseHistoryViewModelErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C1B06AAB60967FA3C0B9B69 /* DoseHistoryViewModelErrorTests.swift */; };
 		23EFBEC8AE09243893958701 /* MockNotificationCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 352C3C79DB4CC3585EAB580C /* MockNotificationCenter.swift */; };
 		248F674B38E78FFD859EEDB2 /* ScheduleSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D2D8F1CA0B3B5140169C47 /* ScheduleSetupView.swift */; };
+		24F89C621E2633324E37ED86 /* AppStoreScreenshotUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA5F49F8E6F4B6E334985FC9 /* AppStoreScreenshotUITests.swift */; };
 		256481AD9A591A47F7AF17D5 /* AdherenceChartsUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE540D708975143C8E3FA4BE /* AdherenceChartsUITests.swift */; };
 		258EF7F42068A258183FE7B6 /* FoodSearchSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48822924C474D2E7E3E2BD2D /* FoodSearchSheet.swift */; };
 		25B5B1A27360CF3B94B723CD /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = E302221806254B729984868B /* DesignTokens.swift */; };
@@ -1098,6 +1099,7 @@
 		A90335DF8E93AA680799FEF7 /* ScheduleService+Modifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ScheduleService+Modifications.swift"; sourceTree = "<group>"; };
 		A99499C4E73416C7637E69FC /* QuickDoseViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickDoseViewModelTests.swift; sourceTree = "<group>"; };
 		A9F79C90B589449F4A203DDF /* FaceIDStepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceIDStepView.swift; sourceTree = "<group>"; };
+		AA5F49F8E6F4B6E334985FC9 /* AppStoreScreenshotUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStoreScreenshotUITests.swift; sourceTree = "<group>"; };
 		AAD9B581A0C4913CB8D7CB6F /* SplitDoseTotalsUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitDoseTotalsUITests.swift; sourceTree = "<group>"; };
 		AB10B25CD15222C7CBB758BF /* Array+Unique.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Array+Unique.swift"; sourceTree = "<group>"; };
 		AB1FCC7D1B42A7FF667684F8 /* AdherenceSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdherenceSection.swift; sourceTree = "<group>"; };
@@ -2299,6 +2301,7 @@
 			children = (
 				DA98E9D9A3599F7678DB1C83 /* .swiftlint.yml */,
 				905F601CB5113A06EF53A83C /* AccountViewUITests.swift */,
+				AA5F49F8E6F4B6E334985FC9 /* AppStoreScreenshotUITests.swift */,
 				2057A13AEB8D2953BCA9B580 /* AuthenticationUITests.swift */,
 				F1CC08CDA4082AC79CF36A50 /* BodyMetricsVisibilityUITests.swift */,
 				DD7C3B0C007CFE71B5FE56C1 /* CalendarAccessibilityUITests.swift */,
@@ -2706,6 +2709,7 @@
 				CE2FBEA27DACFBE09C991FD9 /* AccountViewUITests.swift in Sources */,
 				256481AD9A591A47F7AF17D5 /* AdherenceChartsUITests.swift in Sources */,
 				49989F47EEA834B6746F30BC /* AdherenceMetricsDisplayUITests.swift in Sources */,
+				24F89C621E2633324E37ED86 /* AppStoreScreenshotUITests.swift in Sources */,
 				682FA0647A94A126C638FB07 /* AuthenticationUITests.swift in Sources */,
 				F586ABD28B6930987E6117A7 /* BarcodeScanningUITests.swift in Sources */,
 				18C633B5612E17C519CECA70 /* BodyMetricsVisibilityUITests.swift in Sources */,
