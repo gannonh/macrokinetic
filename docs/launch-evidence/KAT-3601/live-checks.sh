@@ -90,6 +90,7 @@ case $CHECK in 2|all)
 esac
 case $CHECK in 3|all)
   xcrun simctl launch "$U" $B --dump-pending-notifications >/dev/null; sleep 8
+  pending c3-before
   xcrun simctl launch "$U" com.apple.Preferences >/dev/null; sleep 2; tap c3-warm
   xcrun simctl terminate "$U" $B; xcrun simctl terminate "$U" com.apple.Preferences 2>/dev/null; tap c3-cold ;;
 esac
