@@ -83,14 +83,12 @@ final class MedicationProfileDeleteUITests: XCTestCase {
         XCTAssertTrue(seededRow.waitForExistence(timeout: 5))
         swipeAction("delete-medication-profile").tap()
 
-        let disableInstead = app.buttons["disable-instead-button"]
+        let disableInstead = app.buttons["disable-instead-button"].firstMatch
         XCTAssertTrue(disableInstead.waitForExistence(timeout: 5))
         XCTAssertEqual(disableInstead.label, "Disable Instead (Recommended)")
         XCTAssertEqual(app.buttons["delete-permanently-button"].firstMatch.label, "Delete Permanently")
-        TestUtilities.debugScreenshot(app, name: "delete-confirmation")
-        print(app.debugDescription)
-        // The iPhone confirmation dialog renders no Cancel button; tapping outside cancels it.
-        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.15)).tap()
+        // The dialog renders as a popover over the top of the list with no Cancel button; tapping below cancels it.
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.75)).tap()
         XCTAssertTrue(disableInstead.waitForNonExistence(timeout: 5))
 
         XCTAssertTrue(seededRow.exists)
