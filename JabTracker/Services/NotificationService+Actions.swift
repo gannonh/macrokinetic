@@ -83,6 +83,13 @@ extension NotificationService {
             throw NotificationServiceError.invalidScheduledDose
         }
 
+        // Tapping the reminder itself opens the dose it reminds about
+        if actionIdentifier == UNNotificationDefaultActionIdentifier {
+            NotificationCenter.default.post(
+                name: .showQuickDoseSheet, object: nil, userInfo: ["scheduledDoseId": doseID])
+            return
+        }
+
         // Fetch scheduled dose from SwiftData
         let context = scheduleService.context
         let descriptor = FetchDescriptor<ScheduledDose>(

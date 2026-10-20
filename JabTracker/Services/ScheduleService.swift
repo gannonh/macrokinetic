@@ -247,6 +247,9 @@ final class ScheduleService {
     /// UI can observe this property to display error feedback
     var loadError: Error?
 
+    /// Called after a schedule is created, changed, paused, resumed or deleted
+    @ObservationIgnored var onSchedulesChanged: (() -> Void)?
+
     // MARK: - Initialization
 
     /**
@@ -311,6 +314,7 @@ final class ScheduleService {
         loadActiveSchedules()
         print("🔍 [ScheduleService.createSchedule] loadActiveSchedules() called")
         print("🔍 [ScheduleService.createSchedule] activeSchedules.count after load: \(activeSchedules.count)")
+        onSchedulesChanged?()
 
         return schedule
     }
@@ -346,6 +350,7 @@ final class ScheduleService {
 
         // Save changes
         try context.save()
+        onSchedulesChanged?()
     }
 
     /**
@@ -367,6 +372,7 @@ final class ScheduleService {
 
         // Reload active schedules
         loadActiveSchedules()
+        onSchedulesChanged?()
     }
 
     /**
@@ -393,6 +399,7 @@ final class ScheduleService {
 
         // Save changes
         try context.save()
+        onSchedulesChanged?()
     }
 
     /**
@@ -409,6 +416,7 @@ final class ScheduleService {
 
         // Save changes
         try context.save()
+        onSchedulesChanged?()
     }
 
     // MARK: - Private Helpers

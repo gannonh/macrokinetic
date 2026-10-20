@@ -389,6 +389,7 @@
 		9A21F2A2FBF43A9CDB622338 /* EnergyBalanceDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B0299EC304A975B637375A2 /* EnergyBalanceDetailViewModel.swift */; };
 		9A59EC842B2CB83D5D50CABB /* WidgetCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15CCB916EE8996F02CE2D15B /* WidgetCard.swift */; };
 		9A7B5F0EDD9BB56AE4E1E008 /* WeightTrendDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EFA6BD8BC9AC1A045647909 /* WeightTrendDetailViewModel.swift */; };
+		9ABF748A5129EA1E51C3B3E9 /* NotificationQueueRenewalTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9299D89B352C8AC1E55A300 /* NotificationQueueRenewalTests.swift */; };
 		9AD22939A4FCB9B8418CF882 /* ScheduledDoseIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D84DBE2037D1CC46F582F191 /* ScheduledDoseIndicator.swift */; };
 		9BA0C3B240E3D2870BEE63E3 /* QuickDoseViewModelTitrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4EE8B97A327C645FA90405D /* QuickDoseViewModelTitrationTests.swift */; };
 		9BB32F07FC25E272BEE7E011 /* DoseEntryFormSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FDA4E8CB2855FD463FD7A2E /* DoseEntryFormSections.swift */; };
@@ -1141,6 +1142,7 @@
 		B7CCD08369DC2C2914A38132 /* FoodLogCopyPasteUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodLogCopyPasteUITests.swift; sourceTree = "<group>"; };
 		B8263198848FEF424A3543CD /* ChartDatasetCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartDatasetCache.swift; sourceTree = "<group>"; };
 		B8CF5E9D2BFB2F30D87CBE03 /* ClipboardContentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardContentTests.swift; sourceTree = "<group>"; };
+		B9299D89B352C8AC1E55A300 /* NotificationQueueRenewalTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationQueueRenewalTests.swift; sourceTree = "<group>"; };
 		B9929AD449C5CF2680B3657E /* ConcentrationChartGestureHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcentrationChartGestureHandler.swift; sourceTree = "<group>"; };
 		B9DF758F748A0E0EB4D51B3A /* CodeGen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeGen.swift; sourceTree = "<group>"; };
 		BA18D6071EC6044ABCD9C907 /* ScheduleServiceSplitDoseIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleServiceSplitDoseIntegrationTests.swift; sourceTree = "<group>"; };
@@ -1812,6 +1814,7 @@
 				8686B61DCDA3746CC692F9F3 /* MedicationTests.swift */,
 				115141DFFC62923AD24DA404 /* NoSignInUpgradeTests.swift */,
 				DFA3963F2E50CFED0EE8C417 /* NotificationAuthorizationStatusTests.swift */,
+				B9299D89B352C8AC1E55A300 /* NotificationQueueRenewalTests.swift */,
 				0BB336F084EFB16010D7C347 /* NotificationServiceActionTests.swift */,
 				EF5486756E163374C18E8696 /* NotificationServiceActivationTests.swift */,
 				D58DAD4261D9C3F7E970A9BF /* NotificationServiceBackgroundTests.swift */,
@@ -3281,6 +3284,7 @@
 				0DC5AD86F1295578467377C5 /* MonthlyStatsViewTests.swift in Sources */,
 				B4C59159C61C035BD6D21426 /* NoSignInUpgradeTests.swift in Sources */,
 				38B4C2D353C1DBFFC73A7368 /* NotificationAuthorizationStatusTests.swift in Sources */,
+				9ABF748A5129EA1E51C3B3E9 /* NotificationQueueRenewalTests.swift in Sources */,
 				00754AF308ABBC2E411A9E86 /* NotificationServiceActionTests.swift in Sources */,
 				4FE10B2CFDEB6135A3F749C7 /* NotificationServiceActivationTests.swift in Sources */,
 				A4FE1E325B2682E58C00C15A /* NotificationServiceBackgroundTests.swift in Sources */,
