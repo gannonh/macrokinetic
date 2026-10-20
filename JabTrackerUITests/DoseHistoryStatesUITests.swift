@@ -114,8 +114,15 @@ final class DoseHistoryStatesUITests: XCTestCase {
         let expectedDates = [0, 7, 14, 21, 28].map { daysAgo in
             formatter.string(from: Calendar.current.date(byAdding: .day, value: -daysAgo, to: today)!)
         }
+        // The List is lazy: the last header is off screen until scrolled, so gather headers across scrolls.
         let sectionHeaders = app.staticTexts.matching(identifier: "dose-date-section-header")
-        XCTAssertEqual(sectionHeaders.allElementsBoundByIndex.map(\.label), expectedDates)
+        var seenHeaders: [String] = []
+        func collectHeaders() {
+            for label in sectionHeaders.allElementsBoundByIndex.map(\.label) where !seenHeaders.contains(label) {
+                seenHeaders.append(label)
+            }
+        }
+        collectHeaders()
 
         let firstDose = TestUtilities.getDoseRows(from: app, minimumCount: 4).firstMatch
         XCTAssertEqual(firstDose.staticTexts["dose-amount"].label, "0.25 mg")
@@ -128,7 +135,9 @@ final class DoseHistoryStatesUITests: XCTestCase {
         while !lastHeader.isHittable && swipes < 5 {
             list.swipeUp()
             swipes += 1
+            collectHeaders()
         }
+        XCTAssertEqual(seenHeaders, expectedDates)
         if !lastHeader.isHittable {
             TestUtilities.debugScreenshot(app, name: "before-missing-last-header")
             print(app.debugDescription)
