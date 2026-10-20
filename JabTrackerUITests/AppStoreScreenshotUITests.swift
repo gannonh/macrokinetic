@@ -1,17 +1,21 @@
 import XCTest
 
 /// Captures the five App Store screenshots (docs/app-store/screenshots/README.md) from real screens with fictional
-/// seeded data, asserting each screen's behavior before its capture. Runs only when the runner receives
-/// `APP_STORE_CAPTURE_DIR` (pass `TEST_RUNNER_APP_STORE_CAPTURE_DIR=<dir>` to xcodebuild).
+/// seeded data, asserting each screen's behavior before its capture. Contributes tests only when the runner
+/// receives `APP_STORE_CAPTURE_DIR` (pass `TEST_RUNNER_APP_STORE_CAPTURE_DIR=<dir>` to xcodebuild), so ordinary
+/// UI runs neither execute nor skip it.
 final class AppStoreScreenshotUITests: XCTestCase {
+    private static let capturePath = ProcessInfo.processInfo.environment["APP_STORE_CAPTURE_DIR"]
     private var app: XCUIApplication!
     private var directory: URL!
 
+    override static var defaultTestSuite: XCTestSuite {
+        capturePath == nil ? XCTestSuite(name: "AppStoreScreenshotUITests (capture off)") : super.defaultTestSuite
+    }
+
     override func setUpWithError() throws {
         continueAfterFailure = false
-        guard let path = ProcessInfo.processInfo.environment["APP_STORE_CAPTURE_DIR"] else {
-            throw XCTSkip("Set TEST_RUNNER_APP_STORE_CAPTURE_DIR to capture App Store screenshots")
-        }
+        let path = try XCTUnwrap(Self.capturePath, "Set TEST_RUNNER_APP_STORE_CAPTURE_DIR")
         directory = URL(fileURLWithPath: path, isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         app = TestUtilities.launchAppWithConfiguration(

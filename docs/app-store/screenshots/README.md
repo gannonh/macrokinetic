@@ -28,7 +28,7 @@ Use an iPhone 17 Pro Max simulator (1320 x 2868, the 6.9-inch size). Do not upsc
    xcrun simctl status_bar "$UDID" override --time 9:41 --batteryState charged --batteryLevel 100 --cellularBars 4 --wifiBars 3 --operatorName ""
    ```
 
-3. Run the capture test in the `ReleaseTestHarness` configuration. It is the optimized Release build with the test seeding controls compiled in, and `ReleasePolicy` turns every unfinished feature off. Without `TEST_RUNNER_APP_STORE_CAPTURE_DIR` the test skips.
+3. Run the capture test in the `ReleaseTestHarness` configuration. It is the optimized Release build with the test seeding controls compiled in, and `ReleasePolicy` turns every unfinished feature off. Without `TEST_RUNNER_APP_STORE_CAPTURE_DIR` the class contributes no tests, so ordinary UI runs neither run nor skip it.
 
    ```sh
    TEST_RUNNER_APP_STORE_CAPTURE_DIR=/tmp/store-capture xcodebuild test -project JabTracker.xcodeproj \
