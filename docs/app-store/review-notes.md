@@ -20,10 +20,10 @@ Each step lists the evidence on `main` at `49c78848`. The signed archive (KAT-35
 | --- | --- |
 | Contact name and phone | UNRESOLVED. Support email: support@macrokinetic.app |
 | Open the app. It needs no sign-in. | KAT-3586 merged (`docs/launch-evidence/KAT-3586/live-checks.sh`) |
-| Complete first-run onboarding | UNVERIFIED: KAT-3588 is open |
+| Complete first-run onboarding, or skip it | KAT-3588 merged (`docs/launch-evidence/KAT-3588/`) |
 | Food Log → Add → search a food → Add. Confirm the row and the day's totals. | KAT-3587 merged; `evidence/capture-run.json` |
 | Add (+) → Metrics → enter a waist value → Save | `evidence/capture-run.json` (store row 81.28 cm for 32 in) |
-| Optional: More → GLP-1 Programs → Analytics → History | KAT-3186 merged; `evidence/capture-run.json` |
+| Optional: add a medication first (a fresh install has no doses), then More → GLP-1 Programs → Analytics → History | KAT-3186 merged; `evidence/capture-run.json` |
 | More → General → Food data: USDA and Open Food Facts notices | KAT-3593 merged |
 | Privacy, terms, and support at https://macrokinetic.app/privacy, /terms, /support | UNVERIFIED: KAT-3783 publishes the pages and KAT-3592 links them in the app |
 | Data deletion: delete the app. No account and no iCloud copy exist. Apple Health samples stay in Health. | KAT-3713 and KAT-3586 merged |

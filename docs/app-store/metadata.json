@@ -39,9 +39,9 @@
     },
     {
       "id": "metrics_recording",
-      "issue": "KAT-3580",
+      "issue": "KAT-3591",
       "evidence": "evidence/capture-run.json",
-      "merged_evidence": "docs/launch-evidence/KAT-3580/README.md (scenario 7)"
+      "merged_evidence": "docs/app-store/evidence/capture-store-query.txt (waist 32 in saved as 81.28 cm)"
     },
     {
       "id": "prescribed_dose_history",

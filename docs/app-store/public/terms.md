@@ -9,7 +9,7 @@ MacroKinetic is intended for personal tracking of food, body measurements, and p
 
 ## Availability and records
 
-The final enabled functions, supported regions, minimum age, and service-change terms are UNRESOLVED. Your data stays on your iPhone, and deleting the app removes it. Core offline logging is an intended launch behavior that still requires candidate evidence.
+The final enabled functions, supported regions, minimum age, and service-change terms are UNRESOLVED. Your data stays on your iPhone, and deleting the app removes it.
 
 MacroKinetic 1.0 is free with no in-app purchases and excludes subscriptions and drug-dose/reconstitution calculators. This draft does not promise permanent free access or future features.
 
