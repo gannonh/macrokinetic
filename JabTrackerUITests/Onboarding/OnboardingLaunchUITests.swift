@@ -85,10 +85,19 @@ final class OnboardingLaunchUITests: XCTestCase {
         tab("More")
         tap("notifications-row")
         check(element("notification-settings-view").waitForExistence(timeout: 5), "Notification settings should open after denial")
-        capture("onboarding-notifications-denied-settings")
-        // After a real denial the status row reads "Not Configured" in this test-authenticated launch, so the
-        // system Settings button is not asserted here; re-grant through iOS Settings stays an open gap.
         check(app.switches["weigh-in-daily-toggle"].exists, "Manual weigh-in reminders should remain configurable")
+        let status = app.staticTexts["Disabled"]
+        app.swipeUp()
+        check(status.waitForExistence(timeout: 5), "Notification status should report the real denial")
+        check(app.staticTexts["Enable notifications in Settings"].exists, "Denial should explain how to recover")
+        capture("onboarding-notifications-denied-settings")
+        // Re-granting inside iOS Settings is device-only (simctl privacy cannot grant notifications); KAT-3595.
+        tap("notification-settings-button")
+        let settings = XCUIApplication(bundleIdentifier: "com.apple.Preferences")
+        check(settings.wait(for: .runningForeground, timeout: 10), "Settings button should open iOS Settings")
+        TestUtilities.debugScreenshot(settings, name: "onboarding-notifications-ios-settings")
+        app.activate()
+        check(element("notification-settings-view").waitForExistence(timeout: 5), "Returning should restore the app")
 
         relaunchWithoutResetSeedOrOnboardingOverrides()
         verifyNutritionGoal()
@@ -351,16 +360,8 @@ final class OnboardingLaunchUITests: XCTestCase {
         }
         check(button.exists, "Expected button \(name)")
         check(button.isEnabled, "Button \(name) should be enabled")
-        if button.isHittable {
-            button.tap()
-        } else {
-            // Intermittent: on the Choose Your Goal step "onboarding-skip-button" reports isHittable == false
-            // in roughly 1 of 3 runs while idle, enabled and unobstructed (no keyboard, sheet or animation in
-            // the captured screenshot and tree, even after a 3 s hittable wait). It passes on rerun with no
-            // code change. Tap the on-screen center instead of failing on the accessibility flag.
-            check(app.windows.firstMatch.frame.contains(button.frame), "Button \(name) should be on screen")
-            button.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
-        }
+        check(button.isHittable, "Button \(name) should be hittable")
+        button.tap()
     }
 
     private func element(_ identifier: String) -> XCUIElement {
