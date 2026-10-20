@@ -116,6 +116,8 @@ extension ScheduleService {
      *   - limit: Maximum number of doses to keep
      */
     func refreshUpcomingDoses(from now: Date = Date(), daysAhead: Int = 30, limit: Int = .max) {
+        // Other ScheduleService instances may have changed schedules since this one loaded them
+        loadActiveSchedules()
         let cutoffDate = Calendar.current.date(byAdding: .day, value: daysAhead, to: now)!
         let persisted =
             (try? context.fetch(FetchDescriptor<ScheduledDose>(predicate: #Predicate { $0.scheduledTime > now })))

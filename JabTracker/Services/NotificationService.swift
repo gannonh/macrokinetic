@@ -100,6 +100,9 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     /// Time of day for end of day reminder
     public var endOfDayReminderTime: Date = Calendar.current.date(from: DateComponents(hour: 21, minute: 0)) ?? Date()
 
+    /// Refreshes the queue when any ScheduleService changes a schedule
+    @ObservationIgnored private var scheduleObserver: NSObjectProtocol?
+
     /// Logger for notification service operations
     internal let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "NotificationService")
 
@@ -140,8 +143,21 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
         super.init()
         self.notificationCenter.delegate = self
         registerNotificationCategories()
-        scheduleService.onSchedulesChanged = { [weak self] in
-            Task { await self?.refreshIfEnabled() }
+        let launchResponses = LaunchNotificationDelegate.shared.takeResponses()
+        Task {
+            for response in launchResponses {
+                do {
+                    try await handleNotificationResponse(
+                        actionIdentifier: response.actionIdentifier, request: response.request)
+                } catch {
+                    logger.error("Failed to handle launch notification response: \(error.localizedDescription)")
+                }
+            }
+        }
+        scheduleObserver = NotificationCenter.default.addObserver(
+            forName: .doseSchedulesChanged, object: nil, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in await self?.refreshIfEnabled() }
         }
         logger.info("NotificationService initialized")
     }
@@ -364,6 +380,9 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
 
         // Update queue property from pending notifications
         let pendingRequests = await notificationCenter.pendingNotificationRequests()
+        #if DEBUG || JABTRACKER_TEST_HARNESS
+        Self.writePendingRequestsForLiveChecks(pendingRequests)
+        #endif
         notificationQueue = pendingRequests.compactMap { request in
             guard let trigger = request.trigger as? UNCalendarNotificationTrigger,
                 let triggerDate = trigger.nextTriggerDate(),
@@ -400,6 +419,26 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
             logger.error("Failed to refresh notification queue: \(error.localizedDescription)")
         }
     }
+
+    #if DEBUG || JABTRACKER_TEST_HARNESS
+    /// Live checks read the pending queue from Documents; iOS offers no way to query it from outside the app.
+    static func writePendingRequestsForLiveChecks(_ requests: [UNNotificationRequest]) {
+        guard ProcessInfo.processInfo.arguments.contains("--dump-pending-notifications"),
+            let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
+        else { return }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm"
+        let rows = requests.map { request in
+            let fireDate = (request.trigger as? UNCalendarNotificationTrigger)?.nextTriggerDate()
+            return [
+                fireDate.map(formatter.string) ?? "repeating", request.content.categoryIdentifier,
+                request.identifier, request.content.title,
+            ].joined(separator: "\t")
+        }
+        try? rows.sorted().joined(separator: "\n")
+            .write(to: documents.appendingPathComponent("pending-notifications.tsv"), atomically: true, encoding: .utf8)
+    }
+    #endif
 
     static func isDoseQueueRequest(_ request: UNNotificationRequest) -> Bool {
         request.content.categoryIdentifier == "DOSE_REMINDER" || request.identifier == renewalRequestIdentifier
@@ -665,18 +704,22 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
 
     // MARK: - UNUserNotificationCenterDelegate
 
+    /// Uses the completion-handler form: iOS calls the async form's completion off the main thread, which
+    /// crashes UIKit when the user taps a reminder.
     nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter,
-        didReceive response: UNNotificationResponse
-    ) async {
-        await Task { @MainActor in
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping @Sendable () -> Void
+    ) {
+        Task { @MainActor in
             do {
                 try await self.handleNotificationResponse(response)
                 self.logger.info("Successfully handled notification response: \(response.actionIdentifier)")
             } catch {
                 self.logger.error("Failed to handle notification response: \(error.localizedDescription)")
             }
-        }.value
+            completionHandler()
+        }
     }
 
     nonisolated func userNotificationCenter(
@@ -691,6 +734,34 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
             return []
         }
         return [.banner, .sound, .badge]
+    }
+}
+
+// MARK: - LaunchNotificationDelegate
+
+/// Holds notification responses that arrive before NotificationService exists, such as the tap that launched
+/// the app. iOS delivers a launch tap only to a delegate set before launch finishes, and NotificationService
+/// needs the model container, so it is created later and replays these.
+@MainActor
+final class LaunchNotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
+    static let shared = LaunchNotificationDelegate()
+
+    private var responses: [(actionIdentifier: String, request: UNNotificationRequest)] = []
+
+    func takeResponses() -> [(actionIdentifier: String, request: UNNotificationRequest)] {
+        defer { responses = [] }
+        return responses
+    }
+
+    nonisolated func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping @Sendable () -> Void
+    ) {
+        Task { @MainActor in
+            self.responses.append((response.actionIdentifier, response.notification.request))
+            completionHandler()
+        }
     }
 }
 

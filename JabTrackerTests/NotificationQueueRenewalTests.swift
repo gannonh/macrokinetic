@@ -51,7 +51,8 @@ struct NotificationQueueRenewalTests {
 
     private func makeFixture(
         pattern: SchedulePatternType = .daily,
-        config: ScheduleConfiguration = NotificationQueueRenewalTests.config(interval: 1, amount: 0.25)
+        config: ScheduleConfiguration = NotificationQueueRenewalTests.config(interval: 1, amount: 0.25),
+        startDate: Date = date("2029-12-31 00:00")
     ) throws -> Fixture {
         let container = try TestDataSeeding.createTestContainer()
         let context = container.mainContext
@@ -65,7 +66,7 @@ struct NotificationQueueRenewalTests {
         try context.save()
         let scheduleService = ScheduleService(context: context)
         let schedule = try scheduleService.createSchedule(
-            for: profile, pattern: pattern, startDate: Self.date("2029-12-31 00:00"), baseSchedule: config)
+            for: profile, pattern: pattern, startDate: startDate, baseSchedule: config)
         let center = MockNotificationCenter()
         let service = NotificationService(scheduleService: scheduleService, notificationCenter: center)
         return Fixture(
@@ -208,6 +209,23 @@ struct NotificationQueueRenewalTests {
 
         #expect(fixture.center.addedRequests.isEmpty)
         #expect(try persistedDoses(fixture).isEmpty)
+    }
+
+    @Test("A schedule paused through another ScheduleService refreshes the queue on its own")
+    func scheduleChangeFromAnotherServiceRefreshes() async throws {
+        let fixture = try makeFixture(startDate: Date().addingTimeInterval(-86_400))
+        fixture.service.notificationsEnabled = true
+        try await fixture.service.refreshNotificationQueue()
+        #expect(doseRequests(fixture.center).count == 63)
+
+        let otherService = ScheduleService(context: fixture.container.mainContext)
+        try otherService.pauseSchedule(fixture.schedule)
+
+        for _ in 0..<100 where !doseRequests(fixture.center).isEmpty {
+            try await Task.sleep(for: .milliseconds(20))
+        }
+        #expect(doseRequests(fixture.center).isEmpty)
+        #expect(fixture.center.request(withIdentifier: NotificationService.renewalRequestIdentifier) == nil)
     }
 
     @Test("Tapping a reminder opens the dose it reminds about")

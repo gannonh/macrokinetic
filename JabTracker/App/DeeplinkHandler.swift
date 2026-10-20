@@ -10,6 +10,8 @@ extension Notification.Name {
     static let checkInCompleted = Notification.Name("checkInCompleted")
     /// Posted when onboarding is restarted from settings
     static let restartOnboarding = Notification.Name("restartOnboarding")
+    /// Posted when any ScheduleService creates, changes, pauses, resumes or deletes a dose schedule
+    static let doseSchedulesChanged = Notification.Name("doseSchedulesChanged")
 }
 
 /// Result of deeplink parsing

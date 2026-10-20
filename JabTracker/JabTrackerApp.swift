@@ -1,5 +1,6 @@
 import SwiftData
 import SwiftUI
+import UserNotifications
 
 @main
 struct JabTrackerApp: App {
@@ -15,6 +16,7 @@ struct JabTrackerApp: App {
     @State private var isAppLocked: Bool
 
     init() {
+        UNUserNotificationCenter.current().delegate = LaunchNotificationDelegate.shared
         Task {
             await NotificationService.cancelUnavailableTitrationNotifications()
         }

@@ -247,9 +247,6 @@ final class ScheduleService {
     /// UI can observe this property to display error feedback
     var loadError: Error?
 
-    /// Called after a schedule is created, changed, paused, resumed or deleted
-    @ObservationIgnored var onSchedulesChanged: (() -> Void)?
-
     // MARK: - Initialization
 
     /**
@@ -314,7 +311,7 @@ final class ScheduleService {
         loadActiveSchedules()
         print("🔍 [ScheduleService.createSchedule] loadActiveSchedules() called")
         print("🔍 [ScheduleService.createSchedule] activeSchedules.count after load: \(activeSchedules.count)")
-        onSchedulesChanged?()
+        NotificationCenter.default.post(name: .doseSchedulesChanged, object: nil)
 
         return schedule
     }
@@ -350,7 +347,7 @@ final class ScheduleService {
 
         // Save changes
         try context.save()
-        onSchedulesChanged?()
+        NotificationCenter.default.post(name: .doseSchedulesChanged, object: nil)
     }
 
     /**
@@ -372,7 +369,7 @@ final class ScheduleService {
 
         // Reload active schedules
         loadActiveSchedules()
-        onSchedulesChanged?()
+        NotificationCenter.default.post(name: .doseSchedulesChanged, object: nil)
     }
 
     /**
@@ -399,7 +396,7 @@ final class ScheduleService {
 
         // Save changes
         try context.save()
-        onSchedulesChanged?()
+        NotificationCenter.default.post(name: .doseSchedulesChanged, object: nil)
     }
 
     /**
@@ -416,7 +413,7 @@ final class ScheduleService {
 
         // Save changes
         try context.save()
-        onSchedulesChanged?()
+        NotificationCenter.default.post(name: .doseSchedulesChanged, object: nil)
     }
 
     // MARK: - Private Helpers
@@ -429,7 +426,7 @@ final class ScheduleService {
      *
      * Sets loadError property on failure for UI feedback.
      */
-    private func loadActiveSchedules() {
+    func loadActiveSchedules() {
         let descriptor = FetchDescriptor<DoseSchedule>(
             predicate: #Predicate { schedule in
                 schedule.isActive == true
