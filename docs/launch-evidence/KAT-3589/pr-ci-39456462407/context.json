@@ -1,0 +1,21 @@
+{
+  "scheme": "JabTrackerReleaseTestHarness",
+  "configuration": "ReleaseTestHarness",
+  "destination": "platform=iOS Simulator,id=F27BBAD3-9F7C-4353-BFA0-31EC0C16443E",
+  "started_at": "2026-10-20T16:38:26.051372+00:00",
+  "fixture": "ci-foods-22",
+  "signed_device_acceptance": false,
+  "runtime_identifier": "com.apple.CoreSimulator.SimRuntime.iOS-26-2",
+  "device": {
+    "lastBootedAt": "2026-10-20T16:35:53Z",
+    "dataPath": "/Users/runner/Library/Developer/CoreSimulator/Devices/F27BBAD3-9F7C-4353-BFA0-31EC0C16443E/data",
+    "dataPathSize": 467374080,
+    "logPath": "/Users/runner/Library/Logs/CoreSimulator/F27BBAD3-9F7C-4353-BFA0-31EC0C16443E",
+    "udid": "F27BBAD3-9F7C-4353-BFA0-31EC0C16443E",
+    "isAvailable": true,
+    "logPathSize": 49152,
+    "deviceTypeIdentifier": "com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro",
+    "state": "Booted",
+    "name": "JabTracker launch 39456462407-1"
+  }
+}

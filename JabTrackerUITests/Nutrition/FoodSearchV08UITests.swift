@@ -20,7 +20,7 @@ final class FoodSearchV08UITests: XCTestCase {
     }
 
     override func tearDownWithError() throws {
-        if testRun?.hasSucceeded == false, let app {
+        if (testRun?.totalFailureCount ?? 0) > 0, let app {
             TestUtilities.captureFailureScreenshot(app, testName: name)
             let hierarchy = app.debugDescription
             print(hierarchy)
