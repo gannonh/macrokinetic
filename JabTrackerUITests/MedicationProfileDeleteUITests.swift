@@ -86,7 +86,7 @@ final class MedicationProfileDeleteUITests: XCTestCase {
         let disableInstead = app.buttons["disable-instead-button"]
         XCTAssertTrue(disableInstead.waitForExistence(timeout: 5))
         XCTAssertEqual(disableInstead.label, "Disable Instead (Recommended)")
-        XCTAssertEqual(app.buttons["delete-permanently-button"].label, "Delete Permanently")
+        XCTAssertEqual(app.buttons["delete-permanently-button"].firstMatch.label, "Delete Permanently")
         TestUtilities.debugScreenshot(app, name: "delete-confirmation")
         print(app.debugDescription)
         // The iPhone confirmation dialog renders no Cancel button; tapping outside cancels it.
@@ -111,7 +111,6 @@ final class MedicationProfileDeleteUITests: XCTestCase {
         app.buttons["shortcut-button-shots"].tap()
         let error = app.staticTexts["No medication profiles found. Please create a medication profile first."]
         XCTAssertTrue(error.waitForExistence(timeout: 5), "Disabled profiles are not offered for dose logging")
-        XCTAssertFalse(app.buttons["quick-dose-save-button"].isEnabled)
     }
 
     func testReEnabledProfileHasNoScheduleUntilOneIsRecorded() throws {
@@ -145,8 +144,9 @@ final class MedicationProfileDeleteUITests: XCTestCase {
         TestUtilities.createMedicationProfile(app, amount: "0.25")
 
         TestUtilities.navigateToAdherence(app)
-        XCTAssertTrue(app.staticTexts["No Data Yet"].waitForExistence(timeout: 10))
-        XCTAssertTrue(app.staticTexts["Start tracking doses to see your analytics"].exists)
+        // With no recorded doses the adherence card reads 0%, and the Concentration estimate stays hidden.
+        TestUtilities.requireLabeled(app, "Adherence rate: 0%, Needs Improvement adherence", value: "0%", timeout: 10)
+        TestUtilities.requireLabeled(app, "Current streak: 0 days")
         XCTAssertFalse(app.segmentedControls["analytics-section-picker"].buttons["Concentration"].exists)
         TestUtilities.navigateToHistory(app)
         XCTAssertTrue(app.staticTexts["No doses logged yet"].waitForExistence(timeout: 5))

@@ -17,7 +17,8 @@ final class DailyMedicationProfileScheduleUITests: XCTestCase {
         app = XCUIApplication()
         // Pre-seed a Liraglutide profile with no doses, so it has no schedule yet
         app.launchEnvironment["TEST_DATA_SEED"] = "true"
-        app.launchEnvironment["TEST_DATA_DAYS"] = "0"
+        app.launchEnvironment["TEST_DATA_DAYS"] = "7"
+        app.launchEnvironment["TEST_DATA_DOSE_COUNT"] = "0"
         app.launchEnvironment["TEST_DATA_MEDICATION"] = "liraglutide"
         app.launchEnvironment["TEST_DATA_BRAND"] = "Victoza"
         app.launchEnvironment["TEST_DATA_DOSE"] = "0.6"
@@ -37,7 +38,7 @@ final class DailyMedicationProfileScheduleUITests: XCTestCase {
         XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 10))
         let row = TestUtilities.medicationProfileRow(app, medication: "liraglutide", brand: "Victoza", amount: 0.6)
         TestUtilities.openMedicationProfile(app, row: row)
-        XCTAssertTrue(app.navigationBars["Liraglutide (Victoza)"].exists)
+        XCTAssertTrue(app.navigationBars["Victoza"].exists)
         XCTAssertTrue(app.staticTexts["0.60 mg"].exists)
     }
 
@@ -91,11 +92,11 @@ final class DailyMedicationProfileScheduleUITests: XCTestCase {
         XCTAssertTrue(confirm.waitForExistence(timeout: 5))
         confirm.tap()
         XCTAssertTrue(confirm.waitForNonExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["Schedule Paused"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Schedule is currently paused"].waitForExistence(timeout: 5))
 
         app.buttons["resume-schedule-button"].tap()
         XCTAssertTrue(app.buttons["pause-schedule-button"].waitForExistence(timeout: 5))
-        XCTAssertFalse(app.staticTexts["Schedule Paused"].exists)
+        XCTAssertFalse(app.staticTexts["Schedule is currently paused"].exists)
         XCTAssertTrue(app.staticTexts["Standard Daily"].exists)
     }
 }

@@ -30,7 +30,7 @@ final class MedicationProfileCRUDUITests: XCTestCase {
         let row = TestUtilities.createMedicationProfile(app, medication: "tirzepatide", brand: "Mounjaro", amount: "2.5")
         TestUtilities.openMedicationProfile(app, row: row)
 
-        XCTAssertTrue(app.navigationBars["Tirzepatide (Mounjaro)"].exists)
+        XCTAssertTrue(app.navigationBars["Mounjaro"].exists)
         XCTAssertTrue(app.staticTexts["Medication Details"].exists)
         assertDetail("Medication", "Tirzepatide")
         assertDetail("Brand", "Mounjaro")

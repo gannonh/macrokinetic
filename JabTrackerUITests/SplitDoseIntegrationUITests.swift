@@ -57,11 +57,11 @@ final class SplitDoseIntegrationUITests: XCTestCase {
         evidence("quick-dose-split")
 
         // A recorded split schedule never prefills the 1.00 mg weekly total as one administration.
-        XCTAssertEqual(amount.value as? String, amount.placeholderValue)
-        XCTAssertEqual(amount.placeholderValue, "Amount")
+        XCTAssertEqual(amount.value as? String, "0")
         let save = app.buttons["quick-dose-save-button"]
-        XCTAssertFalse(save.isEnabled)
+        XCTAssertFalse(save.isEnabled, "0 mg cannot be saved")
         amount.coordinate(withNormalizedOffset: CGVector(dx: 0.98, dy: 0.5)).tap()
+        amount.typeText(XCUIKeyboardKey.delete.rawValue)
         amount.typeText("0.5")
         XCTAssertEqual(amount.value as? String, "0.5")
         XCTAssertTrue(save.isEnabled)
@@ -71,24 +71,33 @@ final class SplitDoseIntegrationUITests: XCTestCase {
         TestUtilities.navigateToHistoryView(in: app)
         let rows = TestUtilities.getDoseRows(from: app, minimumCount: 2)
         evidence("history-after-split-dose")
-        XCTAssertEqual(rows.count, 2)
-        XCTAssertTrue(rows.element(boundBy: 0).label.contains("0.50 mg"), rows.element(boundBy: 0).label)
+        let labels = rows.allElementsBoundByIndex.map(\.label)
+        XCTAssertEqual(labels.count, 2)
+        XCTAssertEqual(labels.filter { $0.hasPrefix("0.50 milligrams, Ozempic") }.count, 1, "\(labels)")
+        XCTAssertEqual(labels.filter { $0.hasPrefix("1.00 milligrams, Ozempic") }.count, 1, "\(labels)")
     }
 
     func testCalendarShowsTwiceWeeklyDosePattern() throws {
         launch()
         TestUtilities.navigateToHistoryView(in: app)
         app.segmentedControls["history-view-mode-picker"].buttons["Calendar"].tap()
-        XCTAssertTrue(app.descendants(matching: .any)["dose-calendar-container"].waitForExistence(timeout: 5))
         evidence("calendar")
+        XCTAssertTrue(app.descendants(matching: .any)["calendar-day-1"].firstMatch.waitForExistence(timeout: 5))
 
-        let scheduledDays = app.descendants(matching: .any)
-            .matching(NSPredicate(format: "label CONTAINS ' scheduled'")).allElementsBoundByIndex.map(\.label)
-        print("Scheduled day labels: \(scheduledDays)")
-        XCTAssertFalse(scheduledDays.isEmpty, "The recorded split schedule projects scheduled doses")
+        let scheduledCells = app.descendants(matching: .any).matching(NSPredicate(
+            format: "identifier BEGINSWITH 'calendar-day-' AND label CONTAINS ' scheduled'"
+        )).allElementsBoundByIndex
+        let labels = scheduledCells.map(\.label)
+        let days = scheduledCells.compactMap { Int($0.identifier.replacingOccurrences(of: "calendar-day-", with: "")) }
+        print("Scheduled days \(days): \(labels)")
+        XCTAssertFalse(days.isEmpty, "The recorded split schedule projects scheduled doses this month")
         XCTAssertTrue(
-            scheduledDays.allSatisfy { $0.contains("1 scheduled") },
-            "Twice weekly means one administration per scheduled day, not two: \(scheduledDays)")
+            labels.allSatisfy { $0.contains("1 scheduled") },
+            "Twice weekly means one administration per scheduled day, not two: \(labels)")
+        // Administrations are 3.5 days apart, so day gaps alternate 3 and 4 and any two consecutive gaps make a week.
+        let gaps = zip(days.dropFirst(), days).map { $0 - $1 }
+        XCTAssertTrue(gaps.allSatisfy { $0 == 3 || $0 == 4 }, "Gaps \(gaps) between days \(days)")
+        XCTAssertTrue(zip(gaps.dropFirst(), gaps).allSatisfy { $0 + $1 == 7 }, "Gaps \(gaps) between days \(days)")
     }
 
     func testSettingsShowsSplitDoseSchedule() throws {

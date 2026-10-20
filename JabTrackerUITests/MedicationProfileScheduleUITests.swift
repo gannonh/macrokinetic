@@ -17,7 +17,8 @@ final class MedicationProfileScheduleUITests: XCTestCase {
         app = XCUIApplication()
         // Pre-seed a medication profile with no doses, so it has no schedule yet
         app.launchEnvironment["TEST_DATA_SEED"] = "true"
-        app.launchEnvironment["TEST_DATA_DAYS"] = "0"
+        app.launchEnvironment["TEST_DATA_DAYS"] = "7"
+        app.launchEnvironment["TEST_DATA_DOSE_COUNT"] = "0"
         app.launchEnvironment["TEST_DATA_MEDICATION"] = "semaglutide"
         app.launchEnvironment["TEST_DATA_BRAND"] = "Ozempic"
         app.launchEnvironment["TEST_DATA_DOSE"] = "0.25"
@@ -55,7 +56,7 @@ final class MedicationProfileScheduleUITests: XCTestCase {
     }
 
     private func incrementInterval() {
-        app.steppers["interval-stepper"].buttons["Increment"].tap()
+        app.buttons["interval-stepper-Increment"].tap()
     }
 
     private func saveEditor() {
@@ -116,11 +117,11 @@ final class MedicationProfileScheduleUITests: XCTestCase {
     func testPauseScheduleOneWeek() throws {
         openSeededProfile()
         try TestUtilities.createDefaultSchedule(app)
-        XCTAssertFalse(app.staticTexts["Schedule Paused"].exists)
+        XCTAssertFalse(app.staticTexts["Schedule is currently paused"].exists)
 
         pause()
 
-        XCTAssertTrue(app.staticTexts["Schedule Paused"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Schedule is currently paused"].waitForExistence(timeout: 5))
         XCTAssertEqual(app.buttons["resume-schedule-button"].label, "Resume Schedule")
         XCTAssertFalse(app.buttons["pause-schedule-button"].exists)
     }
@@ -129,12 +130,12 @@ final class MedicationProfileScheduleUITests: XCTestCase {
         openSeededProfile()
         try TestUtilities.createDefaultSchedule(app)
         pause()
-        XCTAssertTrue(app.staticTexts["Schedule Paused"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Schedule is currently paused"].waitForExistence(timeout: 5))
 
         app.buttons["resume-schedule-button"].tap()
 
         XCTAssertTrue(app.buttons["pause-schedule-button"].waitForExistence(timeout: 5))
-        XCTAssertFalse(app.staticTexts["Schedule Paused"].exists)
+        XCTAssertFalse(app.staticTexts["Schedule is currently paused"].exists)
         XCTAssertTrue(app.staticTexts["Standard Weekly"].exists)
     }
 
