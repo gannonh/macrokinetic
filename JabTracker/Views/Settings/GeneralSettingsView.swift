@@ -26,6 +26,13 @@ struct GeneralSettingsView: View {
                         .foregroundColor(.secondary)
                 }
                 .accessibilityIdentifier("build-row")
+
+                NavigationLink {
+                    FoodDataSettingsView()
+                } label: {
+                    Label("Food data", systemImage: "books.vertical")
+                }
+                .accessibilityIdentifier("food-data-settings-link")
             }
 
             Section("Legal") {

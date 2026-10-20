@@ -2,6 +2,7 @@ import hashlib
 import json
 import os
 import plistlib
+import shutil
 import subprocess
 import tempfile
 import unittest
@@ -28,7 +29,19 @@ class BuildControlsTests(unittest.TestCase):
             "CFBundleVersion": "16",
         }
         self.write_info()
-        (self.app / "usda_foods.sqlite").write_bytes(b"fictional database fixture")
+        database = b"fictional database fixture"
+        (self.app / "usda_foods.sqlite").write_bytes(database)
+        shutil.copyfile(ROOT / "JabTracker/Resources/food-data-notices.json", self.app / "food-data-notices.json")
+        (self.app / "food-db-manifest.json").write_text(json.dumps({
+            "schema_version": 2, "database_sha256": hashlib.sha256(database).hexdigest(),
+            "database_bytes": len(database), "commit_sha": "a" * 40, "workflow_run_id": "123",
+            "created_at": "2026-09-30T20:00:00Z", "created_epoch": 1790798400,
+            "build_mode": "full", "off_cursor": 123, "applied_delta_files": [],
+            "total_rows": 3, "rows_by_source": {"foundation": 1, "sr_legacy": 1, "openFoodFacts": 1},
+            "usda_urls": {"foundation": "https://fdc.nal.usda.gov/foundation.zip", "sr_legacy": "https://fdc.nal.usda.gov/sr.zip"},
+            "off_full_export_url": "https://static.openfoodfacts.org/data/en.openfoodfacts.org.products.csv.gz",
+            "marketing_version": "0.10.1", "build_number": "16",
+        }))
         self.environment = os.environ | {
             "CONFIGURATION": "Release",
             "PRODUCT_BUNDLE_IDENTIFIER": "com.gannonhall.JabTracker",
@@ -286,7 +299,7 @@ class BuildControlsTests(unittest.TestCase):
             env=self.environment, text=True, capture_output=True,
         )
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("IPA database checksum mismatch", result.stderr)
+        self.assertIn("Bundled database size differs from its manifest", result.stderr)
 
 
 if __name__ == "__main__":
