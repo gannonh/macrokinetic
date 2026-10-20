@@ -77,6 +77,7 @@ struct JabTrackerApp: App {
                         // After auth check, determine if biometric lock should be shown
                         isAppLocked = biometricManager.isBiometricEnabled
 
+                        #if DEBUG || JABTRACKER_TEST_HARNESS
                         // Seed test data if launch argument is present
                         if ProcessInfo.processInfo.arguments.contains("--test-titration-data") {
                             self.dataController.seedTitrationTestData()
@@ -95,6 +96,8 @@ struct JabTrackerApp: App {
                                 DeeplinkHandler.handle(url: url)
                             }
                         }
+                        #endif
+
                     }
                 }
             }

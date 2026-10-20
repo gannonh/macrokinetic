@@ -27,14 +27,22 @@ private struct CloudKitConfig {
     let isCloudKitTesting: Bool
 
     static func determine(inMemory requestedInMemory: Bool) -> CloudKitConfig {
+        #if DEBUG || JABTRACKER_TEST_HARNESS
         let isTestEnvironment =
             ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
             || ProcessInfo.processInfo.environment["XCTestSessionIdentifier"] != nil
         let isUITesting = ProcessInfo.processInfo.arguments.contains("--ui-testing")
+        #if DEBUG
         let inMemory = requestedInMemory || ProcessInfo.processInfo.arguments.contains("-inMemory")
+        #else
+        let inMemory = requestedInMemory
+        #endif
         let isCloudKitDisabled = ProcessInfo.processInfo.arguments.contains("--disable-cloudkit")
         let isCloudKitTesting = ProcessInfo.processInfo.arguments.contains("--cloudkit-testing")
 
+        #if JABTRACKER_TEST_HARNESS
+        let shouldEnableCloudKit = false
+        #else
         let shouldEnableCloudKit: Bool
         if isCloudKitTesting {
             shouldEnableCloudKit = !inMemory
@@ -43,6 +51,16 @@ private struct CloudKitConfig {
         } else {
             shouldEnableCloudKit = !inMemory && !isCloudKitDisabled
         }
+
+        #endif
+        #else
+        let inMemory = requestedInMemory
+        let isTestEnvironment = false
+        let isUITesting = false
+        let isCloudKitDisabled = false
+        let isCloudKitTesting = false
+        let shouldEnableCloudKit = !inMemory
+        #endif
 
         return CloudKitConfig(
             inMemory: inMemory,
@@ -160,7 +178,9 @@ class DataController: ObservableObject {
 
     init(inMemory: Bool = false) {
         let schema = Schema(Self.modelTypes)
+        #if !JABTRACKER_TEST_HARNESS
         let cloudKitContainerIdentifier = "iCloud.com.gannonhall.JabTracker"
+        #endif
 
         // Determine CloudKit configuration based on environment
         let config = CloudKitConfig.determine(inMemory: inMemory)
@@ -179,19 +199,28 @@ class DataController: ObservableObject {
                 isStoredInMemoryOnly: true,
                 cloudKitDatabase: .none)
         } else {
+            #if JABTRACKER_TEST_HARNESS
+            configuration = ModelConfiguration(
+                schema: schema,
+                isStoredInMemoryOnly: false,
+                cloudKitDatabase: .none)
+            #else
             configuration = ModelConfiguration(
                 schema: schema,
                 isStoredInMemoryOnly: false,
                 cloudKitDatabase: shouldEnableCloudKit
                     ? .private(cloudKitContainerIdentifier)
                     : .none)
+            #endif
         }
 
         do {
             self.container = try ModelContainer(for: schema, configurations: [configuration])
             if shouldEnableCloudKit {
                 self.isCloudKitEnabled = true
+                #if !JABTRACKER_TEST_HARNESS
                 self.checkCloudKitStatus()
+                #endif
             } else {
                 self.isCloudKitEnabled = false
                 self.syncStatus = .unavailable
@@ -235,11 +264,15 @@ class DataController: ObservableObject {
         }
     }
 
+    #if DEBUG || JABTRACKER_TEST_HARNESS
     /// Create a test container with isolated context for testing
     static func testContainer() -> DataController {
         DataController(inMemory: true)
     }
 
+    #endif
+
+    #if !JABTRACKER_TEST_HARNESS
     /// Check CloudKit availability status
     private func checkCloudKitStatus() {
         Task {
@@ -280,10 +313,14 @@ class DataController: ObservableObject {
         }
     }
 
+    #endif
+
     /// Retry CloudKit setup - useful when user fixes iCloud issues
     func retryCloudKitSetup() {
         guard self.isCloudKitEnabled else { return }
+        #if !JABTRACKER_TEST_HARNESS
         self.checkCloudKitStatus()
+        #endif
     }
 
     /// Get user-friendly sync status message
@@ -309,6 +346,7 @@ class DataController: ObservableObject {
         self.syncStatus == .available
     }
 
+    #if DEBUG || JABTRACKER_TEST_HARNESS
     /// Seed test data for titration workflow testing
     /// Creates medication profile with titrations at various stages for manual testing
     @MainActor
@@ -502,4 +540,6 @@ class DataController: ObservableObject {
         try? context.save()
         Self.logger.info("Seeded new user for Calorie Expenditure tests")
     }
+    #endif
+
 }

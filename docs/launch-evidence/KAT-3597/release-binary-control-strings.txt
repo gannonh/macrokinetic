@@ -1,0 +1,56 @@
+### ordinary Release iphoneos archive binary: control tokens present (count)
+--ui-testing                     0
+--reset-app-data                 0
+--manual-ui-testing              0
+--bypass-onboarding              0
+--force-onboarding               0
+--seed-test                      0
+--seed-check-in                  0
+--seed-calorie-user              0
+--seed-collaborative             0
+--seed-                          0
+-active                          0
+TEST_DATA_                       0
+UI_TESTING                       0
+--mock-active-energy             0
+--test-titration-data            0
+--deeplink-url                   0
+--disable-cloudkit               0
+--cloudkit-testing               0
+-inMemory                        0
+--food-search-fail-once          0
+XCTestConfigurationFilePath      0
+XCTestSessionIdentifier          0
+SWIFT_TESTING                    0
+--storage-fixture                0
+--storage-fail-first-open        0
+--storage-always-fail-open       0
+XCTestCase                       0
+
+### ReleaseTestHarness iphoneos archive binary: tokens with count>0 (contrast)
+--reset-app-data                 1
+--manual-ui-testing              1
+--bypass-onboarding              1
+--force-onboarding               1
+--seed-test                      4
+--seed-check-in                  4
+--seed-calorie-user              1
+--seed-collaborative             1
+--seed-                          15
+-active                          6
+TEST_DATA_                       6
+--mock-active-energy             1
+--test-titration-data            1
+--disable-cloudkit               1
+--cloudkit-testing               1
+--food-search-fail-once          1
+XCTestConfigurationFilePath      1
+XCTestSessionIdentifier          1
+
+### type/symbol names
+TestDataSeeding release=0 harness=4
+StorageTestFixture release=0 harness=0
+
+### entitlements (iCloud) release vs harness
+JabTracker
+JabTrackerReleaseTestHarness

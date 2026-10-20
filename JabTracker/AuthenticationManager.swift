@@ -34,11 +34,14 @@ class AuthenticationManager: NSObject, ObservableObject {
 
     private let dataController: DataController
 
+    #if DEBUG || JABTRACKER_TEST_HARNESS
     /// Detects if code is running in a unit test context (not UI tests)
     private var isUnitTestEnvironment: Bool {
         ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
             || ProcessInfo.processInfo.environment["XCTestSessionIdentifier"] != nil
     }
+
+    #endif
 
     init(dataController: DataController? = nil) {
         self.dataController = dataController ?? DataController.shared
@@ -48,6 +51,7 @@ class AuthenticationManager: NSObject, ObservableObject {
     func checkAuthenticationStatus() async {
         Self.logger.info("🔍 AuthenticationManager: checkAuthenticationStatus() called")
 
+        #if DEBUG || JABTRACKER_TEST_HARNESS
         // Reset app data if requested (for UI testing)
         if ProcessInfo.processInfo.arguments.contains("--reset-app-data") {
             await self.resetAppData()
@@ -74,6 +78,8 @@ class AuthenticationManager: NSObject, ObservableObject {
                 "🎭 AuthenticationManager: Manual UI testing mode - showing auth UI with mocked Apple ID response"
             )
         }
+
+        #endif
 
         // Check if user is already authenticated by looking for existing user data
         let context = self.dataController.container.mainContext
@@ -117,6 +123,7 @@ class AuthenticationManager: NSObject, ObservableObject {
         }
     }
 
+    #if DEBUG || JABTRACKER_TEST_HARNESS
     /// Clear chart dataset cache from Application Support directory
     /// Used during test data reset to ensure clean state
     private func clearChartDatasetCache() {
@@ -295,12 +302,9 @@ class AuthenticationManager: NSObject, ObservableObject {
         }
     }
 
-    // swiftlint:disable:next orphaned_doc_comment
-    /// Seed test data for UI testing if TEST_DATA_SEED environment variable or time period launch arguments are set
-    /// Enables fast E2E performance testing with large datasets and manual testing with realistic data
     // swiftlint:disable:next function_body_length cyclomatic_complexity
     private func seedTestDataIfRequested(for user: User, context: ModelContext) async {
-        #if DEBUG || TEST
+        #if DEBUG || JABTRACKER_TEST_HARNESS
             let environment = ProcessInfo.processInfo.environment
             let arguments = ProcessInfo.processInfo.arguments
 
@@ -523,7 +527,7 @@ class AuthenticationManager: NSObject, ObservableObject {
         context: ModelContext,
         programStyle: ProgramStyle = .coached
     ) async {
-        #if DEBUG || TEST
+        #if DEBUG || JABTRACKER_TEST_HARNESS
             Self.logger.info("🎯 Seeding check-in ready data (\(programStyle.rawValue)) for UI testing")
 
             await MainActor.run {
@@ -739,7 +743,7 @@ class AuthenticationManager: NSObject, ObservableObject {
         context: ModelContext,
         programStyle: ProgramStyle = .coached
     ) async {
-        #if DEBUG || TEST
+        #if DEBUG || JABTRACKER_TEST_HARNESS
             Self.logger.info("🎯 Seeding GOOD tier check-in data (\(programStyle.rawValue)) for UI testing")
 
             await MainActor.run {
@@ -848,7 +852,7 @@ class AuthenticationManager: NSObject, ObservableObject {
         context: ModelContext,
         programStyle: ProgramStyle = .coached
     ) async {
-        #if DEBUG || TEST
+        #if DEBUG || JABTRACKER_TEST_HARNESS
             Self.logger.info("🎯 Seeding MINIMUM tier check-in data (\(programStyle.rawValue)) for UI testing")
 
             await MainActor.run {
@@ -958,7 +962,7 @@ class AuthenticationManager: NSObject, ObservableObject {
         context: ModelContext,
         programStyle: ProgramStyle = .coached
     ) async {
-        #if DEBUG || TEST
+        #if DEBUG || JABTRACKER_TEST_HARNESS
             Self.logger.info("🎯 Seeding INSUFFICIENT tier check-in data (\(programStyle.rawValue)) for UI testing")
 
             await MainActor.run {
@@ -1059,6 +1063,8 @@ class AuthenticationManager: NSObject, ObservableObject {
             }
         #endif
     }
+
+    #endif
 
     // MARK: - Private Helper Methods
 
@@ -1172,6 +1178,7 @@ class AuthenticationManager: NSObject, ObservableObject {
     // MARK: - Public Methods
 
     func signInWithApple() async throws -> User {
+        #if DEBUG || JABTRACKER_TEST_HARNESS
         // Check if we're in manual UI testing mode
         let isManualUITesting = ProcessInfo.processInfo.arguments.contains("--manual-ui-testing")
 
@@ -1216,6 +1223,8 @@ class AuthenticationManager: NSObject, ObservableObject {
                 throw AuthenticationError.authorizationDenied
             }
         }
+
+        #endif
 
         // Regular Apple ID flow (not yet fully implemented)
         let request = ASAuthorizationAppleIDProvider().createRequest()
@@ -1329,6 +1338,7 @@ extension AuthenticationManager: ASAuthorizationControllerDelegate {
     }
 }
 
+#if DEBUG || JABTRACKER_TEST_HARNESS
 // MARK: - Test Data Seeding Extension
 
 extension AuthenticationManager {
@@ -1375,6 +1385,8 @@ extension AuthenticationManager {
         try context.save()
     }
 }
+
+#endif
 
 // MARK: - ASAuthorizationControllerPresentationContextProviding
 

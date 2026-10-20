@@ -1,0 +1,19 @@
+== ordinary Release archive + IPA (expect pass)
+archive and IPA have ordinary Release compiler inputs
+archive and IPA version/build/checksum verification passed
+exit 0
+== harness archive + harness IPA (expect reject)
+build-controls: only ordinary Release can pass shipment preflight
+exit 1
+== release archive + harness IPA (expect reject)
+build-controls: only ordinary Release can pass shipment preflight
+exit 1
+== harness archive + release IPA (expect reject)
+build-controls: only ordinary Release can pass shipment preflight
+exit 1
+== release archive + IPA missing manifest (expect reject)
+build-controls: [Errno 2] No such file or directory: '/var/folders/d7/p8j2hgrd7b7c89fxsxlbwptm0000gn/T/tmp.hscrJOWCPG/ipa-inspection/Payload/JabTracker.app/JabTrackerBuildManifest.json'
+exit 1
+== release archive + IPA manifest claims DEBUG (expect reject)
+build-controls: ordinary Release has nonempty Swift definitions: DEBUG
+exit 1

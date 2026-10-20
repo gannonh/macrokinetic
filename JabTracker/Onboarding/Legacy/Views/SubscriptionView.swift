@@ -13,18 +13,34 @@ struct SubscriptionView: View {
         subsystem: Bundle.main.bundleIdentifier ?? "JabTracker",
         category: "SubscriptionView")
 
+    #if DEBUG || JABTRACKER_TEST_HARNESS
     private var isTestEnvironment: Bool {
         ProcessInfo.processInfo.arguments.contains("--ui-testing")
     }
 
+    #endif
+
     init(viewModel: LegacyOnboardingViewModel) {
         self._viewModel = ObservedObject(initialValue: viewModel)
+        #if DEBUG || JABTRACKER_TEST_HARNESS
         let isTest =
             ProcessInfo.processInfo.arguments.contains("--ui-testing")
             || ProcessInfo.processInfo.environment["UI_TESTING"] == "true"
         _subscriptionManager = StateObject(
             wrappedValue: SubscriptionManager(isTestEnvironment: isTest)
         )
+        #else
+        _subscriptionManager = StateObject(wrappedValue: SubscriptionManager())
+        #endif
+    }
+
+    private var isPurchaseDisabled: Bool {
+        #if DEBUG || JABTRACKER_TEST_HARNESS
+        subscriptionManager.isLoading
+            || (!isTestEnvironment && subscriptionManager.availableProducts.isEmpty)
+        #else
+        subscriptionManager.isLoading || subscriptionManager.availableProducts.isEmpty
+        #endif
     }
 
     private let premiumFeatures = [
@@ -125,10 +141,7 @@ struct SubscriptionView: View {
                         await self.purchaseSubscription()
                     }
                 }
-                .disabled(
-                    self.subscriptionManager.isLoading
-                        || (!self.isTestEnvironment && self.subscriptionManager.availableProducts.isEmpty)
-                )
+                .disabled(isPurchaseDisabled)
                 .accessibilityIdentifier(
                     self.selectedPlan == .monthly ? "purchase-monthly-button" : "purchase-annual-button"
                 )
@@ -269,15 +282,14 @@ struct SubscriptionView: View {
             Self.logger.error(
                 "🛒 SubscriptionView: Purchase failed: \(error.localizedDescription, privacy: .public)")
 
+            #if DEBUG || JABTRACKER_TEST_HARNESS
             if self.isTestEnvironment {
-                // In test environment, if StoreKit purchase fails, simulate successful completion
-                // This ensures UI tests can complete the flow even if StoreKit isn't working properly
                 Self.logger.info("🛒 SubscriptionView: Test environment - simulating successful purchase")
                 _ = await self.viewModel.completeOnboarding()
-            } else {
-                // In production, show the actual error to the user
-                self.subscriptionManager.errorMessage = "Purchase failed: \(error.localizedDescription)"
+                return
             }
+            #endif
+            self.subscriptionManager.errorMessage = "Purchase failed: \(error.localizedDescription)"
         }
     }
 
