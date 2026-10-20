@@ -86,6 +86,130 @@ else:
         path.write_text(f"#!{sys.executable}\n" + source)
         path.chmod(0o755)
 
+    def write_launch_suite(self, selectors=None):
+        selectors = selectors or ["JabTrackerUITests/FoodSearchV08UITests/testSearchShowsRetryableError"]
+        path = self.directory / "launch-suite.json"
+        path.write_text(json.dumps({
+            "schema_version": 1,
+            "name": "runner-regression",
+            "scheme": "JabTrackerReleaseTestHarness",
+            "configuration": "ReleaseTestHarness",
+            "fixture": "ci-foods-22",
+            "critical_journeys": ["runner-regression"],
+            "tests": [{
+                "selector": selector,
+                "source": "JabTrackerUITests/Nutrition/FoodSearchV08UITests.swift",
+                "issue": "KAT-3589",
+                "purpose": "CLI fixture, not app acceptance",
+                "verified_evidence": "synthetic runner fixture",
+                "journeys": ["runner-regression"],
+            } for selector in selectors],
+            "missing_critical_journeys": [],
+        }))
+        self.nodes["testNodes"][0]["name"] = "JabTrackerUITests"
+        self.nodes["testNodes"][0]["children"] = [{
+            "nodeType": "Test Case",
+            "nodeIdentifier": selector.split("/", 1)[1] + "()",
+            "result": "Passed",
+        } for selector in selectors]
+        self.summary.update(totalTestCount=len(selectors), passedTests=len(selectors))
+        return path
+
+    def test_release_harness_suite_uses_exact_declared_methods_and_configuration(self):
+        suite = self.write_launch_suite()
+        result = self.run_runner(
+            "ui", "--scheme", "JabTrackerReleaseTestHarness", "--configuration", "ReleaseTestHarness",
+            "--suite-file", str(suite), "--log-dir", str(self.directory / "suite-evidence"),
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        arguments = json.loads((self.directory / "arguments.json").read_text())
+        self.assertEqual(arguments[arguments.index("-scheme") + 1], "JabTrackerReleaseTestHarness")
+        self.assertEqual(arguments[arguments.index("-configuration") + 1], "ReleaseTestHarness")
+        self.assertEqual(arguments[arguments.index("-parallel-testing-enabled") + 1], "NO")
+        self.assertIn("CODE_SIGNING_ALLOWED=NO", arguments)
+        self.assertIn("SWIFT_ENABLE_EXPLICIT_MODULES=NO", arguments)
+        self.assertEqual([arg for arg in arguments if arg.startswith("-only-testing:")], [
+            "-only-testing:JabTrackerUITests/FoodSearchV08UITests/testSearchShowsRetryableError",
+        ])
+        self.assertFalse(any(arg.startswith("-skip-testing:") for arg in arguments))
+
+    def run_launch_suite(self, suite, **environment):
+        return self.run_runner(
+            "ui", "--scheme", "JabTrackerReleaseTestHarness", "--configuration", "ReleaseTestHarness",
+            "--suite-file", str(suite), "--log-dir", str(self.directory / "suite-evidence"), **environment,
+        )
+
+    def test_launch_suite_requires_every_expected_method(self):
+        suite = self.write_launch_suite([
+            "JabTrackerUITests/FoodSearchV08UITests/testSearchShowsRetryableError",
+            "JabTrackerUITests/FoodSearchV08UITests/testCompleteAddFoodFlow",
+        ])
+        self.nodes["testNodes"][0]["children"].pop()
+        result = self.run_launch_suite(suite)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Required test was not discovered", result.stderr)
+        self.assertTrue((self.directory / "suite-evidence/attachments/hierarchy.txt").exists())
+
+    def test_launch_case_status_cannot_be_hidden_by_passed_summary(self):
+        suite = self.write_launch_suite()
+        self.nodes["testNodes"][0]["children"][0]["result"] = "Skipped"
+        result = self.run_launch_suite(suite)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Required test did not pass", result.stderr)
+
+    def test_duplicate_launch_case_fails(self):
+        suite = self.write_launch_suite()
+        self.nodes["testNodes"][0]["children"] *= 2
+        self.summary.update(totalTestCount=2, passedTests=2)
+        result = self.run_launch_suite(suite)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("duplicate test cases", result.stderr)
+
+    def test_launch_expected_failure_fails(self):
+        suite = self.write_launch_suite()
+        self.summary.update(expectedFailures=1)
+        result = self.run_launch_suite(suite)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("failed or incomplete test run", result.stderr)
+
+    def test_launch_attachment_export_failure_fails(self):
+        suite = self.write_launch_suite()
+        result = self.run_launch_suite(suite, FAKE_EXPORT_FAILURE="1")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Unable to export xcresult attachments", result.stderr)
+
+    def test_invalid_launch_selection_never_invokes_xcode(self):
+        valid = self.write_launch_suite()
+        payload = json.loads(valid.read_text())
+        variants = {
+            "empty": payload | {"tests": []},
+            "duplicate": payload | {"tests": payload["tests"] * 2},
+            "class_only": payload | {"tests": [payload["tests"][0] | {"selector": "JabTrackerUITests/FoodSearchV08UITests"}]},
+            "undeclared": payload | {"tests": [payload["tests"][0] | {"selector": "JabTrackerUITests/FoodSearchV08UITests/testInventedJourney"}]},
+            "outside_source": payload | {"tests": [payload["tests"][0] | {"source": "../Outside.swift"}]},
+            "wrong_configuration": payload | {"configuration": "Debug"},
+        }
+        for name, suite in variants.items():
+            with self.subTest(name=name):
+                path = self.directory / f"{name}.json"
+                path.write_text(json.dumps(suite))
+                result = self.run_launch_suite(path)
+                self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+                self.assertFalse((self.directory / "arguments.json").exists())
+
+    def test_suite_file_cannot_mix_with_legacy_filter_or_wrong_configuration(self):
+        suite = self.write_launch_suite()
+        for arguments in (
+            ("ui", "FoodSearchV08UITests", "--suite-file", str(suite)),
+            ("unit", "--suite-file", str(suite)),
+            ("ui", "--scheme", "JabTrackerReleaseTestHarness", "--configuration", "Debug"),
+            ("ui", "--scheme", "JabTracker", "--configuration", "Release"),
+        ):
+            with self.subTest(arguments=arguments):
+                result = self.run_runner(*arguments)
+                self.assertEqual(result.returncode, 2)
+                self.assertFalse((self.directory / "arguments.json").exists())
+
     def run_runner(self, *args, **environment):
         summary_path = self.directory / "summary-fixture.json"
         nodes_path = self.directory / "tests-fixture.json"

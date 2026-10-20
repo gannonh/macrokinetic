@@ -1,0 +1,2 @@
+launch-suite: No verified selected test covers required journey: onboarding-skip-relaunch
+Missing critical journey onboarding-skip-relaunch (KAT-3588): Pending PR #375: integrated harness proof of first run, skipped permissions, usable nutrition and exact saved profile/goals. PR CI reports this; Full Validation blocks release until it is selected.

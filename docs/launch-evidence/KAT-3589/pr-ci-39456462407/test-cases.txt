@@ -1,0 +1,11 @@
+Test Case '-[JabTrackerUITests.ConcentrationLaunchPolicyUITests testConcentrationSegmentIsAbsentUnderLaunchPolicy]' passed (36.398 seconds).
+Test Case '-[JabTrackerUITests.DoseHistoryBasicUITests test_doseHistory_displaysInReverseChronologicalOrder]' passed (32.877 seconds).
+Test Case '-[JabTrackerUITests.FoodSearchV08UITests testSearchShowsRetryableError]' passed (41.468 seconds).
+Test Case '-[JabTrackerUITests.MedicalReleaseUITests testCompoundedProfileRecordsExactAmountWithoutCalculatorOrClinicalOutputs]' passed (118.300 seconds).
+Test Case '-[JabTrackerUITests.NutritionLaunchUITests testClearDayRetainsOtherDay]' passed (379.784 seconds).
+Test Case '-[JabTrackerUITests.NutritionLaunchUITests testEditAndDeleteRetainOtherDay]' passed (343.145 seconds).
+Test Case '-[JabTrackerUITests.NutritionLaunchUITests testNutritionOnlyTotalsAndRelaunch]' passed (133.180 seconds).
+Test Case '-[JabTrackerUITests.ReleaseSurfaceUITests testFoodDetailRetainsCopyToCustomAndScheduleWhileFavoriteIsHidden]' passed (27.187 seconds).
+Test Case '-[JabTrackerUITests.ReleaseSurfaceUITests testMoreHidesUnfinishedSettingsAndRetainsAccountAndGeneral]' passed (17.634 seconds).
+Test Case '-[JabTrackerUITests.ReleaseSurfaceUITests testStaleFlagPreferencesAndOverrideInputsCannotRevealHiddenFeaturesAfterRelaunch]' passed (28.094 seconds).
+Test Case '-[JabTrackerUITests.StorageRecoveryUITests test02SuccessfulDiskStartupRetainsFoodAndDoseAcrossRelaunch]' passed (58.011 seconds).
