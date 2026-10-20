@@ -130,8 +130,10 @@ extension ScheduleService {
             .map { persistedBySlot[slot($0)] ?? $0 }
 
         let kept = Set(upcomingDoses.map(\.id))
-        for dose in generated + persisted
-        where !kept.contains(dose.id) && dose.actualDose == nil && dose.skippedAt == nil && dose.rescheduledFrom == nil {
+        let unacted = { (dose: ScheduledDose) in
+            dose.actualDose == nil && dose.skippedAt == nil && dose.rescheduledFrom == nil
+        }
+        for dose in generated + persisted where !kept.contains(dose.id) && unacted(dose) {
             context.delete(dose)
         }
         do {
