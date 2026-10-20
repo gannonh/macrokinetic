@@ -28,6 +28,8 @@ REQUIRED_PR_JOBS = {
     "Fast unit tests": 35,
     "SwiftLint": 5,
     "Python tooling": 5,
+    "ReleaseHarnessUI": 30,
+    "Ordinary Release compile": 20,
 }
 ADVISORY_PR_JOBS = {
     "Integration tests": 20,
@@ -146,6 +148,16 @@ class FullValidationWorkflowTests(unittest.TestCase):
 
     def test_lane_failure_fails_the_workflow(self) -> None:
         self.assertNotRegex(self.text, r"^    continue-on-error:\s*true", re.M)
+
+    def test_launch_jobs_use_the_exact_requested_ref_and_preserve_failure_artifacts(self) -> None:
+        for job, mode in (("launch-harness", "harness"), ("launch-release", "release")):
+            with self.subTest(job=job):
+                block = re.search(rf"^  {job}:\n(?:(?!^  [\w-]+:).|\n)*", self.text, re.M).group()
+                self.assertIn("ref: ${{ env.CHECKOUT_REF }}", block)
+                self.assertIn(f"bash scripts/ci/run-launch-validation.sh {mode}", block)
+                self.assertIn("if: always()", block)
+                self.assertIn("if-no-files-found: error", block)
+                self.assertNotIn("continue-on-error", block)
 
 
 class TestFlightFullValidationTests(unittest.TestCase):

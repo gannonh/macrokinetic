@@ -1,0 +1,144 @@
+{
+  "schema_version": 1,
+  "name": "launch-release-smoke",
+  "scheme": "JabTrackerReleaseTestHarness",
+  "configuration": "ReleaseTestHarness",
+  "fixture": "ci-foods-22",
+  "critical_journeys": [
+    "nutrition-only-disk-relaunch",
+    "onboarding-skip-relaunch",
+    "prescribed-medication-history",
+    "unfinished-feature-absence"
+  ],
+  "tests": [
+    {
+      "selector": "JabTrackerUITests/NutritionLaunchUITests/testNutritionOnlyTotalsAndRelaunch",
+      "source": "JabTrackerUITests/Nutrition/NutritionLaunchUITests.swift",
+      "issue": "KAT-3587",
+      "purpose": "Nutrition-only user logs 200 g salmon; literal 416 kcal/40P/26F/0C totals survive a relaunch from disk.",
+      "journeys": [
+        "nutrition-only-disk-relaunch"
+      ],
+      "verified_evidence": "CI ReleaseHarnessUI run on the integrated KAT-3589 candidate (see PR #374 evidence)"
+    },
+    {
+      "selector": "JabTrackerUITests/NutritionLaunchUITests/testEditAndDeleteRetainOtherDay",
+      "source": "JabTrackerUITests/Nutrition/NutritionLaunchUITests.swift",
+      "issue": "KAT-3587",
+      "purpose": "Edit and delete change only the selected day; the other day keeps its literal totals.",
+      "journeys": [
+        "nutrition-only-disk-relaunch"
+      ],
+      "verified_evidence": "CI ReleaseHarnessUI run on the integrated KAT-3589 candidate (see PR #374 evidence)"
+    },
+    {
+      "selector": "JabTrackerUITests/NutritionLaunchUITests/testClearDayRetainsOtherDay",
+      "source": "JabTrackerUITests/Nutrition/NutritionLaunchUITests.swift",
+      "issue": "KAT-3587",
+      "purpose": "Clear-day deletes one day's entries and retains the other day.",
+      "journeys": [
+        "nutrition-only-disk-relaunch"
+      ],
+      "verified_evidence": "CI ReleaseHarnessUI run on the integrated KAT-3589 candidate (see PR #374 evidence)"
+    },
+    {
+      "selector": "JabTrackerUITests/MedicalReleaseUITests/testCompoundedProfileRecordsExactAmountWithoutCalculatorOrClinicalOutputs",
+      "source": "JabTrackerUITests/MedicalReleaseUITests.swift",
+      "issue": "KAT-3581",
+      "purpose": "A compounded profile records the exact prescribed amount with no calculator or clinical output.",
+      "journeys": [
+        "prescribed-medication-history",
+        "unfinished-feature-absence"
+      ],
+      "verified_evidence": "CI ReleaseHarnessUI run on the integrated KAT-3589 candidate (see PR #374 evidence)"
+    },
+    {
+      "selector": "JabTrackerUITests/MedicalReleaseUITests/testManualDailyScheduleAndQuickDoseHistoryKeepExactRecordedAmounts",
+      "source": "JabTrackerUITests/MedicalReleaseUITests.swift",
+      "issue": "KAT-3581",
+      "purpose": "Manual schedule and Quick Dose keep exact recorded amounts in History.",
+      "journeys": [
+        "prescribed-medication-history"
+      ],
+      "verified_evidence": "CI ReleaseHarnessUI run on the integrated KAT-3589 candidate (see PR #374 evidence)"
+    },
+    {
+      "selector": "JabTrackerUITests/DoseHistoryBasicUITests/test_doseHistory_displaysInReverseChronologicalOrder",
+      "source": "JabTrackerUITests/DoseHistoryBasicUITests.swift",
+      "issue": "KAT-3186",
+      "purpose": "History lists recorded doses newest first through the current GLP-1 navigation.",
+      "journeys": [
+        "prescribed-medication-history"
+      ],
+      "verified_evidence": "CI ReleaseHarnessUI run on the integrated KAT-3589 candidate (see PR #374 evidence)"
+    },
+    {
+      "selector": "JabTrackerUITests/ReleaseSurfaceUITests/testMoreHidesUnfinishedSettingsAndRetainsAccountAndGeneral",
+      "source": "JabTrackerUITests/ReleaseSurfaceUITests.swift",
+      "issue": "KAT-3580",
+      "purpose": "More hides unfinished settings and keeps Account and General.",
+      "journeys": [
+        "unfinished-feature-absence"
+      ],
+      "verified_evidence": "CI ReleaseHarnessUI run on the integrated KAT-3589 candidate (see PR #374 evidence)"
+    },
+    {
+      "selector": "JabTrackerUITests/ReleaseSurfaceUITests/testStaleFlagPreferencesAndOverrideInputsCannotRevealHiddenFeaturesAfterRelaunch",
+      "source": "JabTrackerUITests/ReleaseSurfaceUITests.swift",
+      "issue": "KAT-3580",
+      "purpose": "Stale preferences and hostile override inputs cannot reveal hidden features after relaunch.",
+      "journeys": [
+        "unfinished-feature-absence"
+      ],
+      "verified_evidence": "CI ReleaseHarnessUI run on the integrated KAT-3589 candidate (see PR #374 evidence)"
+    },
+    {
+      "selector": "JabTrackerUITests/ReleaseSurfaceUITests/testFoodDetailRetainsCopyToCustomAndScheduleWhileFavoriteIsHidden",
+      "source": "JabTrackerUITests/ReleaseSurfaceUITests.swift",
+      "issue": "KAT-3580",
+      "purpose": "Food detail keeps supported actions while Favorite stays hidden.",
+      "journeys": [
+        "unfinished-feature-absence"
+      ],
+      "verified_evidence": "CI ReleaseHarnessUI run on the integrated KAT-3589 candidate (see PR #374 evidence)"
+    },
+    {
+      "selector": "JabTrackerUITests/ConcentrationLaunchPolicyUITests/testConcentrationSegmentIsAbsentUnderLaunchPolicy",
+      "source": "JabTrackerUITests/Analytics/ConcentrationTimelineChartUITests.swift",
+      "issue": "KAT-3581",
+      "purpose": "Concentration estimates are absent under the launch policy.",
+      "journeys": [
+        "unfinished-feature-absence"
+      ],
+      "verified_evidence": "CI ReleaseHarnessUI run on the integrated KAT-3589 candidate (see PR #374 evidence)"
+    },
+    {
+      "selector": "JabTrackerUITests/StorageRecoveryUITests/test02SuccessfulDiskStartupRetainsFoodAndDoseAcrossRelaunch",
+      "source": "JabTrackerUITests/StorageRecoveryUITests.swift",
+      "issue": "KAT-3583",
+      "purpose": "A disk-backed store retains food and dose across relaunch.",
+      "journeys": [
+        "storage-disk-relaunch"
+      ],
+      "verified_evidence": "CI ReleaseHarnessUI run on the integrated KAT-3589 candidate (see PR #374 evidence)"
+    },
+    {
+      "selector": "JabTrackerUITests/FoodSearchV08UITests/testSearchShowsRetryableError",
+      "source": "JabTrackerUITests/Nutrition/FoodSearchV08UITests.swift",
+      "issue": "KAT-3597",
+      "purpose": "Interim harness plumbing: a fail-once search can retry; this is not critical journey readiness.",
+      "journeys": [
+        "test-controls-retry"
+      ],
+      "verified_evidence": "/tmp/jabtracker-launch-20260930/controls-harness-retry.xcresult (prior local Release harness pass; CI fixture/integrated candidate rerun required)"
+    }
+  ],
+  "missing_critical_journeys": [
+    {
+      "issue": "KAT-3588",
+      "journey": "onboarding-skip-relaunch",
+      "reason": "Pending PR #375: integrated harness proof of first run, skipped permissions, usable nutrition and exact saved profile/goals. PR CI reports this; Full Validation blocks release until it is selected."
+    }
+  ],
+  "quarantine_file": "scripts/ci/launch-quarantine.json"
+}
