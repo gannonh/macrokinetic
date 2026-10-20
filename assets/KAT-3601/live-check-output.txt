@@ -1,0 +1,53 @@
+c1-enable: PASS
+[c1-enable] now 2026-10-20 15:10 PDT; list written 15:10:21
+[c1-enable] total 64, dose reminders 63 (first 2026-10-21 07:00, last 2026-12-22 07:00), renewal ['2026-12-22 08:00'], amounts ['0.6'], ScheduledDose rows 63
+c1-relaunch: PASS
+[c1-relaunch] now 2026-10-20 15:11 PDT; list written 15:10:53
+[c1-relaunch] total 64, dose reminders 63 (first 2026-10-21 07:00, last 2026-12-22 07:00), renewal ['2026-12-22 08:00'], amounts ['0.6'], ScheduledDose rows 63
+c2-pause: PASS
+[c2-paused] now 2026-10-20 15:11 PDT; list written 15:11:29
+[c2-paused] total 64, dose reminders 63 (first 2026-10-28 07:00, last 2026-12-29 07:00), renewal ['2026-12-29 08:00'], amounts ['0.6'], ScheduledDose rows 63
+c2-resume: PASS
+[c2-resumed] now 2026-10-20 15:11 PDT; list written 15:11:55
+[c2-resumed] total 64, dose reminders 63 (first 2026-10-21 07:00, last 2026-12-22 07:00), renewal ['2026-12-22 08:00'], amounts ['0.6'], ScheduledDose rows 63
+c2-foreground: PASS
+[c2-foreground] now 2026-10-20 15:12 PDT; list written 15:12:14
+[c2-foreground] total 64, dose reminders 63 (first 2026-10-21 07:00, last 2026-12-22 07:00), renewal ['2026-12-22 08:00'], amounts ['0.6'], ScheduledDose rows 63
+15:11:29.035549-0700 Refreshing notification queue
+15:11:41.604215-0700 Notification state loaded: enabled=true, reminderMinutes=60
+15:11:41.888730-0700 Refreshing notification queue
+15:11:54.534846-0700 Refreshing notification queue
+15:12:07.017103-0700 Notification state loaded: enabled=true, reminderMinutes=60
+15:12:07.296108-0700 Refreshing notification queue
+15:12:13.404796-0700 Refreshing notification queue
+[c3-warm] reminder for dose 6191FCD9-FB48-4C6B-B601-84C483104C9D; app running: 1
+c3-warm: PASS
+  15:13:01.026706-0700 Handling notification response: com.apple.UNNotificationDefaultActionIdentifier
+  15:13:01.026769-0700 Received deeplink notification to show QuickDoseSheet for dose: 6191FCD9-FB48-4C6B-B601-84C483104C9D
+  15:13:01.026827-0700 Successfully handled notification response: com.apple.UNNotificationDefaultActionIdentifier
+[c3-cold] reminder for dose 6191FCD9-FB48-4C6B-B601-84C483104C9D; app running: 0
+c3-cold: PASS
+  15:13:01.026706-0700 Handling notification response: com.apple.UNNotificationDefaultActionIdentifier
+  15:13:01.026769-0700 Received deeplink notification to show QuickDoseSheet for dose: 6191FCD9-FB48-4C6B-B601-84C483104C9D
+  15:13:01.026827-0700 Successfully handled notification response: com.apple.UNNotificationDefaultActionIdentifier
+  15:13:38.399973-0700 Handling notification response: com.apple.UNNotificationDefaultActionIdentifier
+  15:13:38.400091-0700 Received deeplink notification to show QuickDoseSheet for dose: 6191FCD9-FB48-4C6B-B601-84C483104C9D
+c4-denied: PASS
+KAT3601 Settings opened at root; tapping the app's Settings button again
+KAT3601 Settings still at root; navigating Apps > MacroKinetic > Notifications
+[c4-recovered] now 2026-10-20 15:15 PDT; list written 15:15:11
+[c4-recovered] total 64, dose reminders 63 (first 2026-10-21 07:00, last 2026-12-22 07:00), renewal ['2026-12-22 08:00'], amounts ['0.6'], ScheduledDose rows 63
+c1-enable: PASS
+[c1-enable] now 2026-10-20 15:16 PDT; list written 15:16:23
+[c1-enable] total 0, dose reminders 0 (none), renewal none, amounts [], ScheduledDose rows 0
+c1-relaunch: PASS
+[c1-relaunch] now 2026-10-20 15:17 PDT; list written 15:16:56
+[c1-relaunch] total 30, dose reminders 30 (first 2026-10-21 07:00, last 2026-11-19 07:00), renewal none, amounts ['0.6'], ScheduledDose rows 31
+[c3-warm] reminder for dose E4BB5FE6-9F4E-4574-8B72-6BB334B4EB9F; app running: 1
+c3-warm: FAIL
+<unknown>:0: error: -[JabTrackerUITests.DoseReminderLiveCheckUITests testTapDeliveredReminderOpensItsDose] : com.gannonhall.JabTracker crashed
+  15:17:50.430993-0700 Handling notification response: com.apple.UNNotificationDefaultActionIdentifier
+  15:17:50.455231-0700 Failed to handle notification response: Failed to schedule notification. Please try again.
+[c3-cold] reminder for dose E4BB5FE6-9F4E-4574-8B72-6BB334B4EB9F; app running: 0
+c3-cold: FAIL
+/tmp/kat3601-main/JabTrackerUITests/DoseReminderLiveCheckUITests.swift:182: error: -[JabTrackerUITests.DoseReminderLiveCheckUITests testTapDeliveredReminderOpensItsDose] : XCTAssertTrue failed - Tapping the reminder opens the dose sheet
