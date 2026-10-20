@@ -134,6 +134,7 @@
 		29EE31A9252020E91F81DD5D /* QuickAddUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD80A84700BF23D039F95AD2 /* QuickAddUITests.swift */; };
 		2A22EBD2079B4A9D27F8E010 /* MealLogServiceQuickAddTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 820C3686980F0BB807DAD84F /* MealLogServiceQuickAddTests.swift */; };
 		2A5632305A41F143D564269F /* ProgramWizardStepViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA95A6F9F8CF36777846684C /* ProgramWizardStepViews.swift */; };
+		2A8BEE149BCAC2679D1D8B11 /* DailyToWeeklyScheduleUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0702522B11DABDCA2FCB8850 /* DailyToWeeklyScheduleUITests.swift */; };
 		2ABA98C2CEFF62EDBE128B4E /* CameraService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276777097A42B3EE7C8B1611 /* CameraService.swift */; };
 		2ADE941214A65E26DE3C6475 /* ConcentrationChartAccessibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D38B10476C3C86B9505C93C /* ConcentrationChartAccessibility.swift */; };
 		2BD0C5857F9BEA4145E59AD6 /* MedicationProfileSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60AB2321B5132205A1E1FEAC /* MedicationProfileSettingsView.swift */; };
@@ -696,6 +697,7 @@
 		06D47A7945B5A392FA8CB11C /* GeneralSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralSettingsView.swift; sourceTree = "<group>"; };
 		06EBDAF9DFA276ECE73657CF /* MedicationSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationSelectionView.swift; sourceTree = "<group>"; };
 		06F3655D8833409426DDC09E /* DoseEntryPKSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseEntryPKSection.swift; sourceTree = "<group>"; };
+		0702522B11DABDCA2FCB8850 /* DailyToWeeklyScheduleUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyToWeeklyScheduleUITests.swift; sourceTree = "<group>"; };
 		0717C0520765741FCE7EA2ED /* ChartDataProcessor+Filtering.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ChartDataProcessor+Filtering.swift"; sourceTree = "<group>"; };
 		07231EC776BF08698D0A862E /* OnboardingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModel.swift; sourceTree = "<group>"; };
 		0745E4F98BA7CF39C3767113 /* AdherenceInsightsViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdherenceInsightsViewTests.swift; sourceTree = "<group>"; };
@@ -2316,6 +2318,7 @@
 				17E4E367655C34142B5E6D31 /* CalorieExpenditureUITests.swift */,
 				B9DF758F748A0E0EB4D51B3A /* CodeGen.swift */,
 				40D7A6327421A8D41790E89B /* DailyMedicationProfileScheduleUITests.swift */,
+				0702522B11DABDCA2FCB8850 /* DailyToWeeklyScheduleUITests.swift */,
 				7F113E9FFDCF570A9BC05463 /* DebugUITests.swift */,
 				65714DDE038569FC5C471011 /* DesignSystemUITests.swift */,
 				59476CC561EE12026913348A /* DoseButtonUITests.swift */,
@@ -2729,6 +2732,7 @@
 				3E9280543374E884348FA1B9 /* ConcentrationTimelineChartUITests.swift in Sources */,
 				6F321B362BB74AB701EDD85D /* CreateFoodUITests.swift in Sources */,
 				9290CE961B5426DDAB4523D4 /* DailyMedicationProfileScheduleUITests.swift in Sources */,
+				2A8BEE149BCAC2679D1D8B11 /* DailyToWeeklyScheduleUITests.swift in Sources */,
 				1892BA5E22D4C309E66349DA /* DashboardWidgetsUITests.swift in Sources */,
 				4667532FC92891E871E29355 /* DebugUITests.swift in Sources */,
 				56347CD76BA1E658441D8D6F /* DesignSystemUITests.swift in Sources */,
