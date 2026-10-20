@@ -2,7 +2,16 @@
 
 KAT-3589 adds two jobs to CI and Full Validation. `ReleaseHarnessUI` runs selected UI methods serially in the optimized `ReleaseTestHarness` configuration. `Ordinary Release compile` builds the production bundle identifier with the ordinary `Release` compiler inputs. Existing unit, integration, StoreKit, performance, lint and tooling jobs remain enabled.
 
-The launch suite is currently incomplete. `scripts/ci/launch-suite.json` selects only `FoodSearchV08UITests/testSearchShowsRetryableError`, whose prior local result is recorded in the manifest. Four missing critical journey groups keep the readiness gate failed even when that control test passes. The manifest must not be treated as launch acceptance until those groups have verified selections.
+`scripts/ci/launch-suite.json` selects the Release-harness tests for nutrition-only logging and relaunch (KAT-3587), prescribed medication and History (KAT-3186, KAT-3581), unfinished-feature absence (KAT-3580, KAT-3581) and disk-backed relaunch (KAT-3583), plus the KAT-3597 retry control.
+
+Onboarding and relaunch (KAT-3588) is listed under `missing_critical_journeys` until its harness test lands. The gate has two modes:
+
+| Mode | Where | Pending journey | Uncovered journey not listed as pending |
+| --- | --- | --- | --- |
+| `pr` (`LAUNCH_GATE_MODE=pr`) | CI on pull requests | Reported, job passes | Fails |
+| `release` (default) | Full Validation, which TestFlight calls | Fails | Fails |
+
+A pending entry whose journey is already covered, or is not a critical journey, fails both modes, so a stale entry cannot linger. To finish the suite, add the KAT-3588 test entries to `tests` with `"journeys": ["onboarding-skip-relaunch"]` and delete its `missing_critical_journeys` entry.
 
 ## Selected methods and quarantine
 
@@ -49,7 +58,7 @@ Flag evidence is based on policy source associated with the built candidate. Com
 
 Ordinary Release evidence uses the existing build-control inspector to reject harness identity or compiler definitions. The simulator compile and 22-food fixture do not establish production database packaging, signed device behavior, CloudKit synchronization or App Store acceptance. Those gates require their own evidence. TestFlight's final build-number resolution and signed archive still follow the release workflow; this earlier compile does not claim to validate that final artifact.
 
-The two new job names can be required by repository protection once their missing launch journeys are populated and verified. This source change does not configure remote branch protection.
+The two new job names can be required by repository protection; the PR-mode gate stays green while the only gap is a documented pending journey. This source change does not configure remote branch protection.
 
 ## Local plumbing checks
 
