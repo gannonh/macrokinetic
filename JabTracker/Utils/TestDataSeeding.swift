@@ -256,9 +256,20 @@
                     customRecurrence: nil
                 )
 
+                // TEST_DATA_SPLIT_SCHEDULE seeds an existing split schedule whose amount is half the weekly total
+                let seedsSplitSchedule = ProcessInfo.processInfo.environment["TEST_DATA_SPLIT_SCHEDULE"] == "true"
+                let seededConfig =
+                    seedsSplitSchedule
+                    ? ScheduleConfiguration.splitDose(
+                        weeklyTotal: config.doseAmount,
+                        timeOfDay: scheduleConfig.timeOfDay,
+                        windowMinutesBefore: scheduleConfig.windowMinutesBefore,
+                        windowMinutesAfter: scheduleConfig.windowMinutesAfter
+                    ) : scheduleConfig
+
                 // Encode configuration to Data
                 let encoder = JSONEncoder()
-                guard let scheduleData = try? encoder.encode(scheduleConfig) else {
+                guard let scheduleData = try? encoder.encode(seededConfig) else {
                     // If encoding fails, skip schedule creation but continue with test data
                     logger.warning("Failed to encode schedule configuration for test data")
                     try context.save()
@@ -276,7 +287,7 @@
                 // Create DoseSchedule with encoded configuration
                 let schedule = DoseSchedule(
                     medicationProfile: profile,
-                    patternType: .weekly,
+                    patternType: seedsSplitSchedule ? .splitDose : .weekly,
                     baseSchedule: scheduleData,
                     isActive: true
                 )

@@ -42,6 +42,10 @@ JabTrackerApp schedules pending notification cleanup independently of authentica
 
 No concentration estimate is enabled in this release. Before enabling these features, review the current [App Store Review Guidelines, sections 1.4.1 and 1.4.2](https://developer.apple.com/app-store/review/guidelines/), establish calculator provider eligibility and support any retained estimate methodology with primary manufacturer references and clear limits in the UI. Disclaimers alone do not establish eligibility or submission approval.
 
+## Split dosing and weekly totals
+
+A profile's `currentDose` is the weekly total. A split schedule records the amount of one administration in `doseAmount` (half the weekly total for two administrations 3.5 days apart), so the projected and reminded amounts add up to the prescribed weekly total. Before KAT-3600 the schedule editor saved the full profile dose as each administration, which doubled the weekly total. In the launch build a weekly or daily schedule cannot be switched to split because the picker and save path are closed while `medicalCalculators` is off. An existing recorded split schedule stays editable: the editor states the amount per administration, the administrations per week and the weekly total exactly as recorded, and switching it back to weekly saves the profile dose (the weekly total) as the weekly amount. Past recorded doses are separate records and no schedule edit rewrites them.
+
 ## Verification
 
 Unit coverage asserts the fifteen disabled features, literal supported catalogs, AI request normalization, preserved preferences, and Manual onboarding rejection before persistent writes. UI coverage checks hidden shortcut/search/library/detail/More/metric controls and supported neighbors. Existing onboarding coverage asserts Manual absent while completing Coached onboarding; the Strategy wizard still receives all three styles explicitly.

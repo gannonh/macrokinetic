@@ -120,6 +120,10 @@ struct DoseScheduleEditView: View {
                     frequencySection
                 }
 
+                if let summary = splitSummary {
+                    splitAmountsSection(summary)
+                }
+
                 // Reminder preferences section
                 reminderPreferencesSection
 
@@ -207,6 +211,37 @@ struct DoseScheduleEditView: View {
             Text("Schedule Pattern")
         } footer: {
             Text(patternFooterText)
+        }
+    }
+
+    /// States the amount of one administration and the weekly total of a split schedule
+    private func splitAmountsSection(_ summary: SplitDoseSummary) -> some View {
+        Section {
+            HStack {
+                Text("Per administration")
+                Spacer()
+                Text("\(RecordedAmountInput.displayText(for: summary.perAdministration)) mg")
+                    .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("split-per-administration")
+            }
+            HStack {
+                Text("Administrations per week")
+                Spacer()
+                Text("\(summary.administrations)")
+                    .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("split-administrations-per-week")
+            }
+            HStack {
+                Text("Weekly total")
+                Spacer()
+                Text("\(RecordedAmountInput.displayText(for: summary.weeklyTotal)) mg")
+                    .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("split-weekly-total")
+            }
+        } header: {
+            Text("Split Amounts")
+        } footer: {
+            Text("The weekly total is the sum of all administrations in a week.")
         }
     }
 
@@ -304,7 +339,7 @@ struct DoseScheduleEditView: View {
         case .weekly:
             return "Doses scheduled on the same day and time each week"
         case .splitDose:
-            return "Divide weekly dose into two administrations (typically Wed/Sun or similar 3.5-day interval)"
+            return "Divide the weekly total into two equal administrations 3.5 days apart"
         case .custom:
             return "Fully customizable schedule with specific dates and times"
         }
@@ -377,14 +412,24 @@ struct DoseScheduleEditView: View {
     }
 
     var scheduleConfiguration: ScheduleConfiguration? {
+        configuration(for: selectedPattern)
+    }
+
+    /// Administration amount, count and weekly total shown while the split pattern is selected.
+    var splitSummary: SplitDoseSummary? {
+        guard selectedPattern == .splitDose else { return nil }
+        return configuration(for: .splitDose)?.splitSummary
+    }
+
+    func configuration(for pattern: SchedulePatternType) -> ScheduleConfiguration? {
         if !ReleasePolicy.isEnabled(.medicalCalculators),
-            selectedPattern == .splitDose || selectedPattern == .custom
+            pattern == .splitDose || pattern == .custom
         {
-            guard existingSchedule?.patternType == selectedPattern else { return nil }
+            guard existingSchedule?.patternType == pattern else { return nil }
             return preservedRecordedConfiguration
         }
         let amount = medicationProfile.currentDose
-        switch selectedPattern {
+        switch pattern {
         case .daily:
             return ScheduleConfiguration(
                 dayOfWeek: nil,
@@ -412,17 +457,12 @@ struct DoseScheduleEditView: View {
                 customRecurrence: nil
             )
         case .splitDose:
-            return ScheduleConfiguration(
-                dayOfWeek: nil,
+            // The profile dose is the weekly total; the schedule holds the amount of one administration.
+            return .splitDose(
+                weeklyTotal: medicationProfile.currentDose,
                 timeOfDay: timeOfDay,
-                secondTimeOfDay: nil,
-                interval: 7,
-                doseAmount: amount,
                 windowMinutesBefore: windowMinutesBefore,
-                windowMinutesAfter: windowMinutesAfter,
-                splitDoseCount: nil,
-                splitIntervalMinutes: TimeConstants.splitDoseInterval,
-                customRecurrence: nil
+                windowMinutesAfter: windowMinutesAfter
             )
         case .custom:
             return ScheduleConfiguration(
