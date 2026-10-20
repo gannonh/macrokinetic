@@ -13,6 +13,7 @@ import UserNotifications
 /// immediately when toggles or times change.
 struct NotificationSettingsView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.scenePhase) private var scenePhase
 
     // Access NotificationService from AppServices
     private var notificationService: NotificationService? {
@@ -52,6 +53,12 @@ struct NotificationSettingsView: View {
         .navigationTitle("Notifications")
         .navigationBarTitleDisplayMode(.inline)
         .accessibilityIdentifier("notification-settings-view")
+        // Onboarding asks the system directly, so read the real status here and again on return from iOS Settings.
+        .task(id: scenePhase) {
+            if scenePhase == .active {
+                _ = await notificationService?.checkAuthorizationStatus()
+            }
+        }
     }
 
     // MARK: - Weigh-in Section
