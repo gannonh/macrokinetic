@@ -37,7 +37,7 @@ struct AuthenticationView: View {
                     Text("Welcome to MacroKinetic")
                         .font(DesignTokens.Typography.headline)
 
-                    Text("Sign in to sync your data across devices")
+                    Text("Sign in to get started")
                         .font(DesignTokens.Typography.body)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
@@ -62,7 +62,7 @@ struct AuthenticationView: View {
                         .font(DesignTokens.Typography.caption)
                         .foregroundColor(.secondary)
 
-                    Text("Synced with iCloud and protected by encryption")
+                    Text("Stored on this iPhone")
                         .font(DesignTokens.Typography.caption)
                         .foregroundColor(.secondary)
                 }

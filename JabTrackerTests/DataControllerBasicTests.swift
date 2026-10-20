@@ -1,4 +1,3 @@
-import CloudKit
 import Foundation
 import SwiftData
 import Testing
@@ -38,33 +37,17 @@ struct DataControllerBasicTests {
         #expect(
             testController !== DataController.shared,
             "Test container should be separate from shared instance")
-
-        // Test CloudKit is disabled for test container
-        #expect(testController.isCloudKitEnabled == false, "Test container should disable CloudKit")
-        #expect(
-            testController.syncStatus == .unavailable, "Test container should be unavailable for sync")
     }
 
-    @Test("DataController CloudKit initialization")
+    @Test("DataController disk store initialization")
     @MainActor
-    func dataControllerCloudKitInit() throws {
+    func dataControllerDiskStoreInit() throws {
         // Test non-memory controller (simulates production)
         let productionStyleController = DataController(inMemory: false)
 
-        // Should have valid container
-        let context = productionStyleController.container.mainContext
-        _ = context  // ModelContext is never nil, just verify we can access it
-
-        // Should attempt CloudKit setup
+        _ = productionStyleController.container.mainContext
         #expect(
             productionStyleController.container.schema.entities.count == 16, "Should have 16 entities")
-
-        // CloudKit status should be set
-        let validStatuses: [SyncStatus] = [
-            .unknown, .available, .unavailable, .restricted, .accountNotSignedIn, .noNetwork,
-        ]
-        #expect(
-            validStatuses.contains(productionStyleController.syncStatus), "Should have valid sync status")
     }
 
     @Test("DataController schema validation")
@@ -83,26 +66,5 @@ struct DataControllerBasicTests {
 
         // Test schema has correct number of entities
         #expect(schema.entities.count == 16, "Should have exactly 16 entities in schema")
-    }
-
-    @Test("DataController published properties")
-    @MainActor
-    func dataControllerPublishedProperties() throws {
-        let controller = DataController.testContainer()
-
-        // Test that published properties exist and are accessible
-        let syncStatus = controller.syncStatus
-        let isCloudKitEnabled = controller.isCloudKitEnabled
-
-        _ = syncStatus  // SyncStatus is never nil, just verify we can access it
-        #expect(
-            isCloudKitEnabled == true || isCloudKitEnabled == false,
-            "isCloudKitEnabled should be valid boolean")
-
-        // Test that properties can be changed (for testing purposes)
-        let originalStatus = controller.syncStatus
-        controller.syncStatus = .available
-        #expect(controller.syncStatus == .available, "Should be able to change sync status")
-        controller.syncStatus = originalStatus
     }
 }

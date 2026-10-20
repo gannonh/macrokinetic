@@ -4,7 +4,6 @@ import SwiftData
 import SwiftUI
 
 struct SettingsView: View {
-    @ObservedObject private var dataController = DataController.shared
     @StateObject private var subscriptionManager = SubscriptionManager()
     @StateObject private var medicationManager: MedicationManager
     @ObservedObject private var appServices = AppServices.shared
@@ -117,8 +116,8 @@ struct SettingsView: View {
                         }
                     }
 
-                    // Sync Status Section
-                    SyncStatusCard(dataController: self.dataController)
+                    // Data Storage Section
+                    LocalStorageCard()
 
                     // Notification Settings Section
                     DesignCard {
@@ -227,98 +226,27 @@ struct NotificationToggleRow: View {
     }
 }
 
-struct SyncStatusCard: View {
-    @ObservedObject var dataController: DataController
-
+struct LocalStorageCard: View {
     var body: some View {
         DesignCard {
-            VStack(alignment: .leading, spacing: 16) {
-                HStack {
-                    Image(systemName: self.syncStatusIcon)
-                        .foregroundColor(self.syncStatusColor)
-                        .font(.title2)
+            HStack {
+                Image(systemName: "iphone")
+                    .foregroundColor(DesignTokens.Colors.info)
+                    .font(.title2)
 
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Sync Status")
-                            .font(DesignTokens.Typography.headline)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Data Storage")
+                        .font(DesignTokens.Typography.headline)
 
-                        Text(self.dataController.syncStatusMessage)
-                            .font(DesignTokens.Typography.body)
-                            .foregroundColor(.secondary)
-                    }
-
-                    Spacer()
-
-                    if self.dataController.syncStatus == .accountNotSignedIn {
-                        Button("Settings") {
-                            // Open iOS Settings app
-                            if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
-                                UIApplication.shared.open(settingsUrl)
-                            }
-                        }
+                    Text("Stored on this iPhone")
                         .font(DesignTokens.Typography.body)
-                        .buttonStyle(.bordered)
-                    } else if self.dataController.syncStatus == .noNetwork
-                        || self.dataController.syncStatus == .unknown
-                    {
-                        Button("Retry") {
-                            self.dataController.retryCloudKitSetup()
-                        }
-                        .font(DesignTokens.Typography.body)
-                        .buttonStyle(.bordered)
-                    }
-                }
-
-                if !self.dataController.willSyncAcrossDevices {
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .foregroundColor(.orange)
-                                .font(.caption)
-                            Text("Your data won't sync across devices")
-                                .font(DesignTokens.Typography.caption)
-                                .foregroundColor(.secondary)
-                        }
-
-                        Text(
-                            "Data is stored locally on this device only. Sign in to iCloud to sync across your devices."
-                        )
-                        .font(DesignTokens.Typography.caption)
                         .foregroundColor(.secondary)
-                    }
-                    .padding(.top, 8)
                 }
+
+                Spacer()
             }
-        }
-    }
-
-    private var syncStatusIcon: String {
-        switch self.dataController.syncStatus {
-        case .available:
-            return "icloud.fill"
-        case .accountNotSignedIn:
-            return "person.crop.circle.badge.exclamationmark"
-        case .restricted:
-            return "lock.icloud"
-        case .noNetwork:
-            return "wifi.slash"
-        case .unavailable:
-            return "icloud.slash"
-        case .unknown:
-            return "questionmark.circle"
-        }
-    }
-
-    private var syncStatusColor: Color {
-        switch self.dataController.syncStatus {
-        case .available:
-            return DesignTokens.Colors.success
-        case .accountNotSignedIn, .noNetwork:
-            return DesignTokens.Colors.warning
-        case .restricted, .unavailable:
-            return DesignTokens.Colors.danger
-        case .unknown:
-            return DesignTokens.Colors.info
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("local-storage-card")
         }
     }
 }

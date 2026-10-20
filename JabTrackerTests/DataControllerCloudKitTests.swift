@@ -4,186 +4,66 @@ import Testing
 
 @testable import JabTracker
 
+/// KAT-3713: health data stays on the device in 1.0, so no store opens with CloudKit.
 @MainActor
-@Suite("DataController Business Logic Tests")
-struct DataControllerBusinessLogicTests {
-    @Test("DataController sync status messages")
-    @MainActor
-    func dataControllerSyncStatusMessages() throws {
-        let controller = DataController.testContainer()
-
-        // Test all sync status message variants
-        let testCases: [(SyncStatus, String)] = [
-            (.unknown, "Checking sync status..."),
-            (.available, "Syncing with iCloud"),
-            (.unavailable, "Sync unavailable - using local storage"),
-            (.accountNotSignedIn, "Sign in to iCloud to sync across devices"),
-            (.restricted, "iCloud sync restricted"),
-            (.noNetwork, "No network connection for sync"),
-        ]
-
-        for (status, expectedMessage) in testCases {
-            controller.syncStatus = status
-            #expect(
-                controller.syncStatusMessage == expectedMessage,
-                """
-                Status message for \(status) should be '\(expectedMessage)', \
-                got '\(controller.syncStatusMessage)'
-                """)
-        }
+@Suite("DataController local storage policy")
+struct DataControllerCloudKitTests {
+    @Test("Store opens with CloudKit off for every normal launch")
+    func cloudKitOffByDefault() {
+        #expect(!DataController.shouldEnableCloudKit(arguments: []))
+        #expect(!DataController.shouldEnableCloudKit(arguments: ["--ui-testing", "--reset-app-data"]))
+        // The retired `--disable-cloudkit` flag must not change anything.
+        #expect(!DataController.shouldEnableCloudKit(arguments: ["--disable-cloudkit"]))
     }
 
-    @Test("DataController sync availability detection")
-    @MainActor
-    func dataControllerSyncAvailabilityDetection() throws {
-        let controller = DataController.testContainer()
-
-        // Test sync availability based on status
-        controller.syncStatus = .available
-        #expect(controller.willSyncAcrossDevices == true, "Should sync when available")
-
-        controller.syncStatus = .unavailable
-        #expect(controller.willSyncAcrossDevices == false, "Should not sync when unavailable")
-
-        controller.syncStatus = .accountNotSignedIn
-        #expect(controller.willSyncAcrossDevices == false, "Should not sync when not signed in")
-
-        controller.syncStatus = .restricted
-        #expect(controller.willSyncAcrossDevices == false, "Should not sync when restricted")
-
-        controller.syncStatus = .noNetwork
-        #expect(controller.willSyncAcrossDevices == false, "Should not sync without network")
-
-        controller.syncStatus = .unknown
-        #expect(controller.willSyncAcrossDevices == false, "Should not sync when status unknown")
+    @Test("Only debug builds can opt in with --cloudkit-testing")
+    func cloudKitOptInIsDebugOnly() {
+        let enabled = DataController.shouldEnableCloudKit(arguments: ["--cloudkit-testing"])
+        #if DEBUG
+        #expect(enabled)
+        #else
+        #expect(!enabled)
+        #endif
     }
 
-    @Test("DataController CloudKit fallback handling")
-    @MainActor
-    func dataControllerCloudKitFallback() throws {
-        // Test that DataController handles CloudKit setup failure gracefully
-        let controller = DataController(inMemory: true)  // Forces no CloudKit
+    @Test("A local-only on-disk store keeps its records across reopen")
+    func localStoreKeepsRecordsAcrossReopen() throws {
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("kat3713-\(UUID().uuidString).store")
+        defer { try? FileManager.default.removeItem(at: url) }
 
-        #expect(controller.isCloudKitEnabled == false, "Should disable CloudKit for in-memory")
-        #expect(controller.syncStatus == .unavailable, "Should mark sync unavailable")
-
-        // Should still work for local operations
-        let context = controller.container.mainContext
-        let user = User(email: "fallback-test@example.com")
-        context.insert(user)
-
-        try context.save()
-        #expect(user.email == "fallback-test@example.com", "Should work without CloudKit")
-    }
-
-    @Test("DataController retry CloudKit setup with disabled state")
-    @MainActor
-    func dataControllerRetryCloudKitSetupDisabled() throws {
-        let testController = DataController.testContainer()
-
-        // Test retry when CloudKit disabled (should not crash or change state)
-        let initialStatus = testController.syncStatus
-        testController.retryCloudKitSetup()
-
-        #expect(
-            testController.syncStatus == initialStatus,
-            "Status should not change when CloudKit disabled")
-        #expect(
-            testController.isCloudKitEnabled == false,
-            "CloudKit should remain disabled for test container")
-    }
-
-    @Test("DataController container schema validation")
-    @MainActor
-    func dataControllerContainerSchemaValidation() throws {
-        let controller = DataController.testContainer()
-
-        // Test that container has correct schema regardless of CloudKit state
-        #expect(
-            controller.container.schema.entities.count == 16,
-            "Container should have 16 entities")
-
-        let entityNames = controller.container.schema.entities.map(\.name)
-        #expect(entityNames.contains("User"), "Schema should contain User entity")
-        #expect(entityNames.contains("Dose"), "Schema should contain Dose entity")
-        #expect(
-            entityNames.contains("MedicationProfile"), "Schema should contain MedicationProfile entity")
-        #expect(entityNames.contains("DoseTitration"), "Schema should contain DoseTitration entity")
-    }
-
-    @Test("DataController preview instance configuration")
-    @MainActor
-    func dataControllerPreviewInstanceConfiguration() throws {
-        let previewController = DataController.preview
-
-        // Preview should be configured for local use
-        #expect(previewController.isCloudKitEnabled == false, "Preview should disable CloudKit")
-        #expect(previewController.syncStatus == .unavailable, "Preview should be unavailable for sync")
-
-        // Preview should have sample data
-        let context = previewController.container.mainContext
-
-        // Access the context to verify it works
+        let schema = Schema([User.self, Dose.self, MedicationProfile.self])
+        let doseID: UUID
         do {
-            _ = try context.fetch(FetchDescriptor<User>())
-        } catch {
-            // Context access failed - still functional for test purposes
+            let container = try ModelContainer(
+                for: schema,
+                configurations: [ModelConfiguration(schema: schema, url: url, cloudKitDatabase: .none)])
+            let dose = Dose(amount: 2.5, timestamp: Date(timeIntervalSince1970: 1_700_000_000), site: "Abdomen", skipped: false)
+            container.mainContext.insert(dose)
+            try container.mainContext.save()
+            doseID = dose.id
         }
 
-        // Should not crash and should allow operations
-        #expect(true, "Preview container should be functional")
+        let reopened = try ModelContainer(
+            for: schema,
+            configurations: [ModelConfiguration(schema: schema, url: url, cloudKitDatabase: .none)])
+        let doses = try reopened.mainContext.fetch(FetchDescriptor<Dose>())
+        #expect(doses.count == 1)
+        #expect(doses.first?.id == doseID)
+        #expect(doses.first?.amount == 2.5)
     }
-}
 
-// MARK: - Mock CloudKit Tests (Business Logic Only)
+    @Test("Every model passes CloudKit schema validation so sync can return later")
+    func schemaIsCloudKitCompatible() throws {
+        // SwiftData validates the schema against CloudKit rules (defaults or optionals, no
+        // unique constraints) when it builds a CloudKit-backed container, even without an account.
+        let schema = Schema(DataController.modelTypes)
+        let configuration = ModelConfiguration(
+            "kat3713-cloudkit-schema-\(UUID().uuidString)",
+            schema: schema,
+            isStoredInMemoryOnly: true,
+            cloudKitDatabase: .private("iCloud.com.gannonhall.JabTracker"))
 
-@MainActor
-@Suite("DataController CloudKit Business Logic (Mocked)")
-struct DataControllerCloudKitMockedTests {
-    @Test("DataController handles all CloudKit status scenarios")
-    @MainActor
-    func dataControllerHandlesAllCloudKitStatusScenarios() throws {
-        let controller = DataController.testContainer()
-
-        // Test business logic for each possible CloudKit status
-        // These tests verify the app's behavior without actual CloudKit calls
-
-        struct StatusScenario {
-            let status: SyncStatus
-            let shouldSync: Bool
-            let expectedMessage: String
-        }
-
-        let statusScenarios = [
-            StatusScenario(status: .available, shouldSync: true, expectedMessage: "Syncing with iCloud"),
-            StatusScenario(
-                status: .unavailable,
-                shouldSync: false,
-                expectedMessage: "Sync unavailable - using local storage"),
-            StatusScenario(
-                status: .accountNotSignedIn,
-                shouldSync: false,
-                expectedMessage: "Sign in to iCloud to sync across devices"),
-            StatusScenario(
-                status: .restricted, shouldSync: false, expectedMessage: "iCloud sync restricted"),
-            StatusScenario(
-                status: .noNetwork, shouldSync: false, expectedMessage: "No network connection for sync"),
-            StatusScenario(
-                status: .unknown, shouldSync: false, expectedMessage: "Checking sync status..."),
-        ]
-
-        for scenario in statusScenarios {
-            let status = scenario.status
-            let shouldSync = scenario.shouldSync
-            let expectedMessage = scenario.expectedMessage
-            controller.syncStatus = status
-
-            #expect(
-                controller.willSyncAcrossDevices == shouldSync,
-                "Sync availability should be \(shouldSync) for status \(status)")
-            #expect(
-                controller.syncStatusMessage == expectedMessage,
-                "Message should be '\(expectedMessage)' for status \(status)")
-        }
+        _ = try ModelContainer(for: schema, configurations: [configuration])
     }
 }

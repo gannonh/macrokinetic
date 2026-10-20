@@ -24,7 +24,7 @@ final class UITestRecordings: XCTestCase {
     /// Launch app with UI testing flags
     private func launchApp() {
         let app = XCUIApplication()
-        app.launchArguments = ["--ui-testing", "--reset-app-data", "--skip-onboarding", "--disable-cloudkit"]
+        app.launchArguments = ["--ui-testing", "--reset-app-data", "--skip-onboarding"]
         app.launch()
     }
 

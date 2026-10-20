@@ -21,7 +21,7 @@ final class DayStatus {
 
     /// Date for this status (normalized to start of day)
     /// This should be unique per day - one status per calendar day
-    var date: Date
+    var date: Date = Date()  // CloudKit requires default value
 
     /// Whether this day is marked as a fasting day
     /// When true, the day counts as 0-calorie in calculations

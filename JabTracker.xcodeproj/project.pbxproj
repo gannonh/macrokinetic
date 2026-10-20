@@ -252,7 +252,6 @@
 		64C82AB2AD4B5166C85A6F60 /* ProgressPhotoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB667642EBECECE0D810B8C4 /* ProgressPhotoTests.swift */; };
 		657C19C6761B07F0872E5417 /* DoseEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A6C4151B087398F5FD4E5A0 /* DoseEvent.swift */; };
 		65A42952BE48F9A01963FBBE /* QuickDoseButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D4BDB02307ED97D84DEDBAD /* QuickDoseButton.swift */; };
-		65F8A1070A60ED8AC3B23DA7 /* DataControllerSyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 263A861237894E446E233B24 /* DataControllerSyncTests.swift */; };
 		660575C2E93022B888FF4627 /* AdherenceStatistics.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCB250F0FB4DE16CF063CA7F /* AdherenceStatistics.swift */; };
 		666E70338436B5345B89C04B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 37937E214E6F17673D3C433D /* Assets.xcassets */; };
 		66EDFF1DF1F7356369CDBED8 /* BiologicalSex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E269A3EBC55C817711B39F4 /* BiologicalSex.swift */; };
@@ -375,7 +374,6 @@
 		9549183A621F7363CE21977F /* LocalFoodDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFDBD34B29CA6B4BD4878382 /* LocalFoodDatabase.swift */; };
 		968CB6D898D2C99EEE015B72 /* TestUtilities+Dose.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BFF4A6E541C0C70EE49FC83 /* TestUtilities+Dose.swift */; };
 		9797845E47F6FDF1C702E322 /* AdherenceInsight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D1F0F4BA63832CABDA576D3 /* AdherenceInsight.swift */; };
-		97E86C5A8BDAAE55226F2CA8 /* CloudKitIntegrationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DF9D1B59C0C2E516D70B5E8 /* CloudKitIntegrationUITests.swift */; };
 		980BD63A14132673C9ED4FAE /* DoseHistoryViewModelUnitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4973FBCC6CDF5FB31FCF549 /* DoseHistoryViewModelUnitTests.swift */; };
 		98884F830CF074A2CBB25C45 /* TestUtilities+ElementTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 818E5E60E88A431506ACA977 /* TestUtilities+ElementTypes.swift */; };
 		98C67807527D9AA71E082C3C /* QuickPhotoSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4B1FF44486600C6E250472F /* QuickPhotoSheet.swift */; };
@@ -763,7 +761,6 @@
 		24B20942E8632D13C2463169 /* MedicationAnalyticsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationAnalyticsTests.swift; sourceTree = "<group>"; };
 		2614EBB9734D1D3BE13B91E7 /* WeeklyCheckInService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeeklyCheckInService.swift; sourceTree = "<group>"; };
 		2637EC9BBAF683E18CB1F8F2 /* SubscriptionUITests+Helpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SubscriptionUITests+Helpers.swift"; sourceTree = "<group>"; };
-		263A861237894E446E233B24 /* DataControllerSyncTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataControllerSyncTests.swift; sourceTree = "<group>"; };
 		26AE7A45FA75867366A66399 /* AuthenticationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationView.swift; sourceTree = "<group>"; };
 		271E8AD60BA9C029C642DF4B /* TitrationConfirmationDialogUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TitrationConfirmationDialogUITests.swift; sourceTree = "<group>"; };
 		276777097A42B3EE7C8B1611 /* CameraService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraService.swift; sourceTree = "<group>"; };
@@ -819,7 +816,6 @@
 		3CF12BCF8009DECAAB6C8B8C /* CalorieAdjustmentServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalorieAdjustmentServiceTests.swift; sourceTree = "<group>"; };
 		3D38B10476C3C86B9505C93C /* ConcentrationChartAccessibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcentrationChartAccessibility.swift; sourceTree = "<group>"; };
 		3D64BB159F1AE0045532893B /* MedicationProfileCRUDUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicationProfileCRUDUITests.swift; sourceTree = "<group>"; };
-		3DF9D1B59C0C2E516D70B5E8 /* CloudKitIntegrationUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitIntegrationUITests.swift; sourceTree = "<group>"; };
 		3E0A42EE3A52EA876B97F096 /* WeekCalendarStrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeekCalendarStrip.swift; sourceTree = "<group>"; };
 		3E26424FEABE9C01090DA749 /* ShortcutsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutsSheet.swift; sourceTree = "<group>"; };
 		3E646E3EA1838586CBBDD4E2 /* FoodTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodTests.swift; sourceTree = "<group>"; };
@@ -1768,7 +1764,6 @@
 				75C4433DD327E2F788B4D4E1 /* DataControllerCloudKitTests.swift */,
 				4F18B2F234252433B0A0D03A /* DataControllerInitializationTests.swift */,
 				6A5D10958F733EFFFF528C2B /* DataControllerPreviewTests.swift */,
-				263A861237894E446E233B24 /* DataControllerSyncTests.swift */,
 				234CB14D5E92B6F709A7E9E7 /* DataControllerTestDataTests.swift */,
 				636E8EEE1932A0793EB3D786 /* DataControllerTests.swift */,
 				D069C46ED857C615C31E8563 /* DeeplinkHandlerTests.swift */,
@@ -2285,7 +2280,6 @@
 				885F303830AF5C665A2B2455 /* CalendarScheduledDosesUITests.swift */,
 				4614C62282B8059E7287C7F9 /* CalendarStatsUITests.swift */,
 				17E4E367655C34142B5E6D31 /* CalorieExpenditureUITests.swift */,
-				3DF9D1B59C0C2E516D70B5E8 /* CloudKitIntegrationUITests.swift */,
 				B9DF758F748A0E0EB4D51B3A /* CodeGen.swift */,
 				40D7A6327421A8D41790E89B /* DailyMedicationProfileScheduleUITests.swift */,
 				7F113E9FFDCF570A9BC05463 /* DebugUITests.swift */,
@@ -2690,7 +2684,6 @@
 				BC621B8876DE5FB5020704D9 /* CalorieExpenditureUITests.swift in Sources */,
 				AE24DAB538FBC6A2E26EBFB2 /* ChartControlsUITests.swift in Sources */,
 				76DBBD40F4E6C9A43FAE3010 /* ChartPerformanceUITests.swift in Sources */,
-				97E86C5A8BDAAE55226F2CA8 /* CloudKitIntegrationUITests.swift in Sources */,
 				747C6E49FE3A1CF40CBB6F5D /* CodeGen.swift in Sources */,
 				3E9280543374E884348FA1B9 /* ConcentrationTimelineChartUITests.swift in Sources */,
 				6F321B362BB74AB701EDD85D /* CreateFoodUITests.swift in Sources */,
@@ -3090,7 +3083,6 @@
 				C546D818B928824F86AFB78E /* DataControllerCloudKitTests.swift in Sources */,
 				0571096EC427EE9AD6BA39C0 /* DataControllerInitializationTests.swift in Sources */,
 				7117F9357730624894D553E4 /* DataControllerPreviewTests.swift in Sources */,
-				65F8A1070A60ED8AC3B23DA7 /* DataControllerSyncTests.swift in Sources */,
 				F25F67B7E5ECD0B15E796AE9 /* DataControllerTestDataTests.swift in Sources */,
 				3A56AA264A13FD887538B3EF /* DataControllerTests.swift in Sources */,
 				1C4F767E00C6B70C3058C2DF /* FoodServiceCustomFoodIntegrationTests.swift in Sources */,

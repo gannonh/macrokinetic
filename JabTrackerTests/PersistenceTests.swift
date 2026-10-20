@@ -44,86 +44,27 @@ struct DataPersistenceTests {
     }
 }
 
-@Suite("CloudKit Sync Tests")
-struct CloudKitSyncTests {
-    @Test("DataController CloudKit status checking")
-    @MainActor
-    func cloudKitStatusChecking() throws {
-        let dataController = DataController.testContainer()
-
-        // Test sync status property is accessible
-        let syncStatus = dataController.syncStatus
-        let validStatuses: [SyncStatus] = [
-            .unknown, .available, .unavailable, .restricted, .accountNotSignedIn, .noNetwork,
-        ]
-        #expect(validStatuses.contains(syncStatus))
-
-        // Test CloudKit enabled flag
-        let isCloudKitEnabled = dataController.isCloudKitEnabled
-        #expect(isCloudKitEnabled == true || isCloudKitEnabled == false)  // Valid boolean
-    }
-
-    @Test("DataController offline mode graceful fallback")
+@Suite("Local Storage Tests")
+struct LocalStorageTests {
+    @Test("DataController works fully offline")
     @MainActor
     func offlineModeGracefulFallback() throws {
-        // Test that DataController works without CloudKit
         let inMemoryController = DataController(inMemory: true)  // In-memory = local-only
         let context = inMemoryController.container.mainContext
 
-        // Test that data operations work in offline mode
         let user = User(email: "offline-test@example.com", weight: 75.0)
         context.insert(user)
 
         try context.save()
         #expect(user.email == "offline-test@example.com")
 
-        // Test that we can fetch data in offline mode
-        let fetchRequest = FetchDescriptor<User>()
-        let users = try context.fetch(fetchRequest)
+        let users = try context.fetch(FetchDescriptor<User>())
         #expect(users.contains { $0.email == "offline-test@example.com" })
-
-        // Verify sync status reflects offline mode
-        #expect(inMemoryController.willSyncAcrossDevices == false)
     }
 
-    @Test("Sync status messaging provides user guidance")
+    @Test("Related models save together and keep their relationships")
     @MainActor
-    func syncStatusMessaging() throws {
-        let dataController = DataController.testContainer()
-
-        // Test that sync status message is accessible and not empty
-        let message = dataController.syncStatusMessage
-        #expect(!message.isEmpty, "Sync status message should provide user guidance")
-
-        // Message should be meaningful for each status
-        switch dataController.syncStatus {
-        case .available:
-            #expect(message.contains("syncing") || message.contains("iCloud"))
-        case .unavailable, .restricted, .accountNotSignedIn:
-            #expect(
-                message.contains("available") || message.contains("sign in") || message.contains("iCloud"))
-        case .unknown:
-            #expect(message.contains("checking") || message.contains("determining"))
-        case .noNetwork:
-            #expect(message.contains("network"))
-        }
-    }
-
-    @Test("Retry CloudKit setup functionality")
-    @MainActor
-    func retryCloudKitSetup() throws {
-        let dataController = DataController.testContainer()
-
-        // Test that retry method exists and can be called
-        dataController.retryCloudKitSetup()
-
-        // Should not crash regardless of CloudKit availability
-        // Actual retry logic is tested through integration
-    }
-
-    @Test("CloudKit sync with model creation")
-    @MainActor
-    func cloudKitSyncWithModelCreation() throws {
+    func relatedModelsSaveTogether() throws {
         let dataController = DataController.testContainer()
         let context = dataController.container.mainContext
 

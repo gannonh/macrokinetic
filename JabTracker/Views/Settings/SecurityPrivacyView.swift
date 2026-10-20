@@ -2,7 +2,7 @@
 //  SecurityPrivacyView.swift
 //  JabTracker
 //
-//  Security and privacy settings: Face ID/Touch ID, Health integration, iCloud sync.
+//  Security and privacy settings: Face ID/Touch ID, Health integration, local data storage.
 //
 
 import OSLog
@@ -12,7 +12,6 @@ import SwiftUI
 struct SecurityPrivacyView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var biometricManager: BiometricAuthManager
-    @ObservedObject private var dataController = DataController.shared
 
     private static let logger = Logger(
         subsystem: "com.gannonhall.JabTracker",
@@ -76,66 +75,27 @@ struct SecurityPrivacyView: View {
                 Text("Sync weight, height, and biometrics from the Health app to keep your profile up to date.")
             }
 
-            // MARK: - iCloud Sync Section
+            // MARK: - Data Storage Section
             Section {
                 HStack {
-                    Image(systemName: syncStatusIcon)
-                        .foregroundColor(syncStatusColor)
+                    Image(systemName: "iphone")
+                        .foregroundColor(DesignTokens.Colors.info)
                         .font(.title2)
                         .frame(width: 28)
 
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("iCloud Sync")
+                        Text("Your data")
                             .font(.body)
 
-                        Text(dataController.syncStatusMessage)
+                        Text("Stored on this iPhone")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
-
-                    Spacer()
-
-                    if dataController.syncStatus == .accountNotSignedIn {
-                        Button("Settings") {
-                            if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
-                                UIApplication.shared.open(settingsUrl)
-                            }
-                        }
-                        .font(.caption)
-                        .buttonStyle(.bordered)
-                    } else if dataController.syncStatus == .noNetwork
-                        || dataController.syncStatus == .unknown
-                    {
-                        Button("Retry") {
-                            dataController.retryCloudKitSetup()
-                        }
-                        .font(.caption)
-                        .buttonStyle(.bordered)
-                    }
                 }
-                .accessibilityIdentifier("sync-status-section")
-
-                if !dataController.willSyncAcrossDevices {
-                    HStack(alignment: .top, spacing: 8) {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundColor(.orange)
-                            .font(.caption)
-                            .padding(.top, 2)
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Your data won't sync across devices")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            Text(
-                                "Data is stored locally on this device only. "
-                                    + "Sign in to iCloud to sync across your devices."
-                            )
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        }
-                    }
-                }
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("local-storage-section")
             } header: {
-                Text("Cloud Storage")
+                Text("Data Storage")
             }
         }
         .listStyle(.insetGrouped)
@@ -200,38 +160,6 @@ struct SecurityPrivacyView: View {
         } catch {
             errorMessage = "Could not disable Health sync: \(error.localizedDescription)"
             showingError = true
-        }
-    }
-
-    // MARK: - Sync Status Helpers
-
-    private var syncStatusIcon: String {
-        switch dataController.syncStatus {
-        case .available:
-            return "icloud.fill"
-        case .accountNotSignedIn:
-            return "person.crop.circle.badge.exclamationmark"
-        case .restricted:
-            return "lock.icloud"
-        case .noNetwork:
-            return "wifi.slash"
-        case .unavailable:
-            return "icloud.slash"
-        case .unknown:
-            return "questionmark.circle"
-        }
-    }
-
-    private var syncStatusColor: Color {
-        switch dataController.syncStatus {
-        case .available:
-            return DesignTokens.Colors.success
-        case .accountNotSignedIn, .noNetwork:
-            return DesignTokens.Colors.warning
-        case .restricted, .unavailable:
-            return DesignTokens.Colors.danger
-        case .unknown:
-            return DesignTokens.Colors.info
         }
     }
 }

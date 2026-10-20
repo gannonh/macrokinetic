@@ -2,7 +2,7 @@
 
 **JabTracker** - iOS app for tracking GLP-1 medication doses, nutrition, and health metrics.
 
-- SwiftUI + SwiftData targeting iOS 17.5+, with CloudKit sync
+- SwiftUI + SwiftData targeting iOS 17.5+, stored on-device only (CloudKit sync off for 1.0)
 - Pharmacokinetics engine for concentration tracking
 - Offline-first food logging with a local SQLite FTS5 database containing 1.7M+ foods
 - Analytics, adherence tracking, and progress photos
@@ -16,7 +16,7 @@
 
 ## Architectural Invariants
 
-- User data must remain CloudKit-compatible and sync across devices.
+- User data stays on the device for 1.0 (store opens with `cloudKitDatabase: .none`). Models stay CloudKit-compatible (optional or defaulted attributes, no unique constraints). Cross-device sync is deferred pending Apple guidance.
 - Core flows must continue to work offline.
 - Use `@Observable` for new stateful types and follow the established service-layer/MVVM structure.
 - Nutrition must work as a standalone experience; GLP-1 tracking remains optional.
