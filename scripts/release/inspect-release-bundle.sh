@@ -14,7 +14,7 @@ plutil -convert xml1 -o "$archive_plist" "$archive_app/Info.plist"
 archive_version=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$archive_plist")
 archive_build=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$archive_plist")
 [[ "$archive_version" == "$expected_version" && "$archive_build" == "$expected_build" ]] || exit 1
-python3 scripts/release/verify-food-data-bundle.py --app "$archive_app" \
+python3 "$script_dir/verify-food-data-bundle.py" --app "$archive_app" \
   --expected-version "$expected_version" --expected-build "$expected_build" \
   --expected-database-sha "$expected_database_sha"
 
@@ -27,7 +27,7 @@ plutil -convert xml1 -o "$RUNNER_TEMP/ipa-info.plist" "$ipa_app/Info.plist"
 ipa_version=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$RUNNER_TEMP/ipa-info.plist")
 ipa_build=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$RUNNER_TEMP/ipa-info.plist")
 [[ "$ipa_version" == "$expected_version" && "$ipa_build" == "$expected_build" ]] || exit 1
-python3 scripts/release/verify-food-data-bundle.py --app "$ipa_app" \
+python3 "$script_dir/verify-food-data-bundle.py" --app "$ipa_app" \
   --expected-version "$expected_version" --expected-build "$expected_build" \
   --expected-database-sha "$expected_database_sha"
 
