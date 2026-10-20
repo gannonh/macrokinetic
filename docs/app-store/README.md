@@ -1,51 +1,51 @@
-# Prepare the App Store packet
+# App Store packet
 
-This is the draft submission packet for [KAT-3591](https://linear.app/kata-sh/issue/KAT-3591), under [KAT-3185](https://linear.app/kata-sh/issue/KAT-3185). It is **IN PROGRESS**. No authentic candidate screenshots or signed icon output have been supplied. The owner answered the name, seller, support contact, public URLs, storage, pricing, and reviewer-access inputs on 2026-10-19. Privacy-label approval, regions, age rating, medical-device status, EU trader status, export compliance, and the App Review contact remain unresolved.
+Submission packet for [KAT-3591](https://linear.app/kata-sh/issue/KAT-3591), under [KAT-3185](https://linear.app/kata-sh/issue/KAT-3185). Nothing here is published or submitted.
 
-The app displays **MacroKinetic**, confirmed by the owner. The repository and stable bundle identifier retain JabTracker. `metadata.json` proposes 1.0.0; it does not change `project.yml` or assign a build number.
+| Part | File | State |
+| --- | --- | --- |
+| Copy, URLs, seller, claims | [`metadata.json`](metadata.json) | Ready. Each claim links evidence. |
+| Screenshots and release scope | [`assets.json`](assets.json), [`screenshots/`](screenshots/README.md) | Ready. Five 1320 x 2868 captures of `main` at `49c78848`. |
+| Icon packaging | [`evidence/icon-check.json`](evidence/icon-check.json) | PASS from the source catalog. KAT-3594 checks the signed archive. |
+| Reviewer notes | [`review-notes.md`](review-notes.md) | Draft. App Review contact is unresolved. |
+| Owner facts | [`owner-inputs.json`](owner-inputs.json) | 5 of 10 unresolved (see below) |
+| Privacy, age, public pages | [`privacy-data-flow.md`](privacy-data-flow.md), [`age-and-medical-status.md`](age-and-medical-status.md), [`public/`](public/README.md) | Drafts pending owner facts |
+| Verification scenarios | [`evidence/verification.md`](evidence/verification.md) | 4 of 4 run |
 
-The [launch readiness plan](../launch-readiness.md) records ticket order, gate conditions, existing-ticket disposition, dated PR states, verified evidence, and the owner/candidate blockers. Refresh its status snapshot when work advances.
+The app displays **MacroKinetic**. The repository and bundle identifier keep JabTracker. `metadata.json` proposes 1.0.0. The capture build is 0.10.1 (16). KAT-3594 sets the submission version and build.
 
-## Validate the draft
+## Validate
 
-Run these commands from the repository root:
+Run from the repository root:
 
 ```sh
-python3 scripts/app-store.py validate
+python3 scripts/app-store.py validate            # format checks; lists readiness blockers; exit 0
+python3 scripts/app-store.py validate --ready    # exit 2 while any blocker remains
+python3 scripts/app-store.py check-icon          # compiles JabTracker/AppIcon.icon with actool, rewrites evidence/icon-check.json
 python3 -m unittest scripts.tests.test_app_store
 ```
 
-Draft validation checks copy lengths, required files, manifest shape, existing asset properties, and the Icon Composer source. It prints outstanding readiness inputs. A valid draft does not prove launch behavior, legal compliance, or App Store readiness.
+`validate` checks copy lengths (name and subtitle 30, promotional text 170, description 4,000, keywords 100 UTF-8 bytes), URLs, screenshot size, opaque 8-bit RGB, checksums, capture provenance, claim evidence, and the icon report. It rejects an icon report whose source checksum no longer matches `JabTracker/AppIcon.icon`.
 
-After all inputs and authentic assets are recorded, run the strict gate:
+The icon check compiles the Icon Composer source for iPhone and reads the compiled catalog with `assetutil`. It requires opaque 1024 x 1024 renditions for the any, dark, and tinted appearances. For an Icon Composer source, App Store Connect takes the marketing icon from the archive's asset catalog, so no separate 1024 PNG is uploaded.
 
-```sh
-python3 scripts/app-store.py validate --ready
-```
+## Open blockers
 
-The strict gate exits nonzero while candidate evidence, image review, or owner inputs are absent. A successful strict check proves packet consistency. A human still reviews image content, legal facts, and the signed candidate.
+`validate --ready` reports these. All are owner facts or belong to another ticket.
 
-## Complete the packet
+| Blocker | Owner |
+| --- | --- |
+| `privacy_label` approval (draft answer: Data Not Collected) | Owner |
+| `regions_age_medical_status`: regions, age rating, medical-device status | Owner |
+| `pricing_and_agreements`: EU trader status | Owner |
+| `app_review_access`: App Review contact name and phone | Owner |
+| `export_and_signing`: export compliance | Owner; signed archive is KAT-3594 |
+| Version 1.0.0 and build | KAT-3594 |
+| Draft markers in `review-notes.md` and `public/` | Clear after the owner facts above, KAT-3588 onboarding, and KAT-3783/KAT-3592 public pages |
 
-1. Review [the launch audit](launch-audit.md) and the linked Linear issues.
-2. Resolve [owner inputs](owner-inputs.json) and the [data-flow worksheet](privacy-data-flow.md).
-3. Confirm the [age and medical-status worksheet](age-and-medical-status.md).
-4. Finalize the [public drafts](public/README.md) after the health-sync decision. Test their real URLs separately.
-5. Record the exact candidate SHA, version, build, and release-scope evidence in `assets.json`.
-6. Exercise each advertised claim. Save reviewable results under `evidence/`, and link them from `metadata.json`.
-7. Follow [the capture plan](screenshots/README.md). Import real full-resolution PNGs with the script. Review each image and record its reviewer.
-8. Export the compiled icon from the same candidate archive. Record its file, checksum, candidate SHA, review, and evidence in `assets.json`.
-9. Replace unresolved reviewer instructions, remove draft markers from finalized resources, and set packet states to `ready`.
-10. Run the strict gate and preserve its output with the candidate evidence.
+## Limits
 
-Do not publish these pages, upload screenshots, or submit a build as part of this workflow. KAT-3592 owns public resources and app links; KAT-3594 owns the submission-eligible archive; KAT-3595 records independent readiness evidence.
-
-## Copy and asset limits
-
-`metadata.json` contains English copy only. Advertised behavior is conditional on the claim evidence. It makes no concentration-accuracy, dosage-guidance, weight-loss-outcome, subscription-price, food-count, or cloud-security claim.
-
-Apple allows a 30-character name and subtitle, 170-character promotional text, a 4,000-character description, and 100 bytes of keywords. [Apple platform fields](https://developer.apple.com/help/app-store-connect/reference/app-information/platform-version-information).
-
-The screenshot plan uses portrait RGB PNGs at accepted large-iPhone sizes. iPad assets are unnecessary while `TARGETED_DEVICE_FAMILY` remains `1`. [Apple screenshot specifications](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications).
-
-An optional App Store preview is 15 to 30 seconds. The project's Human Review video is 30 to 60 seconds, so use separate exports. No preview is required by this packet. [Apple preview specifications](https://developer.apple.com/help/app-store-connect/reference/app-information/app-preview-specifications/).
+- Copy advertises only behavior with merged evidence. The offline claim was removed because KAT-3590 has not verified it on a device.
+- Screenshots come from a simulator `ReleaseTestHarness` build, not from the signed archive. Recapture if the archive's screens differ.
+- iPad assets are not required while `TARGETED_DEVICE_FAMILY` is `1`.
+- Apple references: [platform version fields](https://developer.apple.com/help/app-store-connect/reference/app-information/platform-version-information), [screenshot specifications](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications), [Icon Composer](https://developer.apple.com/documentation/xcode/creating-your-app-icon-using-icon-composer).

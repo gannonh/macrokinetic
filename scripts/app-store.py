@@ -8,9 +8,11 @@ import json
 import re
 import shutil
 import struct
+import subprocess
 import sys
+import tempfile
 import zlib
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -22,6 +24,8 @@ OWNER_IDS = {
     "storage_and_retention", "privacy_label", "regions_age_medical_status",
     "pricing_and_agreements", "app_review_access", "export_and_signing",
 }
+ICON_APPEARANCES = {None: "any", "UIAppearanceDark": "dark", "ISAppearanceTintable": "tinted"}
+DEPLOYMENT_TARGET = "17.5"  # project.yml deploymentTarget
 DOCUMENTS = (
     "README.md", "review-notes.md", "privacy-data-flow.md",
     "age-and-medical-status.md", "launch-audit.md", "screenshots/README.md",
@@ -108,6 +112,26 @@ def checksum(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def tree_checksum(source):
+    digest = hashlib.sha256()
+    for path in sorted(item for item in source.rglob("*") if item.is_file()):
+        digest.update(path.relative_to(source).as_posix().encode() + b"\0" + path.read_bytes())
+    return digest.hexdigest()
+
+
+def icon_ok(renditions):
+    full = {item.get("appearance") for item in renditions
+            if item.get("width") == item.get("height") == 1024 and item.get("opaque") is True}
+    return full == set(ICON_APPEARANCES.values()) and all(item.get("opaque") is True for item in renditions)
+
+
+def icon_source(packet, assets):
+    repo = packet.parents[1]
+    source = (repo / assets.get("icon", {}).get("source", "")).resolve()
+    require(source.is_relative_to(repo.resolve()) and (source / "icon.json").is_file(), "Icon Composer source missing")
+    return source
+
+
 def evidence(packet, name, sha, blockers, label, claim=None):
     if not name:
         blockers.append(f"{label}: evidence missing")
@@ -166,7 +190,8 @@ def validate(packet):
             blockers.append(f"candidate {field} missing")
     if candidate.get("version"):
         require(re.fullmatch(r"[0-9]+\.[0-9]+(?:\.[0-9]+)?", candidate["version"]), "invalid candidate version")
-        require(candidate["version"] == metadata.get("proposed_version"), "metadata/candidate version mismatch")
+        if candidate["version"] != metadata.get("proposed_version"):
+            blockers.append(f"candidate version {candidate['version']} is not proposed {metadata.get('proposed_version')} (KAT-3594 sets the submission version)")
     if candidate.get("build"):
         require(re.fullmatch(r"[1-9][0-9]*", str(candidate["build"])), "invalid candidate build")
     require(nonempty(candidate.get("scope_note")) and candidate.get("excluded_features"), "release scope inventory missing")
@@ -208,10 +233,7 @@ def validate(packet):
             blockers.append(f"{slot['id']}: human content review missing")
         evidence(packet, slot.get("evidence"), sha, blockers, slot["id"], slot["claim"])
     require(len(sizes) <= 1, "use one screenshot size for this locale/set")
-    icon = assets.get("icon", {})
-    repo = packet.parents[1]
-    source = (repo / icon.get("source", "")).resolve()
-    require(source.is_relative_to(repo.resolve()) and (source / "icon.json").is_file(), "Icon Composer source missing")
+    source = icon_source(packet, assets)
     composition = read_json(source / "icon.json")
     require(composition.get("groups"), "Icon Composer has no groups")
     for group in composition["groups"]:
@@ -219,16 +241,14 @@ def validate(packet):
             if layer.get("image-name"):
                 image = (source / "Assets" / layer["image-name"]).resolve()
                 require(image.is_relative_to(source) and image.is_file(), "Icon Composer layer image missing")
-    if not icon.get("path"):
-        blockers.append("compiled App Store icon missing")
+    report_name = assets["icon"].get("report")
+    if not report_name:
+        blockers.append("icon packaging report missing: run check-icon")
     else:
-        path = packet_file(packet, icon["path"])
-        png_size(path, {(1024, 1024)})
-        require(icon.get("sha256") == checksum(path), "icon checksum mismatch")
-        require(icon.get("candidate_sha") == sha and sha, "icon candidate mismatch")
-        if not nonempty(icon.get("reviewed_by")):
-            blockers.append("compiled icon review missing")
-        evidence(packet, icon.get("evidence"), sha, blockers, "compiled icon", "compiled_icon")
+        report = read_json(packet_file(packet, report_name))
+        require(report.get("source_sha256") == tree_checksum(source), "icon report is stale: rerun check-icon")
+        require(report.get("result") == "PASS" and icon_ok(report.get("renditions", [])),
+                "icon must compile to opaque 1024x1024 any, dark, and tinted iPhone renditions")
     inputs = owners.get("inputs", [])
     require(isinstance(inputs, list) and all(isinstance(item, dict) for item in inputs)
             and {item.get("id") for item in inputs} == OWNER_IDS
@@ -238,7 +258,7 @@ def validate(packet):
         if item["status"] != "resolved" or not nonempty(item.get("value")):
             blockers.append(f"owner input unresolved: {item['id']}")
         else:
-            evidence(packet, item.get("evidence"), sha, blockers, item["id"])
+            require(nonempty(item.get("source")), f"{item['id']}: resolved owner input requires its source")
     for name in ("review-notes.md", "public/privacy.md", "public/terms.md", "public/support.md"):
         if re.search(r"\b(DRAFT|UNRESOLVED|UNVERIFIED|NOT RUN)\b", packet_file(packet, name).read_text()):
             blockers.append(f"{name}: unresolved draft content")
@@ -277,12 +297,44 @@ def import_screenshot(args):
     print(f"Imported unchanged capture: {destination}. Human content review is pending.")
 
 
+def check_icon(args):
+    packet = args.packet.resolve()
+    source = icon_source(packet, read_json(packet / "assets.json"))
+    with tempfile.TemporaryDirectory() as out:
+        command = ["xcrun", "actool", str(source), "--compile", out, "--platform", "iphoneos",
+                   "--minimum-deployment-target", DEPLOYMENT_TARGET, "--app-icon", source.stem,
+                   "--target-device", "iphone", "--output-partial-info-plist", f"{out}/partial.plist"]
+        subprocess.run(command, check=True, capture_output=True)
+        info = json.loads(subprocess.run(["xcrun", "assetutil", "--info", f"{out}/Assets.car"],
+                                         check=True, capture_output=True, text=True).stdout)
+    renditions = [
+        {"appearance": ICON_APPEARANCES.get(item.get("Appearance"), item.get("Appearance")),
+         "width": item.get("PixelWidth"), "height": item.get("PixelHeight"), "opaque": item.get("Opaque") is True}
+        for item in info[1:] if item.get("AssetType") == "Icon Image" and item.get("Idiom") == "phone"]
+    report = {
+        "check": "compiled_icon_packaging",
+        "source": source.relative_to(packet.parents[1]).as_posix(),
+        "source_sha256": tree_checksum(source),
+        "command": " ".join(command).replace(str(packet.parents[1]) + "/", "").replace(out, "<tmp>"),
+        "toolchain": "actool " + re.search(r"short-bundle-version: (\S+)", subprocess.run(
+            ["xcrun", "actool", "--version", "--output-format", "human-readable-text"],
+            check=True, capture_output=True, text=True).stdout).group(1),
+        "recorded_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "renditions": renditions,
+        "result": "PASS" if icon_ok(renditions) else "FAIL",
+    }
+    (packet / "evidence/icon-check.json").write_text(json.dumps(report, indent=2) + "\n")
+    print(f"Icon packaging {report['result']}: {len(renditions)} iPhone renditions; wrote evidence/icon-check.json")
+    return 0 if report["result"] == "PASS" else 1
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--packet", type=Path, default=PACKET)
     commands = parser.add_subparsers(dest="command", required=True)
     check = commands.add_parser("validate")
     check.add_argument("--ready", action="store_true")
+    commands.add_parser("check-icon")
     capture = commands.add_parser("import-screenshot")
     capture.add_argument("slot")
     capture.add_argument("source", type=Path)
@@ -294,6 +346,8 @@ def main():
         if args.command == "import-screenshot":
             import_screenshot(args)
             return 0
+        if args.command == "check-icon":
+            return check_icon(args)
         blockers = validate(args.packet.resolve())
         print("Packet format checks passed.")
         if blockers:
@@ -303,7 +357,7 @@ def main():
             return 2 if args.ready else 0
         print("Packet consistency checks passed. Human review and signed-candidate acceptance remain required.")
         return 0
-    except (ValueError, TypeError, KeyError, OSError, zlib.error) as error:
+    except (ValueError, TypeError, KeyError, OSError, zlib.error, subprocess.CalledProcessError) as error:
         print(f"ERROR: {error}", file=sys.stderr)
         return 1
 

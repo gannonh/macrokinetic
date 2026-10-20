@@ -1,0 +1,28 @@
+Test Suite 'Selected tests' started at 2026-10-20 09:47:19.110.
+Test Suite 'JabTrackerUITests.xctest' started at 2026-10-20 09:47:19.111.
+Test Suite 'AppStoreScreenshotUITests' started at 2026-10-20 09:47:19.111.
+Test Case '-[JabTrackerUITests.AppStoreScreenshotUITests testCaptureAppStoreScreenshots]' started.
+    t =     9.02s Tap "Food Log" Button
+    t =    12.64s Tap "add-food-button" Button
+    t =    15.61s Tap "food-search-field" TextField
+    t =    16.11s Type 'salmon
+    t =    19.69s Tap Button (First Match)
+    t =    22.68s Tap "add-food-button" Button
+    t =    27.17s Tap "add-button" Button
+    t =    30.28s Tap "Metrics" Button
+    t =    33.58s Tap "waist-input" TextField
+    t =    34.33s Type '32' into "waist-input" TextField
+    t =    34.81s Tap NavigationBar (First Match)
+    t =    35.35s Tap Switch (First Match)
+    t =    38.48s Tap "save-metrics-button" Button
+    t =    41.85s Tap "More" Button
+    t =    47.25s Tap "glp1-programs-row" Button
+    t =    51.06s Tap "History" Button
+Test Case '-[JabTrackerUITests.AppStoreScreenshotUITests testCaptureAppStoreScreenshots]' passed (55.102 seconds).
+Test Suite 'AppStoreScreenshotUITests' passed at 2026-10-20 09:48:14.216.
+	 Executed 1 test, with 0 failures (0 unexpected) in 55.102 (55.105) seconds
+Test Suite 'JabTrackerUITests.xctest' passed at 2026-10-20 09:48:14.219.
+	 Executed 1 test, with 0 failures (0 unexpected) in 55.102 (55.109) seconds
+Test Suite 'Selected tests' passed at 2026-10-20 09:48:14.220.
+	 Executed 1 test, with 0 failures (0 unexpected) in 55.102 (55.110) seconds
+** TEST SUCCEEDED **

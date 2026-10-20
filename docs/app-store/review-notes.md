@@ -1,29 +1,31 @@
 # App Review notes draft
 
-**DRAFT. Do not submit.** Candidate SHA, version, build, signed-device checks, and the App Review contact are unresolved. The owner decided on 2026-10-19 that 1.0 has no sign-in and keeps data on the device (KAT-3586, KAT-3713); verify both on the candidate.
+**DRAFT. Do not submit.** The App Review contact is UNRESOLVED (owner input `app_review_access`). The signed candidate SHA, version 1.0.0, and build come from KAT-3594.
 
 Public name: MacroKinetic. Seller: Gannon Hall (individual). Price: free, no in-app purchases. Bundle identifier: `com.gannonhall.JabTracker`.
 
-## Proposed review introduction
+## Review introduction
 
-MacroKinetic records food, body measurements, and prescribed medication doses. Nutrition tracking can be used without medication tracking. The app does not prescribe doses or provide mixing instructions in the intended launch scope.
+MacroKinetic records food, body measurements, and prescribed medication doses. Nutrition tracking works without medication tracking. The app does not prescribe doses or calculate medication mixing.
 
-The intended launch excludes subscriptions, AI food tools, recipes, unfinished manual food creation, progress photos, manual onboarding, and drug-dose or reconstitution calculators. KAT-3580 and KAT-3581 must prove these exclusions on the exact candidate before this text becomes a submitted statement. No unreviewed feature should become remotely available after approval.
+The release build turns off subscriptions, AI food tools, recipes, favorites, progress photos, manual onboarding, help center, medical calculators, and concentration estimates (`JabTracker/App/ReleasePolicy.swift`; evidence in `docs/launch-evidence/KAT-3580` and `KAT-3581`). Launch arguments and environment variables cannot turn them on.
 
-## Record the reviewer route
+The app has no accounts. Reviewers need no sign-in, credentials, or demo account. All data stays on the iPhone, with no iCloud sync. Deleting the app removes the data.
 
-Replace this section with the confirmed final route after the candidate is verified. The app has no accounts, so provide no credentials and no demo account. Do not assume a test-only bypass works in the submitted app.
+## Reviewer route
 
-- Owner review contact and telephone: UNRESOLVED. Support email is support@macrokinetic.app; the owner has not given an App Review name or phone.
-- Sign-in requirement and reviewer access: none. The app opens straight to onboarding and reviewers need no account (KAT-3586). UNVERIFIED on the candidate.
-- First-run permission and onboarding steps: UNVERIFIED, KAT-3588.
-- Open Food Log, search the bundled library, add a food, and confirm the recorded meal and totals: UNVERIFIED, KAT-3587.
-- Open Add (+), choose Metrics, and record a body measurement in Log Metrics: UNVERIFIED, KAT-3595. Confirm exact saved values and relaunch retention; no measurement-history screen is advertised.
-- Optional medication route through More, GLP-1 Programs, and dose history: UNVERIFIED, KAT-3186.
-- Open privacy, terms, and support at https://macrokinetic.app/privacy, /terms, and /support: UNVERIFIED until KAT-3783 publishes them and KAT-3592 links them in the app. Open food dataset credits at More → General → Food data (USDA FoodData Central and Open Food Facts notices, license links, bundled database checksum; draft PR #372): UNVERIFIED until KAT-3593 merges and the candidate's manifest matches its database. Add the verified database download or alteration offer only after the owner confirms it.
-- Data deletion: the app has no account. All data is on the iPhone and deleting the app removes it; no iCloud sync (KAT-3713). UNVERIFIED on the candidate, KAT-3586 and KAT-3713. HealthKit samples stay in Apple Health.
-- Offline behavior, upgrade retention, and permission-denial evidence: UNVERIFIED, KAT-3590 and KAT-3588.
+Each step lists the evidence on `main` at `49c78848`. The signed archive (KAT-3594) and independent device checks (KAT-3595) still have to confirm the same behavior.
 
-## Attach the candidate record
+| Step | Evidence |
+| --- | --- |
+| Contact name and phone | UNRESOLVED. Support email: support@macrokinetic.app |
+| Open the app. It needs no sign-in. | KAT-3586 merged (`docs/launch-evidence/KAT-3586/live-checks.sh`) |
+| Complete first-run onboarding | UNVERIFIED: KAT-3588 is open |
+| Food Log → Add → search a food → Add. Confirm the row and the day's totals. | KAT-3587 merged; `evidence/capture-run.json` |
+| Add (+) → Metrics → enter a waist value → Save | `evidence/capture-run.json` (store row 81.28 cm for 32 in) |
+| Optional: More → GLP-1 Programs → Analytics → History | KAT-3186 merged; `evidence/capture-run.json` |
+| More → General → Food data: USDA and Open Food Facts notices | KAT-3593 merged |
+| Privacy, terms, and support at https://macrokinetic.app/privacy, /terms, /support | UNVERIFIED: KAT-3783 publishes the pages and KAT-3592 links them in the app |
+| Data deletion: delete the app. No account and no iCloud copy exist. Apple Health samples stay in Health. | KAT-3713 and KAT-3586 merged |
 
-Record the exact SHA, version, build, production food-database manifest/checksum, release-scope evidence, archive report, tested device and OS, and supporting results in `evidence/`. Link sources for any retained medication estimate. Source inspection and fixture tests do not establish on-device acceptance.
+Offline behavior is not advertised. KAT-3590 verifies it on a device.

@@ -16,6 +16,13 @@ TOOL = ROOT / "scripts/app-store.py"
 SHA = "a" * 40
 
 
+def tree_checksum(source):
+    digest = hashlib.sha256()
+    for path in sorted(item for item in source.rglob("*") if item.is_file()):
+        digest.update(path.relative_to(source).as_posix().encode() + b"\0" + path.read_bytes())
+    return digest.hexdigest()
+
+
 def png(width=1290, height=2796, color=2, byte=0):
     def chunk(kind, payload):
         return struct.pack(">I", len(payload)) + kind + payload + struct.pack(">I", binascii.crc32(kind + payload) & 0xffffffff)
@@ -37,10 +44,12 @@ class AppStoreTests(unittest.TestCase):
             state="draft", proposed_version="1.0.0", support_url=None, privacy_url=None,
             terms_url=None, copyright=None,
             claims=[dict(claim, evidence=None) for claim in value["claims"]]))
+        for image in (self.packet / "screenshots").glob("*.png"):
+            image.unlink()
         def reset_assets(value):
             value["state"] = "draft"
             value["candidate"].update(sha=None, version=None, build=None, release_scope_evidence=None)
-            value["icon"].update(path=None, sha256=None, candidate_sha=None, reviewed_by=None, evidence=None)
+            value["icon"]["report"] = None
             value["screenshots"] = [
                 {"id": slot["id"], "caption": slot["caption"], "claim": slot["claim"], "state": "pending", "path": None}
                 for slot in value["screenshots"]]
@@ -72,7 +81,7 @@ class AppStoreTests(unittest.TestCase):
         self.assertIn("Submission readiness BLOCKED", draft.stdout)
         ready = self.run_tool("validate", "--ready")
         self.assertEqual(ready.returncode, 2)
-        self.assertIn("compiled App Store icon missing", ready.stdout)
+        self.assertIn("icon packaging report missing", ready.stdout)
         self.assertIn("owner input unresolved: storage_and_retention", ready.stdout)
 
     def test_copy_limits_count_keyword_bytes(self):
@@ -123,6 +132,30 @@ class AppStoreTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("path escapes packet", result.stderr)
 
+    def write_icon_report(self, **changes):
+        source = self.repo / "JabTracker/AppIcon.icon"
+        report = {"source_sha256": tree_checksum(source), "result": "PASS", "renditions": [
+            {"appearance": name, "width": 1024, "height": 1024, "opaque": True} for name in ("any", "dark", "tinted")]}
+        report.update(changes)
+        (self.packet / "evidence/icon-check.json").write_text(json.dumps(report))
+        self.edit("assets.json", lambda value: value["icon"].update(report="evidence/icon-check.json"))
+
+    def test_icon_report_must_be_current_and_opaque(self):
+        self.write_icon_report()
+        result = self.run_tool("validate", "--ready")
+        self.assertNotIn("icon", result.stdout + result.stderr)
+        self.write_icon_report(renditions=[{"appearance": "any", "width": 1024, "height": 1024, "opaque": False}])
+        self.assertIn("opaque 1024x1024", self.run_tool("validate").stderr)
+        self.write_icon_report()
+        (self.repo / "JabTracker/AppIcon.icon/icon.json").write_text('{"groups": [{"layers": []}]}')
+        self.assertIn("icon report is stale", self.run_tool("validate").stderr)
+
+    def test_capture_version_differs_from_proposed_version_blocks_readiness(self):
+        self.edit("assets.json", lambda value: value["candidate"].update(sha=SHA, version="0.10.1", build="16"))
+        result = self.run_tool("validate", "--ready")
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("candidate version 0.10.1 is not proposed 1.0.0", result.stdout)
+
     def test_empty_asset_or_owner_inventory_is_rejected(self):
         self.edit("assets.json", lambda value: value.update(screenshots=[]))
         self.assertEqual(self.run_tool("validate").returncode, 1)
@@ -153,13 +186,10 @@ class AppStoreTests(unittest.TestCase):
                             candidate_sha=SHA, version="1.0.0", build="17", device="Test iPhone", os_version="27.0",
                             scenario="Temporary CLI fixture", captured_at=result["recorded_at"], fictional_data=True,
                             reviewed_by="Test reviewer", evidence="evidence/result.json")
-            icon = self.packet / "screenshots/icon.png"
-            icon.write_bytes(png(1024, 1024))
-            value["icon"].update(path="screenshots/icon.png", sha256=hashlib.sha256(icon.read_bytes()).hexdigest(),
-                                 candidate_sha=SHA, reviewed_by="Test reviewer", evidence="evidence/result.json")
         self.edit("assets.json", ready_assets)
+        self.write_icon_report()
         self.edit("owner-inputs.json", lambda value: value.update(
-            state="ready", inputs=[dict(item, status="resolved", value="Temporary owner fixture", evidence="evidence/result.json")
+            state="ready", inputs=[dict(item, status="resolved", value="Temporary owner fixture", source="Fixture owner answer")
                                    for item in value["inputs"]]))
         for name in ("review-notes.md", "public/privacy.md", "public/terms.md", "public/support.md"):
             (self.packet / name).write_text("Approved temporary CLI fixture text.")

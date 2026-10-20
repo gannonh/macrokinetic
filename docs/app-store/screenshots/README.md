@@ -1,35 +1,63 @@
-# Capture authentic candidate screenshots
+# Capture authentic screenshots
 
-No candidate screenshots are present yet. `assets.json` contains the storyboard and pending slots. Each caption describes intended launch behavior and needs evidence before use.
+The five PNGs in this folder are full-screen captures of real app screens with fictional seeded data. `AppStoreScreenshotUITests` drives each screen, asserts its behavior, and then captures it. Nothing is mocked, composed, or edited. `assets.json` records each file's checksum, source SHA, device, OS, and capture time. [`../evidence/capture-run.json`](../evidence/capture-run.json) records the run.
 
-Use the final Release configuration and fictional demonstration records. Capture complete screens at 1320x2868, 1290x2796, or 1260x2736 portrait pixels. Choose one device size consistently. Do not enlarge an iPhone Pro capture to a Pro Max size, stretch a screenshot, use mocks, or generate UI.
+| Slot | Screen and route | Assertion before capture |
+| --- | --- | --- |
+| `dashboard` | Dashboard tab | Weekly Nutrition and Today's Nutrition render with seeded entries |
+| `food-search` | Food Log → Add food → search "salmon" | The bundled database returns a salmon food |
+| `food-log` | Same food → Add | The logged food's row appears in the Food Log |
+| `metrics` | Add (+) → Metrics (Log Metrics) | Waist reads exactly 32 in, Health sync off; Save closes the sheet |
+| `dose-history` | More → GLP-1 Programs → Analytics → History | Seeded Ozempic doses are listed |
 
-## Body-measurement recording slot
+## Recapture
 
-The pending `metrics` slot advertises **Record your body measurements** and uses the `metrics_recording` claim. Its source route is Add (+) → Metrics → Log Metrics. [ContentView](../../../JabTracker/ContentView.swift) presents [QuickMetricsSheet](../../../JabTracker/Views/Metrics/QuickMetricsSheet.swift) from [ShortcutsSheet](../../../JabTracker/Views/Shortcuts/ShortcutsSheet.swift). Save calls [MetricsService.logMetrics](../../../JabTracker/Services/MetricsService.swift), which inserts a MetricsEntry and saves the context. The release-flags branch retains this route. Source inspection establishes that the flow exists; candidate acceptance remains pending.
+Use an iPhone 17 Pro Max simulator (1320 x 2868, the 6.9-inch size). Do not upscale a smaller device. iPad assets are not needed while `TARGETED_DEVICE_FAMILY` is `1`.
 
-If the fictional user's waist measurement is disabled, enable it through More → Metrics before recording. That More route configures measurement visibility; it is not the recording screen. On the candidate, enter a fictional waist value such as 80 cm, confirm the exact saved record/value and relaunch retention, then reopen Log Metrics and capture the recording form. Save this acceptance result separately from the image. Confirm the displayed fields, unit, date, and permission behavior before accepting the caption. Do not advertise a measurement-history screen or fabricate a chart. If recording is absent or fails on the final candidate, remove its copy, claim, and slot.
+1. Link the production food database into the checkout (it is gitignored):
 
-## Record the capture
+   ```sh
+   ln -s <main-checkout>/JabTracker/Resources/usda_foods.sqlite JabTracker/Resources/
+   ```
 
-1. Confirm the candidate SHA, version/build, flags, and production food-database manifest.
-2. Use an isolated simulator or test device with fictional records. Do not reset a real user's data.
-3. Exercise and verify the screen's behavior, then capture the full device screen as an opaque RGB PNG. Record device, OS, capture time, scenario, and the literal result.
-4. Import the unmodified PNG. This command only validates and copies the image; it does not run the app or capture a simulator.
+2. Create and boot a dedicated simulator. Set the clean status bar:
 
-For a simulator that is already running the approved candidate, the capture operator can use `xcrun simctl io <simulator-udid> screenshot --type=png /absolute/path/candidate-food-log.png`. Use the tested device's native size. Do not boot or reset a device merely to satisfy this packet.
+   ```sh
+   UDID=$(xcrun simctl create store-capture com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro-Max com.apple.CoreSimulator.SimRuntime.iOS-27-0)
+   xcrun simctl boot "$UDID"
+   xcrun simctl status_bar "$UDID" override --time 9:41 --batteryState charged --batteryLevel 100 --cellularBars 4 --wifiBars 3 --operatorName ""
+   ```
 
-```sh
-python3 scripts/app-store.py import-screenshot food-log /absolute/path/candidate-food-log.png \
-	--candidate-sha <full-40-character-sha> --version 1.0.0 --build <candidate-build> \
-	--device "iPhone 17 Pro Max" --os-version <tested-os> \
-	--captured-at <ISO-8601-time-with-zone> --scenario "Recorded and verified meal totals" \
-	--fictional-data
-```
+3. Run the capture test in the `ReleaseTestHarness` configuration. It is the optimized Release build with the test seeding controls compiled in, and `ReleasePolicy` turns every unfinished feature off. Without `TEST_RUNNER_APP_STORE_CAPTURE_DIR` the test skips.
 
-5. Review the image for enabled features, fictional records, legibility, and matching caption. Record `reviewed_by` and set the slot to `reviewed`. The import command leaves every image `captured_unreviewed`.
-6. Save the exercised result under `evidence/`. Link the file from the screenshot's `evidence` and its advertised claim in `metadata.json`.
+   ```sh
+   TEST_RUNNER_APP_STORE_CAPTURE_DIR=/tmp/store-capture xcodebuild test -project JabTracker.xcodeproj \
+     -scheme JabTrackerReleaseTestHarness -destination "id=$UDID" \
+     -only-testing:JabTrackerUITests/AppStoreScreenshotUITests
+   ```
 
-Imported images are the submission assets. Captions remain in the manifest for optional later composition. Do not cover controls, alter displayed totals, or add unsupported claims. If you later add overlays, preserve the raw capture and record composition provenance separately.
+4. Simulator PNGs carry an alpha channel that is fully opaque. Confirm it is opaque, then drop the channel without changing any pixel:
 
-The script checks PNG decoding, dimensions, RGB/opacity, checksums, candidate association, and review/evidence fields. It cannot detect invented UI or confirm the human attestation. Inspect every image before submission.
+   ```sh
+   magick identify -format '%[opaque]\n' /tmp/store-capture/dashboard.png   # must print True
+   magick /tmp/store-capture/dashboard.png -alpha off PNG24:/tmp/store-capture/dashboard-rgb.png
+   ```
+
+5. Clear the old slot in `assets.json` (set `path` to null and `state` to `pending`) and delete the old PNG. Then import each image:
+
+   ```sh
+   python3 scripts/app-store.py import-screenshot dashboard /tmp/store-capture/dashboard-rgb.png \
+     --candidate-sha <source-sha> --version <version> --build <build> \
+     --device "iPhone 17 Pro Max (simulator)" --os-version 27.0 \
+     --captured-at "$(cat /tmp/store-capture/dashboard.time)" --scenario "<assertion from the table>" --fictional-data
+   ```
+
+6. Inspect each image for enabled features only, fictional records, and a matching caption. Record `reviewed_by`, set `state` to `reviewed`, and link `evidence`.
+
+The script checks PNG decoding, size, opaque 8-bit RGB, checksum, and source identity. It cannot detect invented UI, so a person must review each image.
+
+## Limits
+
+- The captures come from a simulator build of `main`, not from the signed submission archive. KAT-3594 produces that archive and assigns version 1.0.0. Recapture if the archive's screens differ.
+- The seeded user name and records are fictional test fixtures (`TestDataSeeding`).
+- Captions in `assets.json` are for optional later composition. The raw captures are the submission assets.

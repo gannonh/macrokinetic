@@ -1,0 +1,67 @@
+{
+  "candidate_sha": "49c78848a25aafc7308a09a8cb57f1aa9d209cc6",
+  "candidate_note": "App source is origin/main at this SHA. The KAT-3591 branch adds only docs, scripts and the UI test target file AppStoreScreenshotUITests.swift.",
+  "result": "PASS",
+  "recorded_at": "2026-10-20T16:48:12Z",
+  "method": "XCUITest AppStoreScreenshotUITests.testCaptureAppStoreScreenshots, scheme JabTrackerReleaseTestHarness (ReleaseTestHarness configuration: optimized Release build with test seeding compiled in), iPhone 17 Pro Max simulator, iOS 27.0, production food database, launch args --ui-testing --reset-app-data --bypass-onboarding --seed-1-month-active --disable-cloudkit. 1 test, 0 failures (capture-run.log). Store rows read with sqlite3 after the run (capture-store-query.txt).",
+  "reviewed_by": "KAT-3591 implementing agent (image and store review); independent verifier pending",
+  "claims": [
+    "nutrition_logging",
+    "nutrition_without_medication",
+    "metrics_recording",
+    "prescribed_dose_history",
+    "release_scope"
+  ],
+  "results": [
+    {
+      "claim": "nutrition_logging",
+      "expected": "A searched food can be logged and appears in the Food Log",
+      "actual": "'Salmon, sockeye, canned, total can contents' logged to Breakfast; row shows 638 kcal; store row 417 g x 153 kcal/100 g = 638 kcal",
+      "artifacts": [
+        "screenshots/food-search.png",
+        "screenshots/food-log.png",
+        "evidence/capture-store-query.txt"
+      ],
+      "supporting": "docs/launch-evidence/KAT-3587/README.md (10 scenarios incl. literal totals, edit, delete, relaunch)"
+    },
+    {
+      "claim": "nutrition_without_medication",
+      "expected": "Nutrition logging needs no medication profile",
+      "actual": "Not re-run here; the seeded capture user has 1 medication profile.",
+      "supporting": "docs/launch-evidence/KAT-3587/README.md scenario 2: nutrition-only user with zero MedicationProfile and Dose rows logs and totals food"
+    },
+    {
+      "claim": "metrics_recording",
+      "expected": "Log Metrics saves an entered waist value",
+      "actual": "Waist 32 in entered, Save closed the sheet; store MetricsEntry waistCm = 81.28 (32 x 2.54), source manual",
+      "artifacts": [
+        "screenshots/metrics.png",
+        "evidence/capture-store-query.txt"
+      ],
+      "supporting": "docs/launch-evidence/KAT-3580/README.md scenario 7 (release metrics limited to neck, chest, waist, hip)"
+    },
+    {
+      "claim": "prescribed_dose_history",
+      "expected": "History lists recorded doses",
+      "actual": "History shows '4 of 4 doses' (0.50 mg Ozempic, Oct 20, Oct 13, Oct 6, Sep 29); store ZDOSE count 4",
+      "artifacts": [
+        "screenshots/dose-history.png",
+        "evidence/capture-store-query.txt"
+      ],
+      "supporting": "docs/launch-evidence/KAT-3186/README.md (33 UI tests, 10 live scenarios)"
+    },
+    {
+      "claim": "release_scope",
+      "expected": "Unfinished features stay off",
+      "actual": "ReleasePolicy.isEnabled returns false for all 15 ReleaseFeature cases at this SHA; captured screens show no subscription, AI, recipes, progress photos or concentration estimates (History/Adherence only)",
+      "supporting": "docs/launch-evidence/KAT-3580/README.md, docs/launch-evidence/KAT-3581/README.md"
+    }
+  ],
+  "captures": {
+    "dashboard": "2026-10-20T16:47:27Z",
+    "food-search": "2026-10-20T16:47:37Z",
+    "food-log": "2026-10-20T16:47:45Z",
+    "metrics": "2026-10-20T16:47:56Z",
+    "dose-history": "2026-10-20T16:48:12Z"
+  }
+}

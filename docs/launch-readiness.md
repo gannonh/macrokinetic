@@ -2,7 +2,7 @@
 
 **Submission readiness: BLOCKED.** This is the delivery and evidence index for the [1.0 launch epic](https://linear.app/kata-sh/issue/KAT-3185) and the [App Store packet](app-store/README.md). Linear owns issue scope, dependencies, acceptance criteria, and status. This document records a snapshot; refresh it when the candidate or work states change.
 
-**Status snapshot:** September 30, 2026, 22:01 UTC. The project issue list, milestone descriptions, relevant issue relations, open GitHub PRs, local source identities, and saved test summaries were read for this update. None of the 21 launch children was Done. No launch merge or submission is recorded. Successful checks on separate branches do not establish one submission candidate.
+**Status snapshot:** October 20, 2026. Merged to `main` (`49c78848`): KAT-3186, KAT-3580, KAT-3581, KAT-3583, KAT-3585, KAT-3586, KAT-3587, KAT-3593, KAT-3597, KAT-3598, KAT-3600, KAT-3603, KAT-3713. Evidence for each is under `docs/launch-evidence/`. The ticket-state tables below are the September 30 snapshot; Linear holds current state. No submission candidate is assigned.
 
 ## Scope and artifact identity
 
@@ -115,10 +115,4 @@ Legacy calendar/statistics, program/strategy, and rollover stub suites; disabled
 
 ## Submission resource readiness
 
-The [packet](app-store/README.md) is **IN PROGRESS**. [Metadata](app-store/metadata.json) is conditional draft copy; every claim lacks candidate evidence. [Assets](app-store/assets.json) has an unassigned candidate, no compiled icon, and five pending screenshot slots. [Owner inputs](app-store/owner-inputs.json) has five answered entries (name and rights, seller, contact, URLs, storage), two partly answered (pricing, reviewer access), and three unresolved (privacy-label approval, regions/age/medical status, export and signing). Review instructions, privacy data flow, age/medical worksheets, public-page drafts, capture storyboard, and the validator are prepared for completion.
-
-Source-only work can refine copy, worksheets, source notices, and the evidence inventory. It cannot supply authentic final UI images, a compiled candidate icon, live URL checks, owner facts, or signed acceptance. Measurement copy is now limited to recording through Add (+) → Metrics → Log Metrics. The `metrics_recording` claim and recording-form screenshot remain pending candidate evidence. More → Metrics opens visibility settings. No measurement-history screen is advertised, and no feature was added to justify marketing copy.
-
-After an integrated candidate is available, capture full-resolution supported iPhone PNGs with fictional data, preserve their exact bytes and candidate identity, review content, and export the icon from the same archive. Follow the [capture plan](app-store/screenshots/README.md) and [evidence requirements](app-store/evidence/README.md). Mock screenshots, generated app UI, and clinical artwork cannot substitute for those assets.
-
-Run `python3 scripts/app-store.py validate` for draft consistency and `python3 scripts/app-store.py validate --ready` for the strict packet gate. The strict gate must remain nonzero while facts, claim evidence, or reviewed candidate images are absent. A passing packet validator still needs independent signed-candidate and owner verification under KAT-3595; it does not authorize publishing, upload, or submission.
+The [packet](app-store/README.md) has evidenced copy, five authentic screenshots of `main` at `49c78848`, and a passing icon packaging check. Its open blockers are owner facts, the 1.0.0 version and build (KAT-3594), and draft markers that clear with those facts, KAT-3588, and KAT-3783/KAT-3592. Run `python3 scripts/app-store.py validate --ready` for the current list.
