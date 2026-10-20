@@ -90,7 +90,8 @@ struct DoseScheduleEditView: View {
             // Populate fields from existing configuration
             _dayOfWeek = State(initialValue: config.dayOfWeek ?? 1)
             _timeOfDay = State(initialValue: config.timeOfDay)
-            _interval = State(initialValue: config.interval)
+            // A daily schedule saves interval 1, which must not carry over to the Weekly stepper.
+            _interval = State(initialValue: schedule.patternType == .daily ? 7 : config.interval)
             _windowMinutesBefore = State(initialValue: config.windowMinutesBefore)
             _windowMinutesAfter = State(initialValue: config.windowMinutesAfter)
         } else {
