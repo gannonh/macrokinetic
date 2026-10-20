@@ -1,6 +1,6 @@
 # Onboarding launch verification
 
-[KAT-3588](https://linear.app/kata-sh/issue/KAT-3588/prove-first-run-onboarding-and-denied-permissions-leave-a-usable-app) adds two unit contracts and five UI journeys. Existing onboarding suites and helpers remain unchanged. No production code, permission implementation, release policy or authentication behavior changes. The branch is stacked on the KAT-3580 release-flag branch, so Manual onboarding is hidden here.
+[KAT-3588](https://linear.app/kata-sh/issue/KAT-3588/prove-first-run-onboarding-and-denied-permissions-leave-a-usable-app) adds two unit contracts and five UI journeys. Existing onboarding suites and helpers remain unchanged. It also fixes two defects the journeys found: Notification settings now reads the real authorization status (a denied user previously saw "Not Configured" and no Settings button), and the onboarding skip button is inserted only on skippable steps (it was intermittently not hittable). Release policy and authentication behavior are unchanged; Manual onboarding is hidden by the KAT-3580 launch flags on `main`.
 
 ## Authentication and isolation
 
@@ -20,24 +20,24 @@ Run on an explicitly owned ephemeral simulator with a fresh app container. These
 - Explicitly confirm skip; reach Strategy's `No Active Goal` and Create Goal action; retain that state and one manual entry across relaunch.
 - Cancel the skip confirmation; remain on goal setup with legacy medication/paywall screens absent.
 - Complete with permissions skipped; reach Health and notification settings, then return to manual food logging. Reaching settings is not evidence of actual permission recovery or authorization.
-- Turn on the Health and Notifications toggles, answer the real system prompts with Don't Allow, finish setup, log manually and relaunch. This test needs an erased simulator.
+- Turn on the Health and Notifications toggles, answer the real system prompts with Don't Allow, finish setup and log manually; Notification settings must show Disabled with a Settings button that opens iOS Settings; relaunch. This test needs an erased simulator.
 
 Each failed assertion captures `TestUtilities.debugScreenshot`, prints the element hierarchy and attaches the screenshot before reporting failure. Named checkpoints also preserve welcome, skip, permission, completion, profile, goal and relaunch screenshots. Selectors follow source declarations; live trees must confirm them before any selector repair.
 
 ## Acceptance matrix
 
-| Issue scenario | Current coverage | Required live evidence |
+| Issue scenario | Coverage | Status |
 | --- | --- | --- |
-| 1. Main/branch first run | Named welcome checkpoint | Same production first-run route on main and branch |
-| 2. Nutrition-only completion | Completion UI journey and record contracts | Executed in Debug (passes); Release run pending KAT-3597 |
-| 3. Explicit skip | Skip and cancel journeys | Execute; demonstrate manual entry and later Create Goal |
-| 4. Deny HealthKit | Skipping/unavailable state only | Actual OS denial plus manual logging; **NOT RUN** |
-| 5. Deny notifications | Toggle left off only | Actual OS denial plus core logging; **NOT RUN** |
-| 6. Skip biometrics | Off/unavailable state and no lock on relaunch | Execute on available and unavailable devices |
-| 7. Later recovery | Settings routes reachable | Actual enable/reauthorize in supported OS settings; **NOT RUN** |
-| 8. Relaunch retains profile/goals | No-reset/no-reseed UI journeys; separate in-memory count contracts | Execute and inspect disk-backed results; no claim of UI access to all inactive model records |
-| 9. Hidden features | Manual onboarding, legacy medication/paywall, More placeholders and capture choices absent | Execute against fixed launch policy; inspect every step |
-| 10. Signed-device Apple auth/cancel | No simulated substitute | Named signed-device production run; **NOT RUN** |
+| 1. Main/branch first run | Denial journey against `main` app code vs branch | Pass |
+| 2. Nutrition-only completion | Completion UI journey and record contracts | Pass |
+| 3. Explicit skip | Skip and cancel journeys | Pass |
+| 4. Deny HealthKit | Real Health Access sheet denied, then manual logging | Pass |
+| 5. Deny notifications | Real system alert denied, then core logging | Pass |
+| 6. Skip biometrics | Off/unavailable on simulator, no lock on relaunch | Pass |
+| 7. Later recovery | Denied status, explanation and Settings button opening iOS Settings | Simulator part pass; re-grant on device moved to KAT-3595 |
+| 8. Relaunch retains profile/goals | No-reset/no-reseed UI journeys; in-memory count contracts | Pass |
+| 9. Hidden features | Manual onboarding, legacy medication/paywall, More placeholders and capture choices absent | Pass |
+| 10. Signed-device Apple auth/cancel | No simulated substitute | Skipped, moved to KAT-3595 |
 
 The older `NewOnboardingUITests` contains empty Face ID, notification and completion methods. Their green results are not acceptance evidence. Its full-flow test and `OnboardingPermissionsUITests` remain separate existing coverage. `TestUtilities+Onboarding.completeOnboardingFlow` still describes the legacy medication/subscription flow and is not used here. The existing `--manual-ui-testing` mock is not reached by `AuthenticationView`'s native Apple button; it is not used here.
 
@@ -58,8 +58,8 @@ xcodebuild test -project JabTracker.xcodeproj -scheme JabTracker \
   -derivedDataPath "$UI_DERIVED_DATA" -resultBundlePath "$UI_RESULT"
 ```
 
-This branch has no `ReleaseTestHarness` configuration (KAT-3597 owns it), so the UI class runs in Debug only. A Release-configuration run of this fixture needs KAT-3597 to land first.
+This PR records Debug runs only. The class was not run under the KAT-3597 `JabTrackerReleaseTestHarness` scheme.
 
 ## Recorded results
 
-Durable evidence, screenshots and a timelapse are in `docs/launch-evidence/KAT-3588/`. Debug unit contracts: 2 of 2 passed. Debug UI class: 5 of 5 passed on the final commit, including real Health and notification system-prompt denial on an erased simulator. The same flow on `main` (`edd81bd7`) stops at Program Style because Manual is offered there. Scenario 7 is only partly covered (settings routes reachable after denial) and scenario 10 needs a signed device; neither is simulated.
+Evidence and screenshots are in `docs/launch-evidence/KAT-3588/`. Debug unit contracts: 2 of 2 passed. Debug UI class: 5 of 5 passed on an erased simulator after the rebase onto `main` `49c78848`, including real Health and notification system-prompt denial. The same denial journey against `main`'s app code fails at the notification status check.
