@@ -1,0 +1,21 @@
+{
+  "build": "Release iOS Simulator, unsigned",
+  "manifest_count": 1,
+  "manifest": {
+    "NSPrivacyTracking": false,
+    "NSPrivacyAccessedAPITypes": [
+      {
+        "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+        "NSPrivacyAccessedAPITypeReasons": [
+          "CA92.1"
+        ]
+      }
+    ]
+  },
+  "purpose_strings": {
+    "NSCameraUsageDescription": "MacroKinetic uses your camera to scan food barcodes so you can find nutrition information and log foods.",
+    "NSHealthShareUsageDescription": "MacroKinetic reads your weight, height, body fat, waist circumference, biological sex, and date of birth from Apple Health to track your body metrics and personalize calorie and macro targets. It reads active energy burned to adjust calorie targets when you enable activity-based adjustments.",
+    "NSHealthUpdateUsageDescription": "MacroKinetic saves the weight, height, body fat, and waist measurements you log to Apple Health when you enable Health syncing."
+  },
+  "submission_acceptance": "BLOCKED by collected-data decision and final signed archive"
+}

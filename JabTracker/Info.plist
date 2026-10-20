@@ -51,13 +51,13 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>NSCameraUsageDescription</key>
-	<string>MacroKinetic uses the camera to scan food barcodes for quick nutrition lookup.</string>
+	<string>MacroKinetic uses your camera to scan food barcodes so you can find nutrition information and log foods.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>MacroKinetic uses Face ID to securely protect your health data and ensure only you can access your nutrition and medication tracking information.</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>MacroKinetic would like to read your height, weight, biological sex, and date of birth from Health to calculate your Total Daily Energy Expenditure (TDEE) for personalized calorie and macro targets.</string>
+	<string>MacroKinetic reads your weight, height, body fat, waist circumference, biological sex, and date of birth from Apple Health to track your body metrics and personalize calorie and macro targets. It reads active energy burned to adjust calorie targets when you enable activity-based adjustments.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>MacroKinetic would like to update your weight data in Health to keep your health records synchronized.</string>
+	<string>MacroKinetic saves the weight, height, body fat, and waist measurements you log to Apple Health when you enable Health syncing.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
