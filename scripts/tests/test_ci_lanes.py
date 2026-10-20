@@ -28,7 +28,7 @@ REQUIRED_PR_JOBS = {
     "Fast unit tests": 35,
     "SwiftLint": 5,
     "Python tooling": 5,
-    "ReleaseHarnessUI": 30,
+    "ReleaseHarnessUI": 75,
     "Ordinary Release compile": 20,
 }
 ADVISORY_PR_JOBS = {
