@@ -195,6 +195,22 @@ struct NotificationQueueRenewalTests {
         #expect(Set(doses.map(\.doseAmount)) == [0.5])
     }
 
+    @Test("A schedule change keeps the amount of a dose already acted on")
+    func changedScheduleKeepsActedDose() async throws {
+        let fixture = try makeFixture()
+        try await fixture.service.refreshNotificationQueue(now: now)
+        let skipped = try #require(try persistedDoses(fixture).first)
+        skipped.skippedAt = now
+
+        try fixture.scheduleService.updateSchedule(
+            fixture.schedule, newPattern: .daily, newBaseSchedule: Self.config(interval: 1, amount: 0.5))
+        try await fixture.service.refreshNotificationQueue(now: now)
+
+        #expect(Self.text(skipped.scheduledTime) == "2030-01-02 09:00")
+        #expect(skipped.doseAmount == 0.25)
+        #expect(try persistedDoses(fixture).filter { $0.id != skipped.id }.allSatisfy { $0.doseAmount == 0.5 })
+    }
+
     @Test("Split-dose reminders keep the schedule's cadence whenever the app refreshes")
     func splitDoseCadenceSurvivesRefresh() async throws {
         let fixture = try makeFixture(

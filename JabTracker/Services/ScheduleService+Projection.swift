@@ -126,12 +126,18 @@ extension ScheduleService {
         let slot = { (dose: ScheduledDose) in "\(dose.schedule?.id.uuidString ?? "")|\(dose.scheduledTime)" }
         let persistedBySlot = Dictionary(persisted.map { (slot($0), $0) }, uniquingKeysWith: { first, _ in first })
 
+        let unacted = { (dose: ScheduledDose) in
+            dose.actualDose == nil && dose.skippedAt == nil && dose.rescheduledFrom == nil
+        }
+
         let generated = activeSchedules.flatMap { generateScheduledDoses(for: $0, from: now, to: cutoffDate) }
         upcomingDoses = generated.filter { $0.scheduledTime > now }
             .sorted { $0.scheduledTime < $1.scheduledTime }
             .prefix(limit)
             .map { projected in
                 guard let row = persistedBySlot[slot(projected)] else { return projected }
+                // A taken or skipped dose keeps the amount and window it was recorded against
+                guard unacted(row) else { return row }
                 row.doseAmount = projected.doseAmount
                 row.windowStart = projected.windowStart
                 row.windowEnd = projected.windowEnd
@@ -139,9 +145,6 @@ extension ScheduleService {
             }
 
         let kept = Set(upcomingDoses.map(\.id))
-        let unacted = { (dose: ScheduledDose) in
-            dose.actualDose == nil && dose.skippedAt == nil && dose.rescheduledFrom == nil
-        }
         for dose in generated + persisted where !kept.contains(dose.id) && unacted(dose) {
             context.delete(dose)
         }
