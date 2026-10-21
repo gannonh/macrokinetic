@@ -30,6 +30,7 @@ final class DoseHistoryStatesUITests: XCTestCase {
         XCTAssertTrue(
             app.staticTexts["Start tracking your medication doses to see your history here."].exists)
         XCTAssertTrue(app.buttons["Log Your First Dose"].exists)
+        XCTAssertFalse(app.staticTexts["No doses match your current filters."].exists)
 
         // Verify no dose rows exist separately
         let doseRows = app.buttons.matching(identifier: "dose-history-row")
