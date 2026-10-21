@@ -130,6 +130,23 @@ struct NotificationQueueRenewalTests {
         #expect(fixture.center.addedRequests.count == 64)
     }
 
+    @Test("Turning on a weigh-in reminder gives up a dose slot and keeps the renewal notice")
+    func newReminderMakesRoomInTheQueue() async throws {
+        let fixture = try makeFixture(startDate: Date().addingTimeInterval(-86_400))
+        fixture.service.notificationsEnabled = true
+        fixture.service.authorizationStatus = .authorized
+        try await fixture.service.refreshNotificationQueue()
+        #expect(fixture.center.addedRequests.count == 64)
+
+        fixture.service.weighInDailyEnabled = true
+        try await fixture.service.scheduleWeighInDailyReminder()
+
+        #expect(doseRequests(fixture.center).count == 62)
+        #expect(fixture.center.request(withIdentifier: "weigh-in-daily") != nil)
+        #expect(fixture.center.request(withIdentifier: NotificationService.renewalRequestIdentifier) != nil)
+        #expect(fixture.center.addedRequests.count == 64)
+    }
+
     @Test("Repeated refreshes keep one persisted dose per reminder with a stable id")
     func refreshKeepsDoseRows() async throws {
         let fixture = try makeFixture()

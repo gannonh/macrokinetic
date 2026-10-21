@@ -55,6 +55,8 @@ extension NotificationService {
         Self.reminderLogger.info(
             "Scheduled daily weigh-in reminder at \(components.hour ?? 0):\(components.minute ?? 0)"
         )
+        // Dose reminders fill the free pending slots, so give one up for this reminder
+        await refreshIfEnabled()
     }
 
     /**
@@ -95,6 +97,7 @@ extension NotificationService {
         )
         try await notificationCenter.add(request)
         Self.reminderLogger.info("Scheduled weekly weigh-in reminder")
+        await refreshIfEnabled()
     }
 
     /**
@@ -197,6 +200,7 @@ extension NotificationService {
         } else {
             notificationCenter.removePendingNotificationRequests(withIdentifiers: ["food-log-end-of-day"])
         }
+        await refreshIfEnabled()
     }
 
     /**
