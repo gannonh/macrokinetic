@@ -147,21 +147,12 @@ struct DoseHistoryView: View {
                 .foregroundColor(.gray)
 
             VStack(spacing: 8) {
-                Text("No doses logged yet")
-                    .font(.headline)
-                    .fontWeight(.medium)
-                    .accessibilityIdentifier("empty-state-message")
+                if self.viewModel.allDoses.isEmpty {
+                    Text("No doses logged yet")
+                        .font(.headline)
+                        .fontWeight(.medium)
+                        .accessibilityIdentifier("empty-state-message")
 
-                if self.viewModel.hasActiveFilters {
-                    Text("No doses match your current filters.")
-                        .font(.body)
-                        .foregroundColor(.secondary)
-
-                    Button("Clear Filters") {
-                        self.viewModel.clearAllFilters()
-                    }
-                    .buttonStyle(.bordered)
-                } else {
                     Text("Start tracking your medication doses to see your history here.")
                         .font(.body)
                         .foregroundColor(.secondary)
@@ -172,6 +163,16 @@ struct DoseHistoryView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .accessibilityIdentifier("log-first-dose-button")
+                } else {
+                    Text("No doses match your current filters.")
+                        .font(.headline)
+                        .fontWeight(.medium)
+                        .accessibilityIdentifier("empty-state-message")
+
+                    Button("Clear Filters") {
+                        self.viewModel.clearAllFilters()
+                    }
+                    .buttonStyle(.bordered)
                 }
             }
         }
