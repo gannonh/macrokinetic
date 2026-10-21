@@ -174,4 +174,43 @@ struct DoseScheduleEditViewTests {
         // Note: Actual pattern selection updates would require SwiftUI interaction testing (E2E tests)
         // since @State properties cannot be directly modified in unit tests
     }
+
+    // MARK: - Pattern switching (KAT-3612)
+
+    @Test("Switching a saved Daily schedule to Weekly projects doses 7 days apart and keeps past doses")
+    @MainActor
+    func switchingDailyToWeeklyProjectsWeeklyDoses() throws {
+        let controller = DataController(inMemory: true)
+        let context = controller.container.mainContext
+        defer { withExtendedLifetime(controller) {} }
+        let calendar = Calendar.current
+        func local(_ month: Int, _ day: Int) -> Date {
+            calendar.date(from: DateComponents(year: 2026, month: month, day: day, hour: 8))!
+        }
+        let profile = MedicationProfile(genericName: "semaglutide", brandName: "Generic", currentDose: 1.0)
+        context.insert(profile)
+        let pastDose = Dose(amount: 1.0, timestamp: local(10, 19), medication: profile)
+        context.insert(pastDose)
+        let service = ScheduleService(context: context)
+        let daily = ScheduleConfiguration(
+            dayOfWeek: nil, timeOfDay: TimeComponents(hour: 8, minute: 0), secondTimeOfDay: nil, interval: 1,
+            doseAmount: 1.0, windowMinutesBefore: 120, windowMinutesAfter: 120, splitDoseCount: nil,
+            splitIntervalMinutes: nil, customRecurrence: nil
+        )
+        let start = local(10, 1)
+        let schedule = try service.createSchedule(for: profile, pattern: .daily, startDate: start, baseSchedule: daily)
+
+        let editor = DoseScheduleEditView(medicationProfile: profile, existingSchedule: schedule, onSave: { _, _ in })
+        let weekly = try #require(editor.configuration(for: .weekly))
+        #expect(weekly.interval == 7)
+        #expect(editor.configuration(for: .daily)?.interval == 1)
+        try service.updateSchedule(schedule, newPattern: .weekly, newBaseSchedule: weekly)
+
+        let from = local(10, 21)
+        let doses = service.generateScheduledDoses(for: schedule, from: from, to: local(11, 20))
+        #expect(Array(doses.prefix(4)).map(\.scheduledTime) == [local(10, 26), local(11, 2), local(11, 9), local(11, 16)])
+        #expect(pastDose.timestamp == local(10, 19))
+        #expect(pastDose.amount == 1.0)
+        #expect(profile.doses?.count == 1)
+    }
 }

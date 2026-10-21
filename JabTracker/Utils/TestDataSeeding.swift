@@ -258,8 +258,16 @@
 
                 // TEST_DATA_SPLIT_SCHEDULE seeds an existing split schedule whose amount is half the weekly total
                 let seedsSplitSchedule = ProcessInfo.processInfo.environment["TEST_DATA_SPLIT_SCHEDULE"] == "true"
+                // TEST_DATA_DAILY_SCHEDULE seeds an existing daily schedule (interval 1)
+                let seedsDailySchedule = ProcessInfo.processInfo.environment["TEST_DATA_DAILY_SCHEDULE"] == "true"
                 let seededConfig =
-                    seedsSplitSchedule
+                    seedsDailySchedule
+                    ? ScheduleConfiguration(
+                        dayOfWeek: nil, timeOfDay: scheduleConfig.timeOfDay, secondTimeOfDay: nil, interval: 1,
+                        doseAmount: config.doseAmount, windowMinutesBefore: 120, windowMinutesAfter: 120,
+                        splitDoseCount: nil, splitIntervalMinutes: nil, customRecurrence: nil
+                    )
+                    : seedsSplitSchedule
                     ? ScheduleConfiguration.splitDose(
                         weeklyTotal: config.doseAmount,
                         timeOfDay: scheduleConfig.timeOfDay,
@@ -287,7 +295,7 @@
                 // Create DoseSchedule with encoded configuration
                 let schedule = DoseSchedule(
                     medicationProfile: profile,
-                    patternType: seedsSplitSchedule ? .splitDose : .weekly,
+                    patternType: seedsDailySchedule ? .daily : seedsSplitSchedule ? .splitDose : .weekly,
                     baseSchedule: scheduleData,
                     isActive: true
                 )
