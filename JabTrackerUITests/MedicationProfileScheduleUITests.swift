@@ -2,8 +2,8 @@
 //  MedicationProfileScheduleUITests.swift
 //  JabTrackerUITests
 //
-//  E2E tests for medication profile schedule management (CRUD operations)
-//  Issue #179 - Stream C
+//  Schedule create, edit, pause, resume and deactivate for a seeded Semaglutide (Ozempic) 0.25 mg profile,
+//  reached through More > GLP-1 Programs > Medications.
 //
 
 import XCTest
@@ -15,9 +15,10 @@ final class MedicationProfileScheduleUITests: XCTestCase {
         super.setUp()
         continueAfterFailure = false
         app = XCUIApplication()
-        // Pre-seed with medication profile (no schedule yet)
+        // Pre-seed a medication profile with no doses, so it has no schedule yet
         app.launchEnvironment["TEST_DATA_SEED"] = "true"
-        app.launchEnvironment["TEST_DATA_DAYS"] = "0"  // No doses
+        app.launchEnvironment["TEST_DATA_DAYS"] = "7"
+        app.launchEnvironment["TEST_DATA_DOSE_COUNT"] = "0"
         app.launchEnvironment["TEST_DATA_MEDICATION"] = "semaglutide"
         app.launchEnvironment["TEST_DATA_BRAND"] = "Ozempic"
         app.launchEnvironment["TEST_DATA_DOSE"] = "0.25"
@@ -25,423 +26,193 @@ final class MedicationProfileScheduleUITests: XCTestCase {
     }
 
     override func tearDown() {
+        if testRun?.hasSucceeded == false {
+            TestUtilities.captureFailureScreenshot(app, testName: name)
+        }
         app = nil
         super.tearDown()
     }
 
-    // MARK: - Helper Methods
-
-    /// Navigate to medication profile settings view (profile already pre-seeded)
-    private func navigateToMedicationProfileSettings() throws {
-        app.launch()
-
-        // Wait for app to load
-        let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 5), "Tab bar should appear after app launch")
-
-        // Navigate to Settings (via More tab)
-        TestUtilities.navigateToSettings(app)
-
-        // Tap Medication Profiles button
-        let medicationProfilesButton = app.buttons["Medication Profiles"]
-        XCTAssertTrue(
-            medicationProfilesButton.waitForExistence(timeout: 3),
-            "Medication Profiles button should exist in Settings")
-        medicationProfilesButton.tap()
-
-        // Tap on pre-seeded profile
-        let profile = app.buttons["medication-profile-semaglutide-ozempic-0.25mg"]
-        XCTAssertTrue(
-            profile.waitForExistence(timeout: 3),
-            "Pre-seeded medication profile should appear in list")
-        profile.tap()
+    private var profileRow: XCUIElement {
+        TestUtilities.medicationProfileRow(app, medication: "semaglutide", brand: "Ozempic", amount: 0.25)
     }
 
-    // MARK: - Test 1: Create Schedule Flow
+    private func openSeededProfile() {
+        app.launch()
+        XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 10))
+        TestUtilities.navigateToMedicationProfiles(app)
+        XCTAssertTrue(profileRow.waitForExistence(timeout: 5))
+        XCTAssertTrue(profileRow.staticTexts["Schedule not set"].exists)
+        TestUtilities.openMedicationProfile(app, row: profileRow)
+    }
+
+    private func patternOptions() -> [String] {
+        app.buttons.matching(identifier: "pattern-picker").allElementsBoundByIndex.map(\.label)
+    }
+
+    private func openEditor() {
+        app.buttons["edit-schedule-button"].tap()
+        XCTAssertTrue(app.navigationBars["Edit Schedule"].waitForExistence(timeout: 5))
+    }
+
+    private func incrementInterval() {
+        app.buttons["interval-stepper-Increment"].tap()
+    }
+
+    private func saveEditor() {
+        let save = app.buttons["save-schedule-edit"]
+        XCTAssertEqual(save.label, "Save")
+        save.tap()
+        XCTAssertTrue(save.waitForNonExistence(timeout: 5))
+    }
+
+    private func pause() {
+        app.buttons["pause-schedule-button"].tap()
+        let confirm = app.buttons["pause-confirm-button"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+        confirm.tap()
+        XCTAssertTrue(confirm.waitForNonExistence(timeout: 5))
+    }
+
+    private func confirmDeactivateButton() -> XCUIElement {
+        app.buttons.matching(NSPredicate(format: "label == 'Deactivate Schedule' AND identifier == ''")).firstMatch
+    }
 
     func testCreateWeeklySchedule() throws {
-        // GIVEN: User on medication profile settings with no active schedule
-        try navigateToMedicationProfileSettings()
+        openSeededProfile()
+        app.buttons["create-schedule-button"].tap()
+        XCTAssertTrue(app.navigationBars["Create Schedule"].waitForExistence(timeout: 5))
+        let create = app.buttons["save-schedule-edit"]
+        XCTAssertEqual(create.label, "Create")
+        XCTAssertFalse(create.isEnabled, "No pattern is preselected for a new schedule")
 
-        // WHEN: User taps "Create Dose Schedule" button
-        let createScheduleButton = app.buttons["create-schedule-button"]
-        XCTAssertTrue(
-            createScheduleButton.waitForExistence(timeout: 5),
-            "Create schedule button should exist when no active schedule")
-        createScheduleButton.tap()
+        app.buttons["Weekly"].tap()
+        XCTAssertTrue(create.isEnabled)
+        XCTAssertTrue(app.staticTexts["7 days"].exists, "A weekly schedule starts at a 7 day interval")
+        create.tap()
+        XCTAssertTrue(create.waitForNonExistence(timeout: 5))
 
-        // THEN: DoseScheduleEditView sheet appears
-        let cancelButton = app.buttons["cancel-schedule-edit"]
-        XCTAssertTrue(
-            cancelButton.waitForExistence(timeout: 3),
-            "Schedule edit sheet should appear")
-
-        // WHEN: User selects weekly pattern (should be default), sets day/time
-        let patternPicker = app.buttons.matching(identifier: "pattern-picker").firstMatch
-        XCTAssertTrue(
-            patternPicker.waitForExistence(timeout: 3),
-            "Pattern picker should exist")
-
-        // Tap Save button
-        let saveButton = app.buttons["save-schedule-edit"]
-        XCTAssertTrue(
-            saveButton.waitForExistence(timeout: 3),
-            "Save button should exist")
-        saveButton.tap()
-
-        // THEN: ScheduleSummaryView appears with correct schedule info
-        let editScheduleButton = app.buttons["edit-schedule-button"]
-        XCTAssertTrue(
-            editScheduleButton.waitForExistence(timeout: 5),
-            "Edit schedule button should appear after creating schedule")
-
-        print("✅ Test 1 passed: Weekly schedule created successfully")
+        XCTAssertTrue(app.staticTexts["Standard Weekly"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Once weekly"].exists)
+        app.navigationBars.buttons["BackButton"].tap()
+        XCTAssertTrue(profileRow.staticTexts["Recorded schedule"].waitForExistence(timeout: 5))
     }
-
-    // MARK: - Test 2: Edit Existing Schedule
 
     func testEditExistingSchedule() throws {
-        // GIVEN: User on medication profile settings with active weekly schedule
-        try navigateToMedicationProfileSettings()
+        openSeededProfile()
         try TestUtilities.createDefaultSchedule(app)
 
-        // WHEN: User taps "Edit Schedule" button
-        let editScheduleButton = app.buttons["edit-schedule-button"]
-        XCTAssertTrue(
-            editScheduleButton.waitForExistence(timeout: 5),
-            "Edit schedule button should exist with active schedule")
-        editScheduleButton.tap()
+        openEditor()
+        XCTAssertTrue(app.buttons["Weekly"].isSelected)
+        XCTAssertTrue(app.staticTexts["7 days"].exists)
+        incrementInterval()
+        XCTAssertTrue(app.staticTexts["8 days"].exists)
+        saveEditor()
 
-        // THEN: DoseScheduleEditView sheet appears with current values pre-populated
-        let cancelButton = app.buttons["cancel-schedule-edit"]
-        XCTAssertTrue(
-            cancelButton.waitForExistence(timeout: 3),
-            "Schedule edit sheet should appear")
-
-        // Verify pattern picker exists and has current value
-        let patternPicker = app.buttons.matching(identifier: "pattern-picker").firstMatch
-        XCTAssertTrue(
-            patternPicker.waitForExistence(timeout: 3),
-            "Pattern picker should exist")
-
-        // Tap Save
-        let saveButton2 = app.buttons["save-schedule-edit"]
-        XCTAssertTrue(
-            saveButton2.waitForExistence(timeout: 3),
-            "Save button should exist")
-        saveButton2.tap()
-
-        // THEN: ScheduleSummaryView updates
-        XCTAssertTrue(
-            editScheduleButton.waitForExistence(timeout: 5),
-            "Edit schedule button should still exist after update")
-
-        print("✅ Test 2 passed: Schedule edited successfully")
+        openEditor()
+        XCTAssertTrue(app.staticTexts["8 days"].exists, "The saved interval reopens as 8 days")
+        app.buttons["cancel-schedule-edit"].tap()
     }
-
-    // MARK: - Test 3: Pause Schedule
 
     func testPauseScheduleOneWeek() throws {
-        // GIVEN: User on medication profile settings with active schedule
-        try navigateToMedicationProfileSettings()
+        openSeededProfile()
         try TestUtilities.createDefaultSchedule(app)
+        XCTAssertFalse(app.staticTexts["Schedule is currently paused"].exists)
 
-        // WHEN: User taps "Pause Schedule" button
-        let pauseScheduleButton = app.buttons["pause-schedule-button"]
-        XCTAssertTrue(
-            pauseScheduleButton.waitForExistence(timeout: 5),
-            "Pause schedule button should exist with active schedule")
-        pauseScheduleButton.tap()
+        pause()
 
-        // THEN: Pause schedule sheet appears
-        let pauseConfirmButton = app.buttons["pause-confirm-button"]
-        XCTAssertTrue(
-            pauseConfirmButton.waitForExistence(timeout: 3),
-            "Pause confirmation button should appear in sheet")
-
-        // WHEN: User taps "Pause" to confirm
-        pauseConfirmButton.tap()
-
-        // THEN: Sheet dismisses and schedule shows paused state with resume button
-        XCTAssertFalse(
-            pauseConfirmButton.waitForExistence(timeout: 3),
-            "Pause sheet should dismiss after confirmation")
-
-        let resumeScheduleButton = app.buttons["resume-schedule-button"]
-        XCTAssertTrue(
-            resumeScheduleButton.waitForExistence(timeout: 5),
-            "Resume schedule button should appear after pausing")
-        print("✅ Test 3 passed: Schedule paused successfully")
+        XCTAssertTrue(app.staticTexts["Schedule is currently paused"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.buttons["resume-schedule-button"].label, "Resume Schedule")
+        XCTAssertFalse(app.buttons["pause-schedule-button"].exists)
     }
-
-    // MARK: - Test 4: Resume Schedule
 
     func testResumeSchedule() throws {
-        // GIVEN: User on medication profile settings with paused schedule
-        try navigateToMedicationProfileSettings()
+        openSeededProfile()
         try TestUtilities.createDefaultSchedule(app)
+        pause()
+        XCTAssertTrue(app.staticTexts["Schedule is currently paused"].waitForExistence(timeout: 5))
 
-        // Pause the schedule
-        let pauseScheduleButton = app.buttons["pause-schedule-button"]
-        XCTAssertTrue(
-            pauseScheduleButton.waitForExistence(timeout: 5),
-            "Pause schedule button should exist")
-        pauseScheduleButton.tap()
+        app.buttons["resume-schedule-button"].tap()
 
-        // Confirm pause in sheet
-        let pauseConfirmButton = app.buttons["pause-confirm-button"]
-        XCTAssertTrue(
-            pauseConfirmButton.waitForExistence(timeout: 3),
-            "Pause confirmation button should appear in sheet")
-        pauseConfirmButton.tap()
-
-        // Wait for sheet to dismiss
-        XCTAssertFalse(
-            pauseConfirmButton.waitForExistence(timeout: 3),
-            "Pause sheet should dismiss after confirmation")
-
-        // WHEN: User taps "Resume Schedule" button
-        let resumeScheduleButton = app.buttons["resume-schedule-button"]
-        XCTAssertTrue(
-            resumeScheduleButton.waitForExistence(timeout: 5),
-            "Resume button should exist to resume schedule")
-        resumeScheduleButton.tap()
-
-        // THEN: Pause button returns
-        let pauseButton = app.buttons["pause-schedule-button"]
-        XCTAssertTrue(
-            pauseButton.waitForExistence(timeout: 5),
-            "Pause button should return after resuming")
-
-        print("✅ Test 4 passed: Schedule resumed successfully")
+        XCTAssertTrue(app.buttons["pause-schedule-button"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["Schedule is currently paused"].exists)
+        XCTAssertTrue(app.staticTexts["Standard Weekly"].exists)
     }
-
-    // MARK: - Test 5: Deactivate Schedule
 
     func testDeactivateScheduleWithConfirmation() throws {
-        // GIVEN: User on medication profile settings with active schedule
-        try navigateToMedicationProfileSettings()
+        openSeededProfile()
         try TestUtilities.createDefaultSchedule(app)
 
-        // WHEN: User taps "Deactivate Schedule" button
-        let deactivateScheduleButton = app.buttons["deactivate-schedule-button"]
-        XCTAssertTrue(
-            deactivateScheduleButton.waitForExistence(timeout: 5),
-            "Deactivate schedule button should exist with active schedule")
-        deactivateScheduleButton.tap()
+        app.buttons["deactivate-schedule-button"].tap()
+        let confirm = confirmDeactivateButton()
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+        confirm.tap()
 
-        // THEN: Confirmation dialog appears
-        // Wait for dialog to present
-        usleep(500_000)  // 0.5 seconds
-
-        // WHEN: User taps "Deactivate Schedule" in confirmation dialog
-        // Confirmation dialog buttons don't have identifiers, find by label
-        let allButtons = app.buttons
-        var confirmButton: XCUIElement?
-
-        // Find button with "Deactivate Schedule" label that's NOT the original button
-        for index in 0..<allButtons.count {
-            let button = allButtons.element(boundBy: index)
-            if button.label == "Deactivate Schedule" && button.identifier == "" {
-                confirmButton = button
-                break
-            }
-        }
-
-        XCTAssertNotNil(confirmButton, "Deactivate confirmation button should exist in dialog")
-        confirmButton?.tap()
-
-        // THEN: "Create Dose Schedule" button appears
-        let createButton = app.buttons["create-schedule-button"]
-        XCTAssertTrue(
-            createButton.waitForExistence(timeout: 5),
-            "Create schedule button should appear after deactivation")
-
-        print("✅ Test 5 passed: Schedule deactivated successfully")
+        XCTAssertTrue(app.buttons["create-schedule-button"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["edit-schedule-button"].exists)
+        app.navigationBars.buttons["BackButton"].tap()
+        XCTAssertTrue(profileRow.staticTexts["Schedule not set"].waitForExistence(timeout: 5))
     }
-
-    // MARK: - Test 6: Cancel Deactivate
 
     func testCancelDeactivateSchedule() throws {
-        // GIVEN: User on medication profile settings with active schedule
-        try navigateToMedicationProfileSettings()
+        openSeededProfile()
         try TestUtilities.createDefaultSchedule(app)
 
-        // WHEN: User taps "Deactivate Schedule", confirmation appears
-        let deactivateScheduleButton = app.buttons["deactivate-schedule-button"]
-        XCTAssertTrue(
-            deactivateScheduleButton.waitForExistence(timeout: 5),
-            "Deactivate schedule button should exist")
-        deactivateScheduleButton.tap()
+        app.buttons["deactivate-schedule-button"].tap()
+        let confirm = confirmDeactivateButton()
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+        // The confirmation dialog has no Cancel button on iPhone; tapping outside dismisses it.
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.1, dy: 0.15)).tap()
+        XCTAssertTrue(confirm.waitForNonExistence(timeout: 5))
 
-        // THEN: Confirmation dialog appears (SwiftUI confirmationDialog popover)
-        // Wait for the dialog to appear - the "Deactivate Schedule" button in the popover
-        let dialogDeactivateButton = app.buttons.matching(
-            NSPredicate(format: "label == 'Deactivate Schedule' AND identifier == ''")
-        ).firstMatch
-        XCTAssertTrue(
-            dialogDeactivateButton.waitForExistence(timeout: 3),
-            "Confirmation dialog should appear")
-
-        // WHEN: User taps outside the dialog to dismiss it (cancel action)
-        // The confirmation dialog doesn't have an explicit Cancel button - user dismisses by tapping outside
-        // Tap on the background area (the view behind the popover)
-        let backgroundCoordinate = app.coordinate(withNormalizedOffset: CGVector(dx: 0.1, dy: 0.9))
-        backgroundCoordinate.tap()
-
-        // THEN: Dialog dismisses, schedule remains active
-        let editScheduleButton = app.buttons["edit-schedule-button"]
-        XCTAssertTrue(
-            editScheduleButton.waitForExistence(timeout: 5),
-            "Edit schedule button should still exist after cancel")
-
-        print("✅ Test 6 passed: Deactivation cancelled successfully")
+        XCTAssertTrue(app.buttons["edit-schedule-button"].exists)
+        XCTAssertTrue(app.staticTexts["Standard Weekly"].exists)
     }
-
-    // MARK: - Test 7: Multiple Schedule Modifications
 
     func testMultipleScheduleModifications() throws {
-        // GIVEN: User on medication profile settings
-        try navigateToMedicationProfileSettings()
+        openSeededProfile()
         try TestUtilities.createDefaultSchedule(app)
 
-        // WHEN: User edits the schedule
-        let editScheduleButton = app.buttons["edit-schedule-button"]
-        XCTAssertTrue(
-            editScheduleButton.waitForExistence(timeout: 5),
-            "Edit schedule button should exist")
-        editScheduleButton.tap()
+        openEditor()
+        incrementInterval()
+        saveEditor()
+        openEditor()
+        XCTAssertTrue(app.staticTexts["8 days"].exists)
+        incrementInterval()
+        saveEditor()
 
-        let saveButton2 = app.buttons["save-schedule-edit"]
-        XCTAssertTrue(
-            saveButton2.waitForExistence(timeout: 3),
-            "Save button should exist after edit")
-        saveButton2.tap()
-
-        // Wait for sheet to dismiss
-        XCTAssertFalse(
-            saveButton2.waitForExistence(timeout: 3),
-            "Sheet should dismiss after edit save")
-
-        // THEN: Schedule modifications persist and edit button remains available
-        XCTAssertTrue(
-            editScheduleButton.waitForExistence(timeout: 5),
-            "Edit schedule button should remain available after modifications")
-
-        print("✅ Test 7 passed: Multiple schedule modifications handled successfully")
+        openEditor()
+        XCTAssertTrue(app.staticTexts["9 days"].exists, "The second edit builds on the first")
+        app.buttons["cancel-schedule-edit"].tap()
+        XCTAssertTrue(app.staticTexts["Standard Weekly"].waitForExistence(timeout: 5))
     }
-
-    // MARK: - Test 8: Accessibility Support
 
     func testScheduleManagementAccessibility() throws {
-        // GIVEN: User on medication profile settings
-        try navigateToMedicationProfileSettings()
+        openSeededProfile()
+        XCTAssertEqual(app.buttons["create-schedule-button"].label, "Create Dose Schedule")
 
-        // VERIFY: Create schedule button has proper accessibility identifier
-        let createScheduleButton = app.buttons["create-schedule-button"]
-        XCTAssertTrue(
-            createScheduleButton.waitForExistence(timeout: 3),
-            "Create schedule button should exist")
-        XCTAssertEqual(
-            createScheduleButton.identifier,
-            "create-schedule-button",
-            "Create button should have correct accessibility identifier")
-
-        // Create schedule to test all button states
         try TestUtilities.createDefaultSchedule(app)
 
-        // VERIFY: All buttons have proper accessibility identifiers
-        let editScheduleButton = app.buttons["edit-schedule-button"]
-        XCTAssertTrue(
-            editScheduleButton.waitForExistence(timeout: 5),
-            "Edit schedule button should exist after creating schedule")
-        XCTAssertEqual(
-            editScheduleButton.identifier,
-            "edit-schedule-button",
-            "Edit button should have correct accessibility identifier")
-
-        let pauseScheduleButton = app.buttons["pause-schedule-button"]
-        XCTAssertTrue(
-            pauseScheduleButton.waitForExistence(timeout: 3),
-            "Pause schedule button should exist")
-        XCTAssertEqual(
-            pauseScheduleButton.identifier,
-            "pause-schedule-button",
-            "Pause button should have correct accessibility identifier")
-
-        let deactivateScheduleButton = app.buttons["deactivate-schedule-button"]
-        XCTAssertTrue(
-            deactivateScheduleButton.waitForExistence(timeout: 3),
-            "Deactivate schedule button should exist")
-        XCTAssertEqual(
-            deactivateScheduleButton.identifier,
-            "deactivate-schedule-button",
-            "Deactivate button should have correct accessibility identifier")
-
-        print("✅ Test 8 passed: All accessibility identifiers verified")
+        XCTAssertEqual(app.buttons["edit-schedule-button"].label, "Edit Schedule")
+        XCTAssertEqual(app.buttons["pause-schedule-button"].label, "Pause Schedule")
+        XCTAssertEqual(app.buttons["deactivate-schedule-button"].label, "Deactivate Schedule")
     }
 
-    // MARK: - ISSUE #180: Medication-Specific Pattern Filtering in Settings
+    func testNewScheduleOffersOnlyDailyAndWeekly() throws {
+        openSeededProfile()
+        app.buttons["create-schedule-button"].tap()
+        XCTAssertTrue(app.navigationBars["Create Schedule"].waitForExistence(timeout: 5))
+        TestUtilities.debugScreenshot(app, name: "new-schedule-patterns")
+        print(app.debugDescription)
 
-    // MARK: - ACCEPTANCE CRITERION 7: Custom pattern NOT visible in schedule edit view
-
-    func testCustomPatternNotVisibleInScheduleEdit() throws {
-        // GIVEN: User in schedule edit view with weekly medication (semaglutide)
-        try navigateToMedicationProfileSettings()
-
-        // Tap "Create Dose Schedule" button
-        let createScheduleButton = app.buttons["create-schedule-button"]
-        XCTAssertTrue(
-            createScheduleButton.waitForExistence(timeout: 5),
-            "Create schedule button should exist")
-        createScheduleButton.tap()
-
-        // Wait for sheet to appear
-        let cancelButton = app.buttons["cancel-schedule-edit"]
-        XCTAssertTrue(
-            cancelButton.waitForExistence(timeout: 3),
-            "Schedule edit sheet should appear")
-
-        // WHEN: User views pattern picker (DoseScheduleEditView uses Picker, not SchedulePatternCard)
-        // The picker should only show allowed patterns for weekly medication
-        let patternPicker = app.buttons["pattern-picker"].firstMatch
-        XCTAssertTrue(
-            patternPicker.waitForExistence(timeout: 3),
-            "Pattern picker should exist")
-
-        // THEN: Verify weekly pattern is available (default value)
-        // Note: Picker shows current selection, we need to verify "Custom" is NOT an option
-        // Based on implementation: SchedulePattern.allCases.filter { isAllowed($0, for: frequency) }
-        // For weekly medications: .weekly and .splitDose allowed, .custom filtered out
-
-        // Tap picker to see available options (if menu appears)
-        patternPicker.tap()
-
-        // Wait for picker menu to expand by checking for expected options
-        // Note: "Weekly" appears as StaticText, "Split Dose" appears as Button
-        let weeklyOption = app.staticTexts["Weekly"]
-        let splitDoseOption = app.buttons["Split Dose"]
-
-        // Assert that the picker expanded and shows expected options
-        XCTAssertTrue(
-            weeklyOption.waitForExistence(timeout: 2),
-            "Picker should expand and show 'Weekly' option"
-        )
-        XCTAssertTrue(
-            splitDoseOption.waitForExistence(timeout: 2),
-            "Picker should show 'Split Dose' option for weekly medications"
-        )
-
-        // The key verification: "Custom" text should NOT exist anywhere in the UI
-        // Check for "Custom" in various element types
-        let customText1 = app.staticTexts["Custom"]
-        let customText2 = app.buttons["Custom"]
-        let customText3 = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Custom'")).firstMatch
-
-        XCTAssertFalse(customText1.exists, "Custom pattern should NOT appear as static text")
-        XCTAssertFalse(customText2.exists, "Custom pattern should NOT appear as button")
-        XCTAssertFalse(customText3.exists, "Custom pattern should NOT appear in any text element")
-
-        print("✅ Test passed: Custom pattern not visible in schedule edit view")
+        XCTAssertEqual(patternOptions(), ["Daily", "Weekly"])
+        XCTAssertFalse(app.buttons["Split Dose"].exists)
+        XCTAssertFalse(app.staticTexts["Split Dose"].exists)
+        XCTAssertFalse(app.buttons["Recorded Split Schedule"].exists)
+        XCTAssertEqual(app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Custom'")).count, 0)
+        XCTAssertTrue(app.staticTexts[
+            "Record the schedule prescribed by your clinician. This app does not recommend a dosing schedule."
+        ].exists)
+        app.buttons["cancel-schedule-edit"].tap()
     }
 }

@@ -97,11 +97,6 @@
       "issue": "https://linear.app/kata-sh/issue/KAT-3581"
     },
     {
-      "selector": "JabTrackerUITests/SplitDoseIntegrationUITests",
-      "reason": "Dormant medical capability coverage; launch prescribed-value/absence replacements own active acceptance.",
-      "issue": "https://linear.app/kata-sh/issue/KAT-3581"
-    },
-    {
       "selector": "JabTrackerUITests/ConcentrationTimelineChartUITests",
       "reason": "Dormant medical capability coverage; launch prescribed-value/absence replacements own active acceptance.",
       "issue": "https://linear.app/kata-sh/issue/KAT-3581"

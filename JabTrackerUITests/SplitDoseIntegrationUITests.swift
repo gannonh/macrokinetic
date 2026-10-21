@@ -2,223 +2,148 @@
 //  SplitDoseIntegrationUITests.swift
 //  JabTrackerUITests
 //
-//  E2E tests for split-dose integration validation (Issue #180)
+//  Split dosing in the launch build: new schedules never offer Split Dose, and a recorded split schedule
+//  (seeded as Semaglutide (Ozempic) 1.00 mg weekly total) keeps its twice-weekly pattern without prefilling
+//  the weekly total as one administration.
 //
 
 import XCTest
 
 final class SplitDoseIntegrationUITests: XCTestCase {
     var app: XCUIApplication!
-    var screenshotCapture: ScreenshotCapture!
 
     override func setUp() {
         super.setUp()
         continueAfterFailure = false
         app = XCUIApplication()
-        screenshotCapture = ScreenshotCapture(app: app, testCase: self, phase: "split-dose-integration")
-
-        // Pre-seed with medication profile (no schedule yet)
         app.launchEnvironment["TEST_DATA_SEED"] = "true"
-        app.launchEnvironment["TEST_DATA_DAYS"] = "0"
+        app.launchEnvironment["TEST_DATA_DAYS"] = "7"
+        app.launchEnvironment["TEST_DATA_DOSE_COUNT"] = "1"
         app.launchEnvironment["TEST_DATA_MEDICATION"] = "semaglutide"
         app.launchEnvironment["TEST_DATA_BRAND"] = "Ozempic"
-        app.launchEnvironment["TEST_DATA_DOSE"] = "0.25"
+        app.launchEnvironment["TEST_DATA_DOSE"] = "1.0"
+        app.launchEnvironment["TEST_DATA_SPLIT_SCHEDULE"] = "true"
+        // The split schedule is seeded from the first recorded dose, so that dose must never be randomly skipped.
+        app.launchEnvironment["TEST_DATA_ADHERENCE"] = "1.0"
+        app.launchEnvironment["TEST_DATA_SKIPPED"] = "false"
         app.launchArguments = ["--ui-testing", "--reset-app-data"]
     }
 
     override func tearDown() {
+        if testRun?.hasSucceeded == false {
+            TestUtilities.captureFailureScreenshot(app, testName: name)
+        }
         app = nil
         super.tearDown()
     }
 
-    // MARK: - Test 1: Quick Add Dose Shows Correct Split-Dose Amount (Issue #180 Critical Bug Fix)
+    private var profileRow: XCUIElement {
+        TestUtilities.medicationProfileRow(app, medication: "semaglutide", brand: "Ozempic", amount: 1.0)
+    }
+
+    private func launch() {
+        app.launch()
+        XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 10))
+    }
+
+    private func evidence(_ name: String) {
+        TestUtilities.debugScreenshot(app, name: "split-integration-\(name)")
+        print(app.debugDescription)
+    }
 
     func testQuickAddDoseShowsCorrectSplitDoseAmount() throws {
-        // GIVEN: User with Semaglutide 1.0mg weekly split-dose schedule
-        // Launch with 1.0mg dose so we can verify split shows 0.5mg
-        app.launchEnvironment["TEST_DATA_DOSE"] = "1.0"  // Override setUp default
-        app.launch()
+        launch()
+        TestUtilities.openShortcutsSheet(app)
+        app.buttons["shortcut-button-shots"].tap()
+        let amount = app.textFields["quick-dose-prescribed-amount-input"]
+        XCTAssertTrue(amount.waitForExistence(timeout: 5))
+        evidence("quick-dose-split")
 
-        // Wait for app to load
-        let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 5), "Tab bar should appear after app launch")
+        // A recorded split schedule never prefills the 1.00 mg weekly total as one administration.
+        XCTAssertEqual(amount.value as? String, "0")
+        let save = app.buttons["quick-dose-save-button"]
+        XCTAssertFalse(save.isEnabled, "0 mg cannot be saved")
+        amount.coordinate(withNormalizedOffset: CGVector(dx: 0.98, dy: 0.5)).tap()
+        amount.typeText(XCUIKeyboardKey.delete.rawValue)
+        amount.typeText("0.5")
+        XCTAssertEqual(amount.value as? String, "0.5")
+        XCTAssertTrue(save.isEnabled)
+        save.tap()
+        XCTAssertTrue(amount.waitForNonExistence(timeout: 5))
 
-        // Navigate to medication profile settings and create split-dose schedule
-        // Note: Dose is formatted with 2 decimal places (1.00 not 1.0)
-        TestUtilities.navigateToMedicationProfileSettings(
-            app,
-            profileIdentifier: "medication-profile-semaglutide-ozempic-1.00mg")
-        try TestUtilities.createSplitDoseSchedule(app)
-
-        // Navigate back to Dashboard screen before using Quick Add
-        let dashboardTab = app.tabBars.buttons["Dashboard"]
-        XCTAssertTrue(dashboardTab.waitForExistence(timeout: 3), "Dashboard tab should exist")
-        dashboardTab.tap()
-
-        // Wait for Home screen to load
-        usleep(500_000)  // 0.5 seconds
-
-        // WHEN: User taps Quick Add Dose button ("+" tab)
-        let quickAddButton = app.tabBars.buttons["Add"]
-        XCTAssertTrue(quickAddButton.waitForExistence(timeout: 3), "Quick Add button should exist")
-        quickAddButton.tap()
-
-        // Wait for sheet to appear
-        usleep(1_000_000)  // 1 second for sheet animation
-
-        // Debug screenshot
-        TestUtilities.debugScreenshot(app, step: 1, description: "after-add-tap")
-
-        // Wait for Quick Dose sheet or ShortcutsSheet to appear
-        // Note: Recent UI changes changed the + button to show ShortcutsSheet
-        let quickDoseSheet = app.otherElements["quick-dose-sheet"]
-
-        // Check if ShortcutsSheet appeared (has "Shortcuts" title)
-        let shortcutsTitle = app.staticTexts["Shortcuts"]
-        if shortcutsTitle.waitForExistence(timeout: 2) {
-            // ShortcutsSheet appeared - tap "Shots" button in the shortcuts sheet (not tab bar)
-            // The sheet has buttons in a grid: Search, Barcode, Photo, Shots
-            // Use an identifier-based query to avoid tab bar conflict
-            let shotsButtonInSheet = app.buttons.matching(
-                NSPredicate(format: "label == 'Shots' AND identifier != 'Shots'")
-            ).firstMatch
-            if shotsButtonInSheet.waitForExistence(timeout: 2) && shotsButtonInSheet.isHittable {
-                shotsButtonInSheet.tap()
-                usleep(500_000)
-                TestUtilities.debugScreenshot(app, step: 2, description: "after-shots-button-tap")
-            } else {
-                // Try the direct quick dose action
-                let logDoseButton = app.buttons["shortcut-log-dose"]
-                if logDoseButton.waitForExistence(timeout: 2) {
-                    logDoseButton.tap()
-                    usleep(500_000)
-                } else {
-                    // Last resort - tap the first Shots button that isn't the tab bar
-                    let shotsButtonsQuery = app.buttons.matching(
-                        NSPredicate(format: "label == 'Shots'"))
-                    if shotsButtonsQuery.count > 1 {
-                        // Second button should be in the sheet (first is tab bar)
-                        let sheetShotsButton = shotsButtonsQuery.element(boundBy: 1)
-                        if sheetShotsButton.isHittable {
-                            sheetShotsButton.tap()
-                            usleep(500_000)
-                        }
-                    }
-                }
-            }
-        }
-
-        // Verify we're now on a dose entry interface
-        let quickDoseExists = quickDoseSheet.waitForExistence(timeout: 3)
-
-        XCTAssertTrue(
-            quickDoseExists,
-            "Quick Dose sheet should appear after navigating through Shortcuts")
-
-        // THEN: Dose amount shows 0.5mg (half of 1.0mg weekly dose)
-        // QuickDoseEntry displays dose amount with accessibility identifier "quick-dose-amount"
-        let doseAmountText = app.staticTexts["quick-dose-amount"]
-        XCTAssertTrue(
-            doseAmountText.waitForExistence(timeout: 3),
-            "Dose amount should be displayed in Quick Dose sheet")
-
-        let doseAmountValue = doseAmountText.label
-        print("📊 Quick Dose shows: \(doseAmountValue)")
-
-        // Verify it shows 0.50 mg (split-dose: 1.0mg / 2 = 0.5mg)
-        XCTAssertTrue(
-            doseAmountValue.contains("0.50") || doseAmountValue.contains("0.5"),
-            "Split-dose should show 0.5mg (half of 1.0mg weekly dose), but showed: \(doseAmountValue)")
-
-        XCTAssertFalse(
-            doseAmountValue.contains("1.0") || doseAmountValue.contains("1.00"),
-            "Split-dose should NOT show full 1.0mg dose (would cause overdose), but showed: \(doseAmountValue)")
-
-        print("✅ Test 1 passed: Quick Add Dose correctly shows 0.5mg for split-dose (1.0mg weekly split)")
+        TestUtilities.navigateToHistoryView(in: app)
+        let rows = TestUtilities.getDoseRows(from: app, minimumCount: 2)
+        evidence("history-after-split-dose")
+        let labels = rows.allElementsBoundByIndex.map(\.label)
+        XCTAssertEqual(labels.count, 2)
+        XCTAssertEqual(labels.filter { $0.hasPrefix("0.50 milligrams, Ozempic") }.count, 1, "\(labels)")
+        XCTAssertEqual(labels.filter { $0.hasPrefix("1.00 milligrams, Ozempic") }.count, 1, "\(labels)")
     }
-
-    // MARK: - Test 2: Calendar Shows Twice-Weekly Pattern (NOT 14 doses/week)
 
     func testCalendarShowsTwiceWeeklyDosePattern() throws {
-        // GIVEN: User on medication profile settings with split-dose schedule
-        app.launch()
+        launch()
+        TestUtilities.navigateToHistoryView(in: app)
+        app.segmentedControls["history-view-mode-picker"].buttons["Calendar"].tap()
+        evidence("calendar")
 
-        // Wait for app to load
-        let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 5), "Tab bar should appear after app launch")
-
-        TestUtilities.navigateToMedicationProfileSettings(app)
-        try TestUtilities.createSplitDoseSchedule(app)
-
-        // WHEN: User navigates to History (via Shots tab) calendar view
-        TestUtilities.navigateToHistory(app)
-
-        // Wait for History content to load within Shots view
-        usleep(500_000)
-
-        // Select Calendar mode within History section
-        let viewModePicker = app.segmentedControls["history-view-mode-picker"]
+        // The next administration can fall in the following month, so read this month and the next.
+        let thisMonth = scheduledDayLabels()
+        // The month title inherits the History section identifier, so the first day's date label marks the month.
+        let firstDay = app.descendants(matching: .any)["calendar-day-1"].firstMatch
+        let shownFirstDay = firstDay.label
+        app.buttons["Next month"].tap()
+        let nextMonthShown = expectation(for: NSPredicate(format: "label != %@", shownFirstDay), evaluatedWith: firstDay)
+        wait(for: [nextMonthShown], timeout: 5)
+        let nextMonth = scheduledDayLabels()
+        let labels = thisMonth + nextMonth
+        print("Scheduled day labels: \(labels)")
+        XCTAssertGreaterThanOrEqual(labels.count, 4, "Two months hold at least four twice-weekly administrations")
         XCTAssertTrue(
-            viewModePicker.waitForExistence(timeout: 3),
-            "View mode picker should be available in History section")
+            labels.allSatisfy { $0.contains("1 scheduled") },
+            "Twice weekly means one administration per scheduled day, not two: \(labels)")
 
-        let calendarToggleButton = viewModePicker.buttons["Calendar"]
-        XCTAssertTrue(calendarToggleButton.exists, "Calendar toggle should be available")
-        calendarToggleButton.tap()
-
-        let calendarView = app.descendants(matching: .any)["dose-calendar-container"]
-        XCTAssertTrue(calendarView.waitForExistence(timeout: 3), "Calendar view should appear")
-
-        // Wait for scheduled doses to be generated and displayed
-        usleep(500_000)  // 0.5 seconds for dose generation
-
-        // THEN: Calendar shows scheduled dose indicators with correct counts
-        // DoseIndicatorsView has accessibility labels like "1 scheduled", "2 scheduled", etc.
-        let indicatorsWithScheduled = app.descendants(matching: .any).matching(
-            NSPredicate(format: "label CONTAINS 'scheduled'"))
-
-        // For split-dose (twice weekly), we expect ~8-9 scheduled doses for 30-day window
-        // Each day with scheduled dose(s) has DoseIndicatorsView with label containing "scheduled"
-        let scheduledDaysCount = indicatorsWithScheduled.count
-        print("📊 Found \(scheduledDaysCount) calendar days with scheduled doses")
-
-        XCTAssertGreaterThan(
-            scheduledDaysCount, 0,
-            "Calendar should show scheduled doses for split-dose pattern")
-        XCTAssertLessThan(
-            scheduledDaysCount, 15,
-            "Calendar should NOT show twice-daily pattern (14+ days with doses)")
-
-        print("✅ Test 2 passed: Calendar shows twice-weekly pattern (NOT twice-daily)")
+        // Administrations are 3.5 days apart, so day gaps alternate 3 and 4 and any two consecutive gaps make a week.
+        // Gaps are checked within each month: KAT-3793 tracks the cadence restarting at the month boundary.
+        for month in [thisMonth, nextMonth] {
+            let days = month.compactMap { Int($0.components(separatedBy: " ")[1].dropLast()) }
+            XCTAssertEqual(days.count, month.count, "Every scheduled day label starts with its date: \(month)")
+            let gaps = zip(days.dropFirst(), days).map { $0 - $1 }
+            XCTAssertTrue(gaps.allSatisfy { $0 == 3 || $0 == 4 }, "Gaps \(gaps) between \(month)")
+            XCTAssertTrue(zip(gaps.dropFirst(), gaps).allSatisfy { $0 + $1 == 7 }, "Gaps \(gaps) between \(month)")
+        }
     }
 
-    // MARK: - Test 3: Settings Workflow Shows Split-Dose Schedule
+    /// Labels such as "Oct 24, 2026, 1 scheduled" for the visible month, in day order.
+    private func scheduledDayLabels() -> [String] {
+        XCTAssertTrue(app.descendants(matching: .any)["calendar-day-1"].firstMatch.waitForExistence(timeout: 5))
+        let cells = app.descendants(matching: .any).matching(NSPredicate(
+            format: "identifier BEGINSWITH 'calendar-day-' AND label CONTAINS ' scheduled'"
+        )).allElementsBoundByIndex
+        let day = { (cell: XCUIElement) in Int(cell.identifier.dropFirst("calendar-day-".count)) ?? 0 }
+        return cells.sorted { day($0) < day($1) }.map(\.label)
+    }
 
     func testSettingsShowsSplitDoseSchedule() throws {
-        // GIVEN: User on medication profile settings with split-dose schedule
-        app.launch()
+        launch()
+        TestUtilities.navigateToMedicationProfiles(app)
+        XCTAssertTrue(profileRow.waitForExistence(timeout: 5))
+        XCTAssertTrue(profileRow.staticTexts["Recorded schedule"].exists)
+        TestUtilities.openMedicationProfile(app, row: profileRow)
+        XCTAssertTrue(app.staticTexts["Split Dose (Twice Weekly)"].waitForExistence(timeout: 5))
 
-        // Wait for app to load
-        let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 5), "Tab bar should appear after app launch")
-
-        TestUtilities.navigateToMedicationProfileSettings(app)
-        try TestUtilities.createSplitDoseSchedule(app)
-
-        // THEN: Schedule summary shows split-dose pattern information
-        // Note: ScheduleSummaryView renders as StaticText in accessibility hierarchy
-        let scheduleSummary = app.staticTexts["schedule-summary-view"]
-        XCTAssertTrue(
-            scheduleSummary.waitForExistence(timeout: 5),
-            "Schedule summary should appear in medication profile settings")
-
-        // Verify edit schedule button exists (confirms schedule is active)
-        let editScheduleButton = app.buttons["edit-schedule-button"]
-        XCTAssertTrue(
-            editScheduleButton.waitForExistence(timeout: 3),
-            "Edit schedule button should exist for active split-dose schedule")
-
-        print("✅ Test 3 passed: Settings workflow displays split-dose schedule")
+        // Replacing the recorded split schedule offers only Daily and Weekly for the new one.
+        app.buttons["deactivate-schedule-button"].tap()
+        let confirm = app.buttons.matching(
+            NSPredicate(format: "label == 'Deactivate Schedule' AND identifier == ''")).firstMatch
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+        confirm.tap()
+        app.buttons["create-schedule-button"].tap()
+        XCTAssertTrue(app.navigationBars["Create Schedule"].waitForExistence(timeout: 5))
+        evidence("new-schedule-after-split")
+        XCTAssertEqual(
+            app.buttons.matching(identifier: "pattern-picker").allElementsBoundByIndex.map(\.label), ["Daily", "Weekly"])
+        XCTAssertFalse(app.buttons["Split Dose"].exists)
+        XCTAssertFalse(app.buttons["Recorded Split Schedule"].exists)
+        app.buttons["cancel-schedule-edit"].tap()
     }
-
 }

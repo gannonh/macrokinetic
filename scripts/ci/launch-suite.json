@@ -162,6 +162,87 @@
         "onboarding-skip-relaunch"
       ],
       "verified_evidence": "PR #375 independent verification: JabTrackerReleaseTestHarness 5/5 (https://github.com/gannonh/macrokinetic/pull/375#issuecomment-6297837595)"
+    },
+    {
+      "selector": "JabTrackerUITests/MedicationProfileCRUDUITests/testEditMedicationProfileAmount",
+      "source": "JabTrackerUITests/MedicationProfileCRUDUITests.swift",
+      "issue": "KAT-3602",
+      "purpose": "A typed 0.25 mg Ozempic profile is added, edited to 0.5, and its detail and row read 0.50 mg.",
+      "journeys": [
+        "prescribed-medication-history"
+      ],
+      "verified_evidence": "PR #385 local JabTrackerReleaseTestHarness run (iOS 27.0) and CI ReleaseHarnessUI on the KAT-3602 candidate"
+    },
+    {
+      "selector": "JabTrackerUITests/MedicationProfileCRUDUITests/testViewMedicationProfileDetail",
+      "source": "JabTrackerUITests/MedicationProfileCRUDUITests.swift",
+      "issue": "KAT-3602",
+      "purpose": "Profile detail reads Tirzepatide, Mounjaro, 2.50 mg and Thigh through More > GLP-1 Programs > Medications.",
+      "journeys": [
+        "prescribed-medication-history"
+      ],
+      "verified_evidence": "PR #385 local JabTrackerReleaseTestHarness run (iOS 27.0) and CI ReleaseHarnessUI on the KAT-3602 candidate"
+    },
+    {
+      "selector": "JabTrackerUITests/MedicationProfileScheduleUITests/testCreateWeeklySchedule",
+      "source": "JabTrackerUITests/MedicationProfileScheduleUITests.swift",
+      "issue": "KAT-3602",
+      "purpose": "A weekly schedule is recorded only after the user picks Weekly; the summary reads Standard Weekly, Once weekly.",
+      "journeys": [
+        "prescribed-medication-history"
+      ],
+      "verified_evidence": "PR #385 local JabTrackerReleaseTestHarness run (iOS 27.0) and CI ReleaseHarnessUI on the KAT-3602 candidate"
+    },
+    {
+      "selector": "JabTrackerUITests/MedicationProfileScheduleUITests/testNewScheduleOffersOnlyDailyAndWeekly",
+      "source": "JabTrackerUITests/MedicationProfileScheduleUITests.swift",
+      "issue": "KAT-3602",
+      "purpose": "A new schedule offers exactly Daily and Weekly; Split Dose and Custom are absent.",
+      "journeys": [
+        "prescribed-medication-history",
+        "unfinished-feature-absence"
+      ],
+      "verified_evidence": "PR #385 local JabTrackerReleaseTestHarness run (iOS 27.0) and CI ReleaseHarnessUI on the KAT-3602 candidate"
+    },
+    {
+      "selector": "JabTrackerUITests/DailyMedicationProfileScheduleUITests/testDailyMedicationScheduleCreation",
+      "source": "JabTrackerUITests/DailyMedicationProfileScheduleUITests.swift",
+      "issue": "KAT-3602",
+      "purpose": "A Victoza 0.60 mg profile records a Standard Daily schedule without Split Dose.",
+      "journeys": [
+        "prescribed-medication-history"
+      ],
+      "verified_evidence": "PR #385 local JabTrackerReleaseTestHarness run (iOS 27.0) and CI ReleaseHarnessUI on the KAT-3602 candidate"
+    },
+    {
+      "selector": "JabTrackerUITests/MedicationProfileDeleteUITests/testDisableMedicationProfile",
+      "source": "JabTrackerUITests/MedicationProfileDeleteUITests.swift",
+      "issue": "KAT-3602",
+      "purpose": "Disabling a profile keeps all three recorded doses in History.",
+      "journeys": [
+        "prescribed-medication-history"
+      ],
+      "verified_evidence": "PR #385 local JabTrackerReleaseTestHarness run (iOS 27.0) and CI ReleaseHarnessUI on the KAT-3602 candidate"
+    },
+    {
+      "selector": "JabTrackerUITests/MedicationProfileDeleteUITests/testPermanentDeleteRemovesAllData",
+      "source": "JabTrackerUITests/MedicationProfileDeleteUITests.swift",
+      "issue": "KAT-3602",
+      "purpose": "Permanent delete removes the profile and its three recorded doses.",
+      "journeys": [
+        "prescribed-medication-history"
+      ],
+      "verified_evidence": "PR #385 local JabTrackerReleaseTestHarness run (iOS 27.0) and CI ReleaseHarnessUI on the KAT-3602 candidate"
+    },
+    {
+      "selector": "JabTrackerUITests/SplitDoseIntegrationUITests/testQuickAddDoseShowsCorrectSplitDoseAmount",
+      "source": "JabTrackerUITests/SplitDoseIntegrationUITests.swift",
+      "issue": "KAT-3602",
+      "purpose": "A recorded split schedule never prefills the 1.00 mg weekly total; a typed 0.5 mg dose is recorded exactly.",
+      "journeys": [
+        "prescribed-medication-history"
+      ],
+      "verified_evidence": "PR #385 local JabTrackerReleaseTestHarness run (iOS 27.0) and CI ReleaseHarnessUI on the KAT-3602 candidate"
     }
   ],
   "missing_critical_journeys": [],

@@ -1,44 +1,42 @@
 import XCTest
 
-/// Minimal E2E tests for medication profile settings integration
-/// Core functionality has been moved to dedicated test files for better organization
+/// The medication list is reached through More > GLP-1 Programs > Medications.
 final class MedicationProfileSettingsUITests: XCTestCase {
     var app: XCUIApplication!
 
     override func setUpWithError() throws {
         continueAfterFailure = false
-
-        self.app = XCUIApplication()
-        self.app.launchArguments = ["--ui-testing", "--reset-app-data"]
-        self.app.launch()
-
-        XCTAssertTrue(self.app.tabBars.firstMatch.waitForExistence(timeout: 5.0))
+        app = TestUtilities.launchAppWithTestMode(resetData: true)
+        XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 10))
     }
 
-    /// Integration test: Settings navigation to medication profiles
+    override func tearDownWithError() throws {
+        if testRun?.hasSucceeded == false {
+            TestUtilities.captureFailureScreenshot(app, testName: name)
+        }
+        app = nil
+    }
+
     func testMedicationProfilesNavigation() throws {
-        TestUtilities.navigateToSettings(self.app)
+        TestUtilities.navigateToMedicationProfiles(app)
 
-        let medicationProfilesButton = self.app.buttons["Medication Profiles"]
-        XCTAssertTrue(
-            medicationProfilesButton.waitForExistence(timeout: 3.0),
-            "Medication Profiles button should exist in Settings")
-        medicationProfilesButton.tap()
-
-        let addProfileButton = self.app.buttons["Add Medication Profile"]
-        XCTAssertTrue(
-            addProfileButton.waitForExistence(timeout: 3.0),
-            "Add button should be accessible in medication profiles")
+        XCTAssertTrue(app.navigationBars["GLP-1 Programs"].exists)
+        let sections = app.segmentedControls["glp1-programs-view"]
+        XCTAssertEqual(sections.buttons.allElementsBoundByIndex.map(\.label), ["Analytics", "Medications"])
+        XCTAssertTrue(sections.buttons["Medications"].isSelected)
+        XCTAssertEqual(app.buttons["add-medication-button"].label, "Add")
     }
 
-    /// Integration test: Empty state display
     func testEmptyStateDisplay() throws {
-        TestUtilities.navigateToSettings(self.app)
-        self.app.buttons["Medication Profiles"].tap()
+        TestUtilities.navigateToMedicationProfiles(app)
 
-        let emptyStateLabel = self.app.staticTexts["No medication profiles yet"]
+        XCTAssertTrue(app.staticTexts["No medication profiles yet"].waitForExistence(timeout: 5))
         XCTAssertTrue(
-            emptyStateLabel.waitForExistence(timeout: 3.0),
-            "Empty state should be shown when no profiles exist")
+            app.staticTexts["Add your first medication profile to record prescribed doses and schedules."].exists)
+        let addFirst = app.buttons["add-medication-empty-button"]
+        XCTAssertEqual(addFirst.label, "Add Medication")
+        addFirst.tap()
+        XCTAssertTrue(app.navigationBars["Add Medication"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.textFields["add-prescribed-dose-input"].exists)
     }
 }

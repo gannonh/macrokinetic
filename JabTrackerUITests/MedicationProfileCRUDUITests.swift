@@ -1,102 +1,73 @@
 import XCTest
 
-/// E2E tests for basic medication profile CRUD operations
+/// Add, view and edit a medication profile through More > GLP-1 Programs > Medications.
 final class MedicationProfileCRUDUITests: XCTestCase {
     var app: XCUIApplication!
 
     override func setUpWithError() throws {
         continueAfterFailure = false
-
-        self.app = XCUIApplication()
-        self.app.launchArguments = ["--ui-testing", "--reset-app-data"]
-        self.app.launch()
-
-        XCTAssertTrue(self.app.tabBars.firstMatch.waitForExistence(timeout: 5.0))
+        app = TestUtilities.launchAppWithTestMode(resetData: true)
+        XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 10))
     }
 
-    private func navigateToMedicationProfiles() {
-        TestUtilities.navigateToSettings(self.app)
-        let medicationProfilesButton = self.app.buttons["Medication Profiles"]
-        XCTAssertTrue(medicationProfilesButton.waitForExistence(timeout: 3.0))
-        medicationProfilesButton.tap()
+    override func tearDownWithError() throws {
+        if testRun?.hasSucceeded == false {
+            TestUtilities.captureFailureScreenshot(app, testName: name)
+        }
+        app = nil
     }
 
     func testCreateMedicationProfile() throws {
-        self.navigateToMedicationProfiles()
+        let row = TestUtilities.createMedicationProfile(app, amount: "0.25")
 
-        let addProfileButton = self.app.buttons["Add Medication Profile"]
-        XCTAssertTrue(addProfileButton.waitForExistence(timeout: 3.0))
-        addProfileButton.tap()
-
-        // Select medication
-        let medicationPicker = self.app.buttons["medication-picker"]
-        XCTAssertTrue(medicationPicker.waitForExistence(timeout: 3.0))
-        medicationPicker.tap()
-
-        let semaglutideOption = self.app.buttons["medication-semaglutide"]
-        XCTAssertTrue(semaglutideOption.waitForExistence(timeout: 3.0))
-        semaglutideOption.tap()
-
-        // Select brand
-        let brandPicker = self.app.buttons["add-brand-picker"]
-        XCTAssertTrue(brandPicker.waitForExistence(timeout: 3.0))
-        brandPicker.tap()
-
-        let ozempicOption = self.app.buttons["add-brand-ozempic"]
-        XCTAssertTrue(ozempicOption.waitForExistence(timeout: 3.0))
-        ozempicOption.tap()
-
-        // Select dose
-        let dosePicker = self.app.buttons["add-dose-picker"]
-        XCTAssertTrue(dosePicker.waitForExistence(timeout: 3.0))
-        dosePicker.tap()
-
-        let doseOption = self.app.buttons["add-dose-option-0.25"]
-        XCTAssertTrue(doseOption.waitForExistence(timeout: 3.0))
-        doseOption.tap()
-
-        // Save profile
-        let saveButton = self.app.buttons["save-medication-profile"]
-        XCTAssertTrue(saveButton.waitForExistence(timeout: 3.0))
-        saveButton.tap()
-
-        // Verify profile created
-        let profileCell = self.app.buttons["medication-profile-semaglutide-ozempic-0.25mg"]
-        XCTAssertTrue(profileCell.waitForExistence(timeout: 3.0))
-        XCTAssertTrue(profileCell.staticTexts["Semaglutide (Ozempic)"].exists)
-        XCTAssertTrue(profileCell.staticTexts["0.25 mg"].exists)
+        XCTAssertTrue(row.staticTexts["Semaglutide (Ozempic)"].exists)
+        XCTAssertTrue(row.staticTexts["0.25 mg"].exists)
+        XCTAssertTrue(row.staticTexts["Schedule not set"].exists)
+        XCTAssertFalse(app.staticTexts["No medication profiles yet"].exists)
     }
 
     func testViewMedicationProfileDetail() throws {
-        self.navigateToMedicationProfiles()
+        let row = TestUtilities.createMedicationProfile(app, medication: "tirzepatide", brand: "Mounjaro", amount: "2.5")
+        TestUtilities.openMedicationProfile(app, row: row)
 
-        // First create a profile (simplified)
-        let addProfileButton = self.app.buttons["Add Medication Profile"]
-        addProfileButton.tap()
+        XCTAssertTrue(app.navigationBars["Mounjaro"].exists)
+        XCTAssertTrue(app.staticTexts["Medication Details"].exists)
+        assertDetail("Medication", "Tirzepatide")
+        assertDetail("Brand", "Mounjaro")
+        assertDetail("Current Dose", "2.50 mg")
+        assertDetail("Preferred Sites", "Thigh")
+        XCTAssertTrue(app.staticTexts["Dose Schedule"].exists)
+        XCTAssertTrue(app.buttons["create-schedule-button"].exists)
+    }
 
-        let medicationPicker = self.app.buttons["medication-picker"]
-        medicationPicker.tap()
-        let semaglutideOption = self.app.buttons["medication-semaglutide"]
-        semaglutideOption.tap()
+    func testEditMedicationProfileAmount() throws {
+        let row = TestUtilities.createMedicationProfile(app, amount: "0.25")
+        TestUtilities.openMedicationProfile(app, row: row)
 
-        let brandPicker = self.app.buttons["add-brand-picker"]
-        brandPicker.tap()
-        let ozempicOption = self.app.buttons["add-brand-ozempic"]
-        ozempicOption.tap()
+        app.buttons["edit-medication-profile"].tap()
+        let amount = app.textFields["edit-prescribed-dose-input"]
+        XCTAssertTrue(amount.waitForExistence(timeout: 5))
+        XCTAssertEqual(amount.value as? String, "0.25")
+        let save = app.buttons["edit-save-button"]
+        amount.coordinate(withNormalizedOffset: CGVector(dx: 0.98, dy: 0.5)).tap()
+        amount.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 4))
+        XCTAssertFalse(save.isEnabled, "Save stays disabled while the amount is empty")
+        amount.typeText("0.5")
+        XCTAssertEqual(amount.value as? String, "0.5")
+        save.tap()
+        XCTAssertTrue(amount.waitForNonExistence(timeout: 5))
 
-        let saveButton = self.app.buttons["save-medication-profile"]
-        saveButton.tap()
+        assertDetail("Current Dose", "0.50 mg")
+        app.navigationBars.buttons["BackButton"].tap()
+        let editedRow = TestUtilities.medicationProfileRow(app, medication: "semaglutide", brand: "Ozempic", amount: 0.5)
+        XCTAssertTrue(editedRow.waitForExistence(timeout: 5))
+        XCTAssertTrue(editedRow.staticTexts["0.50 mg"].exists)
+        XCTAssertFalse(row.exists, "The 0.25 mg row is replaced, not duplicated")
+    }
 
-        // Now test detail view
-        let profileCell = self.app.buttons.matching(
-            identifier: "medication-profile-semaglutide-ozempic-0.25mg"
-        ).firstMatch
-        XCTAssertTrue(profileCell.waitForExistence(timeout: 3.0))
-        profileCell.tap()
-
-        // Verify detail view content
-        XCTAssertTrue(self.app.staticTexts["Medication Details"].waitForExistence(timeout: 3.0))
-        XCTAssertTrue(self.app.staticTexts["Semaglutide"].exists)
-        XCTAssertTrue(self.app.staticTexts["Ozempic"].exists)
+    /// A DetailRow renders its title and value as sibling texts.
+    private func assertDetail(_ title: String, _ value: String, file: StaticString = #filePath, line: UInt = #line) {
+        XCTAssertTrue(app.staticTexts[title].waitForExistence(timeout: 5), "Missing \(title)", file: file, line: line)
+        XCTAssertTrue(app.staticTexts[value].exists, "\(title) should read \(value)", file: file, line: line)
     }
 }

@@ -2,8 +2,8 @@
 //  DailyMedicationProfileScheduleUITests.swift
 //  JabTrackerUITests
 //
-//  E2E tests for daily medication profile schedule management
-//  Tests Liraglutide (Victoza) - daily dosing medication
+//  Daily schedule management for a seeded Liraglutide (Victoza) 0.60 mg profile,
+//  reached through More > GLP-1 Programs > Medications.
 //
 
 import XCTest
@@ -15,9 +15,10 @@ final class DailyMedicationProfileScheduleUITests: XCTestCase {
         super.setUp()
         continueAfterFailure = false
         app = XCUIApplication()
-        // Pre-seed with Liraglutide profile (daily medication)
+        // Pre-seed a Liraglutide profile with no doses, so it has no schedule yet
         app.launchEnvironment["TEST_DATA_SEED"] = "true"
-        app.launchEnvironment["TEST_DATA_DAYS"] = "0"  // No doses
+        app.launchEnvironment["TEST_DATA_DAYS"] = "7"
+        app.launchEnvironment["TEST_DATA_DOSE_COUNT"] = "0"
         app.launchEnvironment["TEST_DATA_MEDICATION"] = "liraglutide"
         app.launchEnvironment["TEST_DATA_BRAND"] = "Victoza"
         app.launchEnvironment["TEST_DATA_DOSE"] = "0.6"
@@ -25,161 +26,77 @@ final class DailyMedicationProfileScheduleUITests: XCTestCase {
     }
 
     override func tearDown() {
+        if testRun?.hasSucceeded == false {
+            TestUtilities.captureFailureScreenshot(app, testName: name)
+        }
         app = nil
         super.tearDown()
     }
 
-    // MARK: - Helper Methods
-
-    /// Navigate to Liraglutide medication profile settings view (profile already pre-seeded in setUp)
-    private func navigateToMedicationProfileSettings() throws {
+    private func openSeededProfile() {
         app.launch()
-
-        // Wait for app to load
-        let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 5), "Tab bar should appear after app launch")
-
-        // Navigate to Settings (via More tab)
-        TestUtilities.navigateToSettings(app)
-
-        // Tap Medication Profiles button
-        let medicationProfilesButton = app.buttons["Medication Profiles"]
-        XCTAssertTrue(
-            medicationProfilesButton.waitForExistence(timeout: 3),
-            "Medication Profiles button should exist in Settings")
-        medicationProfilesButton.tap()
-
-        // Tap on pre-seeded Liraglutide profile
-        // Note: Dose is formatted with 2 decimal places (0.60 not 0.6)
-        let profile = app.buttons["medication-profile-liraglutide-victoza-0.60mg"]
-        XCTAssertTrue(
-            profile.waitForExistence(timeout: 3),
-            "Pre-seeded Liraglutide profile should appear in list")
-        profile.tap()
+        XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 10))
+        let row = TestUtilities.medicationProfileRow(app, medication: "liraglutide", brand: "Victoza", amount: 0.6)
+        TestUtilities.openMedicationProfile(app, row: row)
+        XCTAssertTrue(app.navigationBars["Victoza"].exists)
+        XCTAssertTrue(app.staticTexts["0.60 mg"].exists)
     }
 
-    // MARK: - Test 1: Schedule Creation for Daily Medication
+    private func patternOptions() -> [String] {
+        app.buttons.matching(identifier: "pattern-picker").allElementsBoundByIndex.map(\.label)
+    }
 
     func testDailyMedicationScheduleCreation() throws {
-        // GIVEN: App launched with Liraglutide profile (daily medication)
-        try navigateToMedicationProfileSettings()
+        openSeededProfile()
+        app.buttons["create-schedule-button"].tap()
+        XCTAssertTrue(app.navigationBars["Create Schedule"].waitForExistence(timeout: 5))
 
-        // WHEN: User creates a schedule
-        let createScheduleButton = app.buttons["create-schedule-button"]
-        XCTAssertTrue(
-            createScheduleButton.waitForExistence(timeout: 5),
-            "Create schedule button should exist when no active schedule")
-        createScheduleButton.tap()
+        // The launch editor records the prescribed pattern and never offers Split Dose.
+        XCTAssertEqual(patternOptions(), ["Daily", "Weekly"])
+        XCTAssertFalse(app.buttons["Split Dose"].exists)
+        XCTAssertTrue(app.staticTexts["0.60 mg"].exists, "The editor states the profile amount")
+        let create = app.buttons["save-schedule-edit"]
+        XCTAssertFalse(create.isEnabled)
 
-        // THEN: Only Daily pattern is available
-        let dailyOption = app.staticTexts["Daily"]
-        XCTAssertTrue(
-            dailyOption.waitForExistence(timeout: 5),
-            "Daily option must be visible")
+        app.buttons["Daily"].tap()
+        XCTAssertTrue(create.isEnabled)
+        XCTAssertFalse(app.steppers["interval-stepper"].exists, "Daily has no interval")
+        create.tap()
+        XCTAssertTrue(create.waitForNonExistence(timeout: 5))
 
-        let weeklyOption = app.staticTexts["Weekly"]
-        XCTAssertFalse(
-            weeklyOption.exists,
-            "Weekly option should NOT exist for daily medication")
-
-        let splitDoseOption = app.staticTexts["Split Dose"]
-        XCTAssertFalse(
-            splitDoseOption.exists,
-            "Split Dose option should NOT exist for daily medication")
-
-        // Save schedule
-        let saveButton = app.buttons["save-schedule-edit"]
-        XCTAssertTrue(saveButton.waitForExistence(timeout: 3), "Save button should exist")
-        saveButton.tap()
-
-        // Wait for sheet to dismiss
-        XCTAssertFalse(
-            saveButton.waitForExistence(timeout: 3),
-            "Sheet should dismiss after saving")
-
-        // THEN: Verify schedule was created (even if pattern is wrong)
-        let editScheduleButton = app.buttons["edit-schedule-button"]
-        XCTAssertTrue(
-            editScheduleButton.waitForExistence(timeout: 5),
-            "Edit schedule button should appear after creating schedule")
-
-        print("✅ Test passed: Daily medication schedule created correctly")
+        XCTAssertTrue(app.buttons["edit-schedule-button"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Standard Daily"].exists)
     }
-
-    // MARK: - Test 3: Edit Schedule Pattern Restriction for Daily Medication
 
     func testDailyMedicationEditSchedulePatternRestriction() throws {
-        // GIVEN: Liraglutide profile with existing daily schedule
-        try navigateToMedicationProfileSettings()
+        openSeededProfile()
+        try TestUtilities.createDefaultSchedule(app, pattern: "Daily")
 
-        // Create initial schedule using helper
-        try TestUtilities.createDefaultSchedule(app)
+        app.buttons["edit-schedule-button"].tap()
+        XCTAssertTrue(app.navigationBars["Edit Schedule"].waitForExistence(timeout: 5))
+        XCTAssertEqual(patternOptions(), ["Daily", "Weekly"])
+        XCTAssertTrue(app.buttons["Daily"].isSelected)
+        XCTAssertFalse(app.buttons["Split Dose"].exists)
+        XCTAssertFalse(app.buttons["Recorded Split Schedule"].exists)
 
-        // WHEN: User edits the schedule again
-        let editScheduleButton = app.buttons["edit-schedule-button"]
-        XCTAssertTrue(editScheduleButton.waitForExistence(timeout: 5))
-        editScheduleButton.tap()
-
-        // THEN: Pattern picker STILL only shows Daily option
-        let dailyOption = app.staticTexts["Daily"]
-        XCTAssertTrue(
-            dailyOption.waitForExistence(timeout: 5),
-            "Daily option must still be visible when editing")
-
-        let weeklyOption = app.staticTexts["Weekly"]
-        let splitDoseOption = app.staticTexts["Split Dose"]
-        XCTAssertFalse(weeklyOption.exists, "Weekly should NOT appear when editing daily schedule")
-        XCTAssertFalse(splitDoseOption.exists, "Split Dose should NOT appear when editing daily schedule")
-
-        // Cancel edit
-        let cancelButton = app.buttons["cancel-schedule-edit"]
-        XCTAssertTrue(cancelButton.waitForExistence(timeout: 3), "Cancel button should exist")
-        cancelButton.tap()
-
-        print("✅ Test passed: Daily medication edit schedule maintains pattern restriction")
+        app.buttons["cancel-schedule-edit"].tap()
+        XCTAssertTrue(app.staticTexts["Standard Daily"].waitForExistence(timeout: 5))
     }
 
-    // MARK: - Test 4: Pause/Resume Schedule for Daily Medication
-
     func testDailyMedicationPauseResumeSchedule() throws {
-        // GIVEN: Liraglutide profile with active daily schedule
-        try navigateToMedicationProfileSettings()
+        openSeededProfile()
+        try TestUtilities.createDefaultSchedule(app, pattern: "Daily")
 
-        // Create schedule using helper
-        try TestUtilities.createDefaultSchedule(app)
+        app.buttons["pause-schedule-button"].tap()
+        let confirm = app.buttons["pause-confirm-button"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5))
+        confirm.tap()
+        XCTAssertTrue(confirm.waitForNonExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Schedule is currently paused"].waitForExistence(timeout: 5))
 
-        // WHEN: User pauses the schedule
-        let pauseButton = app.buttons["pause-schedule-button"]
-        XCTAssertTrue(pauseButton.waitForExistence(timeout: 5), "Pause button should exist")
-        pauseButton.tap()
-
-        // Confirm pause in sheet
-        let pauseConfirmButton = app.buttons["pause-confirm-button"]
-        XCTAssertTrue(
-            pauseConfirmButton.waitForExistence(timeout: 3),
-            "Pause confirmation button should appear in sheet")
-        pauseConfirmButton.tap()
-
-        // Wait for sheet to dismiss
-        XCTAssertFalse(
-            pauseConfirmButton.waitForExistence(timeout: 3),
-            "Pause sheet should dismiss after confirmation")
-
-        // THEN: Resume button appears
-        let resumeButton = app.buttons["resume-schedule-button"]
-        XCTAssertTrue(
-            resumeButton.waitForExistence(timeout: 5),
-            "Resume button should exist after pausing")
-
-        // WHEN: User resumes the schedule
-        resumeButton.tap()
-
-        // THEN: Verify pause button returns (schedule is active again)
-        let pauseButtonAfterResume = app.buttons["pause-schedule-button"]
-        XCTAssertTrue(
-            pauseButtonAfterResume.waitForExistence(timeout: 5),
-            "Pause button should return after resuming schedule")
-
-        print("✅ Test passed: Daily medication pause/resume works correctly")
+        app.buttons["resume-schedule-button"].tap()
+        XCTAssertTrue(app.buttons["pause-schedule-button"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["Schedule is currently paused"].exists)
+        XCTAssertTrue(app.staticTexts["Standard Daily"].exists)
     }
 }

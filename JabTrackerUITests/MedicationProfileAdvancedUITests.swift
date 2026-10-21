@@ -1,168 +1,91 @@
 import XCTest
 
-/// E2E tests for advanced medication profile features
+/// Injection sites, start date, compounded profiles and the hidden titration tool on the launch medication form.
 final class MedicationProfileAdvancedUITests: XCTestCase {
     var app: XCUIApplication!
 
     override func setUpWithError() throws {
         continueAfterFailure = false
-
-        self.app = XCUIApplication()
-        self.app.launchArguments = ["--ui-testing", "--reset-app-data"]
-        self.app.launch()
-
-        XCTAssertTrue(self.app.tabBars.firstMatch.waitForExistence(timeout: 5.0))
+        app = TestUtilities.launchAppWithTestMode(resetData: true)
+        XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 10))
     }
 
-    private func navigateToMedicationProfiles() {
-        TestUtilities.navigateToSettings(self.app)
-        let medicationProfilesButton = self.app.buttons["Medication Profiles"]
-        XCTAssertTrue(medicationProfilesButton.waitForExistence(timeout: 3.0))
-        medicationProfilesButton.tap()
+    override func tearDownWithError() throws {
+        if testRun?.hasSucceeded == false {
+            TestUtilities.captureFailureScreenshot(app, testName: name)
+        }
+        app = nil
     }
 
     func testInjectionSitesSelection() throws {
-        self.navigateToMedicationProfiles()
+        openAddForm()
+        let abdomen = app.descendants(matching: .any)["add-injection-site-abdomen"].firstMatch
+        XCTAssertTrue(abdomen.waitForExistence(timeout: 5))
+        abdomen.tap()
+        enterAmountAndSave("0.25")
 
-        let addProfileButton = self.app.buttons["Add Medication Profile"]
-        XCTAssertTrue(addProfileButton.waitForExistence(timeout: 3.0))
-        addProfileButton.tap()
-
-        // Select medication
-        let medicationPicker = self.app.buttons["medication-picker"]
-        medicationPicker.tap()
-        let semaglutideOption = self.app.buttons["medication-semaglutide"]
-        semaglutideOption.tap()
-
-        // Test default injection site selection
-        let thighSite = self.app.staticTexts["add-injection-site-thigh"]
-        XCTAssertTrue(thighSite.waitForExistence(timeout: 3.0))
-
-        let thighCheckmark = self.app.images["add-injection-site-thigh"].firstMatch
-        XCTAssertTrue(thighCheckmark.exists, "Thigh should be selected by default")
-
-        // Add additional injection site
-        let abdomenSite = self.app.staticTexts["add-injection-site-abdomen"]
-        XCTAssertTrue(abdomenSite.waitForExistence(timeout: 3.0))
-        abdomenSite.tap()
-
-        let abdomenCheckmark = self.app.images["add-injection-site-abdomen"].firstMatch
-        XCTAssertTrue(
-            abdomenCheckmark.waitForExistence(timeout: 2.0),
-            "Abdomen should be selected after tap")
+        let row = TestUtilities.medicationProfileRow(app, medication: "semaglutide", brand: "Ozempic", amount: 0.25)
+        TestUtilities.openMedicationProfile(app, row: row)
+        XCTAssertTrue(app.staticTexts["Preferred Sites"].exists)
+        XCTAssertTrue(app.staticTexts["Thigh, Abdomen"].exists, "Thigh is preselected; Abdomen is added")
     }
 
     func testStartDateFunctionality() throws {
-        self.navigateToMedicationProfiles()
+        openAddForm()
+        XCTAssertTrue(app.datePickers["add-start-date-picker"].exists)
+        enterAmountAndSave("0.25")
 
-        let addProfileButton = self.app.buttons["Add Medication Profile"]
-        addProfileButton.tap()
-
-        // Select medication
-        let medicationPicker = self.app.buttons["medication-picker"]
-        medicationPicker.tap()
-        let semaglutideOption = self.app.buttons["medication-semaglutide"]
-        semaglutideOption.tap()
-
-        // Test start date picker
-        let startDatePicker = self.app.buttons["Date Picker"]
-        XCTAssertTrue(
-            startDatePicker.waitForExistence(timeout: 3.0),
-            "Start date picker should be accessible")
-        startDatePicker.tap()
-
-        // Dismiss calendar modal
-        let dismissRegion = self.app.buttons["PopoverDismissRegion"]
-        if dismissRegion.exists {
-            dismissRegion.tap()
-        }
+        let row = TestUtilities.medicationProfileRow(app, medication: "semaglutide", brand: "Ozempic", amount: 0.25)
+        TestUtilities.openMedicationProfile(app, row: row)
+        XCTAssertTrue(app.staticTexts["Start Date"].exists)
+        XCTAssertTrue(app.staticTexts[Date().formatted(date: .abbreviated, time: .omitted)].exists)
     }
 
     func testCompoundedMedicationSetup() throws {
-        self.navigateToMedicationProfiles()
+        openAddForm()
+        let compounded = app.switches["add-compounded-medication-toggle"].switches.firstMatch
+        XCTAssertTrue(compounded.exists)
+        XCTAssertEqual(compounded.value as? String, "0")
+        compounded.tap()
+        XCTAssertEqual(compounded.value as? String, "1")
 
-        let addProfileButton = self.app.buttons["Add Medication Profile"]
-        addProfileButton.tap()
+        XCTAssertFalse(app.buttons["add-brand-picker"].exists, "A compounded profile has a fixed Generic brand")
+        XCTAssertTrue(app.staticTexts["Generic"].exists)
+        XCTAssertFalse(app.textFields["add-vial-strength-input"].exists)
+        XCTAssertFalse(app.textFields["add-target-dose-input"].exists)
+        XCTAssertFalse(app.buttons["add-calculate-reconstitution"].exists)
+        enterAmountAndSave("1.5")
 
-        // Select medication
-        let medicationPicker = self.app.buttons["medication-picker"]
-        medicationPicker.tap()
-        let semaglutideOption = self.app.buttons["medication-semaglutide"]
-        semaglutideOption.tap()
-
-        // Test compounded medication toggle
-        let compoundedToggle = self.app.switches["add-compounded-medication-toggle"]
-        XCTAssertTrue(
-            compoundedToggle.waitForExistence(timeout: 3.0),
-            "Compounded toggle should be present")
-
-        // Verify initial state (should be off)
-        XCTAssertEqual(
-            compoundedToggle.value as? String, "Off",
-            "Compounded toggle should be off by default")
-
-        // Toggle on using coordinate-based approach (required for SwiftUI Form toggles)
-        compoundedToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
-        XCTAssertEqual(
-            compoundedToggle.value as? String, "On",
-            "Compounded toggle should be on after tap")
-
-        // Verify compounded fields appear
-        let vialStrengthField = self.app.textFields["add-vial-strength-input"]
-        XCTAssertTrue(
-            vialStrengthField.waitForExistence(timeout: 2.0),
-            "Vial strength field should appear for compounded medication")
-
-        let targetDoseField = self.app.textFields["add-target-dose-input"]
-        XCTAssertTrue(
-            targetDoseField.waitForExistence(timeout: 2.0),
-            "Target dose field should appear for compounded medication")
+        let row = TestUtilities.medicationProfileRow(app, medication: "semaglutide", brand: "Generic", amount: 1.5)
+        XCTAssertTrue(row.waitForExistence(timeout: 5))
+        XCTAssertTrue(row.staticTexts["Semaglutide (Generic)"].exists)
+        XCTAssertTrue(row.staticTexts["Compounded"].exists)
+        XCTAssertTrue(row.staticTexts["1.50 mg"].exists)
     }
 
-    func testDoseEscalationTracking() throws {
-        self.navigateToMedicationProfiles()
+    func testDoseTitrationIsAbsentUnderLaunchPolicy() throws {
+        let row = TestUtilities.createMedicationProfile(app, amount: "0.25")
+        TestUtilities.openMedicationProfile(app, row: row)
 
-        // Create test profile
-        let addProfileButton = self.app.buttons["Add Medication Profile"]
-        addProfileButton.tap()
+        XCTAssertTrue(app.staticTexts["Current Dose"].exists)
+        XCTAssertTrue(app.staticTexts["0.25 mg"].exists)
+        XCTAssertFalse(app.buttons["dose-escalation-button"].exists)
+        XCTAssertFalse(app.staticTexts["Dose Titration Plan"].exists)
+        XCTAssertFalse(app.staticTexts["Half-life"].exists)
+    }
 
-        let medicationPicker = self.app.buttons["medication-picker"]
-        medicationPicker.tap()
-        let semaglutideOption = self.app.buttons["medication-semaglutide"]
-        semaglutideOption.tap()
+    private func openAddForm() {
+        TestUtilities.navigateToMedicationProfiles(app)
+        app.buttons["add-medication-button"].tap()
+        XCTAssertTrue(app.textFields["add-prescribed-dose-input"].waitForExistence(timeout: 5))
+    }
 
-        let brandPicker = self.app.buttons["add-brand-picker"]
-        brandPicker.tap()
-        let ozempicOption = self.app.buttons["add-brand-ozempic"]
-        ozempicOption.tap()
-
-        let dosePicker = self.app.buttons["add-dose-picker"]
-        dosePicker.tap()
-        let doseOption = self.app.buttons["add-dose-option-0.25"]
-        doseOption.tap()
-
-        let saveButton = self.app.buttons["save-medication-profile"]
-        saveButton.tap()
-
-        // Navigate to profile details
-        let profileCell = self.app.buttons["medication-profile-semaglutide-ozempic-0.25mg"]
-        XCTAssertTrue(profileCell.waitForExistence(timeout: 3.0))
-        profileCell.tap()
-
-        // Test dose escalation functionality
-        let escalationButton = self.app.buttons["dose-escalation-button"]
-        XCTAssertTrue(
-            escalationButton.waitForExistence(timeout: 3.0),
-            "Dose escalation button should be accessible from profile detail")
-        escalationButton.tap()
-
-        let escalationTitle = self.app.staticTexts["Dose Escalation Plan"]
-        XCTAssertTrue(
-            escalationTitle.waitForExistence(timeout: 3.0),
-            "Dose escalation view should open")
-
-        // Verify current dose is displayed
-        XCTAssertTrue(self.app.staticTexts["Current Dose"].exists)
-        XCTAssertTrue(self.app.staticTexts["0.25 mg"].exists)
+    private func enterAmountAndSave(_ amount: String) {
+        let field = app.textFields["add-prescribed-dose-input"]
+        field.tap()
+        field.typeText(amount)
+        XCTAssertEqual(field.value as? String, amount)
+        app.buttons["save-medication-profile"].tap()
+        XCTAssertTrue(field.waitForNonExistence(timeout: 5))
     }
 }
