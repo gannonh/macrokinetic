@@ -87,9 +87,13 @@ final class MockNotificationCenter: NotificationCenterProtocol {
         self.setCategories = categories
     }
 
+    /// Runs after each add, letting a test act while a caller is mid-way through adding requests
+    var onAdd: (() async -> Void)?
+
     func add(_ request: UNNotificationRequest) async throws {
         addCallCount += 1
         addedRequests.append(request)
+        await onAdd?()
     }
 
     func removePendingNotificationRequests(withIdentifiers identifiers: [String]) {

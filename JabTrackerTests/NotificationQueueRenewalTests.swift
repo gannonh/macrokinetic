@@ -195,6 +195,43 @@ struct NotificationQueueRenewalTests {
         #expect(Set(doses.map(\.doseAmount)) == [0.5])
     }
 
+    @Test("Split-dose reminders keep the schedule's cadence whenever the app refreshes")
+    func splitDoseCadenceSurvivesRefresh() async throws {
+        let fixture = try makeFixture(
+            pattern: .splitDose,
+            config: .splitDose(
+                weeklyTotal: 0.5, timeOfDay: TimeComponents(hour: 9, minute: 0),
+                windowMinutesBefore: 120, windowMinutesAfter: 120))
+
+        try await fixture.service.refreshNotificationQueue(now: now)
+        #expect(Array(triggerTimes(doseRequests(fixture.center)).prefix(3)) == [
+            "2030-01-03 20:00", "2030-01-07 08:00", "2030-01-10 20:00",
+        ])
+
+        try await fixture.service.refreshNotificationQueue(now: Self.date("2030-01-02 07:00"))
+        #expect(Array(triggerTimes(doseRequests(fixture.center)).prefix(3)) == [
+            "2030-01-03 20:00", "2030-01-07 08:00", "2030-01-10 20:00",
+        ])
+    }
+
+    @Test("A schedule change during a rebuild is applied after it, leaving no obsolete reminders")
+    func overlappingRefreshesApplyTheLatestSchedule() async throws {
+        let fixture = try makeFixture()
+        var second: Task<Void, Error>?
+        fixture.center.onAdd = {
+            guard second == nil else { return }
+            fixture.schedule.pausedAt = Self.date("2030-01-01 00:00")
+            second = Task { try await fixture.service.refreshNotificationQueue(now: self.now) }
+            for _ in 0..<20 { await Task.yield() }
+        }
+
+        try await fixture.service.refreshNotificationQueue(now: now)
+        try await second?.value
+
+        #expect(doseRequests(fixture.center).isEmpty)
+        #expect(fixture.center.request(withIdentifier: NotificationService.renewalRequestIdentifier) == nil)
+    }
+
     @Test("Paused days get no reminders; an open-ended pause ends the queue")
     func pausedScheduleSkipsReminders() async throws {
         let fixture = try makeFixture()

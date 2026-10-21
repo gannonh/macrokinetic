@@ -402,8 +402,8 @@ extension ScheduleService {
 
         var currentDate = startDate
 
-        // Align to start of day with configured time
-        var components = calendar.dateComponents([.year, .month, .day], from: currentDate)
+        // Align to the schedule's first day so every refresh keeps the same cadence
+        var components = calendar.dateComponents([.year, .month, .day], from: schedule.createdAt)
         components.hour = config.timeOfDay.hour
         components.minute = config.timeOfDay.minute
         components.second = 0
@@ -493,14 +493,15 @@ extension ScheduleService {
         var doses: [ScheduledDose] = []
         let calendar = Calendar.current
 
-        var currentDate = startDate
-
-        // Align to start date with configured time
-        var components = calendar.dateComponents([.year, .month, .day], from: currentDate)
+        // Align to the schedule's first day so every refresh keeps the same cadence
+        var components = calendar.dateComponents([.year, .month, .day], from: schedule.createdAt)
         components.hour = config.timeOfDay.hour
         components.minute = config.timeOfDay.minute
         components.second = 0
-        currentDate = calendar.date(from: components)!
+        var currentDate = calendar.date(from: components)!
+        while config.interval > 0 && currentDate < calendar.startOfDay(for: startDate) {
+            currentDate = calendar.date(byAdding: .day, value: config.interval, to: currentDate)!
+        }
 
         // Generate doses at configured interval
         // Use tolerance to prevent boundary date inclusion due to floating-point precision

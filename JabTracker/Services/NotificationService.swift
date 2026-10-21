@@ -103,6 +103,9 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     /// Refreshes the queue when any ScheduleService changes a schedule
     @ObservationIgnored private var scheduleObserver: NSObjectProtocol?
 
+    /// The latest queue rebuild; each rebuild waits for the one before it
+    @ObservationIgnored private var queueRebuild: Task<Void, Error>?
+
     /// Logger for notification service operations
     internal let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "NotificationService")
 
@@ -354,10 +357,22 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
      * every free slot but one, which holds a notice at the last queued dose telling the user to open
      * the app. Only dose reminders and that notice are replaced; other reminders stay.
      *
+     * Rebuilds run one at a time, so a schedule change during a rebuild is applied after it.
+     *
      * - Parameter now: Doses after this time are queued
      * - Throws: NotificationServiceError if scheduling fails
      */
     func refreshNotificationQueue(now: Date = Date()) async throws {
+        let previous = queueRebuild
+        let rebuild = Task {
+            _ = await previous?.result
+            try await rebuildNotificationQueue(now: now)
+        }
+        queueRebuild = rebuild
+        try await rebuild.value
+    }
+
+    private func rebuildNotificationQueue(now: Date) async throws {
         logger.info("Refreshing notification queue")
         isRefreshing = true
         defer { isRefreshing = false }
