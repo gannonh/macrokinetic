@@ -216,8 +216,12 @@ final class DoseReminderLiveCheckUITests: XCTestCase {
         }
         if !allow.waitForExistence(timeout: 5) {
             print("KAT3601 Settings still at root; navigating Apps > MacroKinetic > Notifications")
-            settings.swipeUp()
-            settings.staticTexts["Apps"].firstMatch.tap()
+            // The Settings root can still be loading, and Apps sits several screens down
+            let apps = settings.staticTexts["Apps"].firstMatch
+            for _ in 0..<8 where !apps.isHittable {
+                settings.swipeUp()
+            }
+            apps.tap()
             let appRow = settings.staticTexts["MacroKinetic"].firstMatch
             XCTAssertTrue(appRow.waitForExistence(timeout: 10))
             appRow.tap()
