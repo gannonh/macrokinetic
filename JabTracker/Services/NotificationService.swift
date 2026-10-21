@@ -427,7 +427,7 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     /// Rebuild the queue when dose reminders are on and permitted. Runs on every foreground and
     /// after every schedule change.
     func refreshIfEnabled() async {
-        guard notificationsEnabled, await checkAuthorizationStatus() == .authorized else { return }
+        guard await checkAuthorizationStatus() == .authorized, notificationsEnabled else { return }
         do {
             try await refreshNotificationQueue()
         } catch {
@@ -533,18 +533,19 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     public func disable() async {
         logger.info("Disabling notifications")
 
-        // 1. Cancel all pending notifications
+        // 1. Stop new refreshes, and let a running rebuild finish so it adds nothing after the removal
+        notificationsEnabled = false
+        _ = await queueRebuild?.result
+
+        // 2. Cancel all pending notifications
         notificationCenter.removeAllPendingNotificationRequests()
         logger.debug("Cancelled all pending notifications")
 
-        // 2. Clear notification queue
+        // 3. Clear notification queue
         notificationQueue.removeAll()
 
-        // 3. Update badge count
+        // 4. Update badge count
         await updateBadgeCount()
-
-        // 4. Update enabled state
-        notificationsEnabled = false
 
         // 5. Persist state to UserDefaults
         saveState()

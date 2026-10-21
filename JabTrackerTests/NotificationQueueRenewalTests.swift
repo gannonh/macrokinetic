@@ -232,6 +232,24 @@ struct NotificationQueueRenewalTests {
         #expect(fixture.center.request(withIdentifier: NotificationService.renewalRequestIdentifier) == nil)
     }
 
+    @Test("Turning reminders off during a rebuild leaves nothing pending")
+    func disablingDuringRebuildLeavesNothingPending() async throws {
+        let fixture = try makeFixture()
+        fixture.service.notificationsEnabled = true
+        var disabling: Task<Void, Never>?
+        fixture.center.onAdd = {
+            guard disabling == nil else { return }
+            disabling = Task { await fixture.service.disable() }
+            for _ in 0..<20 { await Task.yield() }
+        }
+
+        try await fixture.service.refreshNotificationQueue(now: now)
+        await disabling?.value
+
+        #expect(fixture.center.addedRequests.isEmpty)
+        #expect(!fixture.service.notificationsEnabled)
+    }
+
     @Test("Paused days get no reminders; an open-ended pause ends the queue")
     func pausedScheduleSkipsReminders() async throws {
         let fixture = try makeFixture()
