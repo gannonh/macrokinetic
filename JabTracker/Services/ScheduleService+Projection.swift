@@ -108,7 +108,8 @@ extension ScheduleService {
      *
      * Generating a dose for a stored schedule inserts it into the context, so this reconciles
      * persisted future doses: a projected time keeps its existing row (and id, which a delivered
-     * reminder points to), and unacted future rows the projection no longer produces are deleted.
+     * reminder points to) but takes the projected amount and window, and unacted future rows the
+     * projection no longer produces are deleted.
      *
      * - Parameters:
      *   - now: Start of the window (exclusive)
@@ -129,7 +130,13 @@ extension ScheduleService {
         upcomingDoses = generated.filter { $0.scheduledTime > now }
             .sorted { $0.scheduledTime < $1.scheduledTime }
             .prefix(limit)
-            .map { persistedBySlot[slot($0)] ?? $0 }
+            .map { projected in
+                guard let row = persistedBySlot[slot(projected)] else { return projected }
+                row.doseAmount = projected.doseAmount
+                row.windowStart = projected.windowStart
+                row.windowEnd = projected.windowEnd
+                return row
+            }
 
         let kept = Set(upcomingDoses.map(\.id))
         let unacted = { (dose: ScheduledDose) in

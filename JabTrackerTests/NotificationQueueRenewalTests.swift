@@ -179,6 +179,22 @@ struct NotificationQueueRenewalTests {
         #expect(Set(doses.map(\.doseAmount)) == [0.5])
     }
 
+    @Test("Changing only the amount keeps reminder ids and updates their doses")
+    func changedAmountUpdatesReusedDoses() async throws {
+        let fixture = try makeFixture()
+        try await fixture.service.refreshNotificationQueue(now: now)
+        let firstIds = Set(doseRequests(fixture.center).map(\.identifier))
+
+        try fixture.scheduleService.updateSchedule(
+            fixture.schedule, newPattern: .daily, newBaseSchedule: Self.config(interval: 1, amount: 0.5))
+        try await fixture.service.refreshNotificationQueue(now: now)
+
+        #expect(Set(doseRequests(fixture.center).map(\.identifier)) == firstIds)
+        let doses = try persistedDoses(fixture)
+        #expect(doses.count == 63)
+        #expect(Set(doses.map(\.doseAmount)) == [0.5])
+    }
+
     @Test("Paused days get no reminders; an open-ended pause ends the queue")
     func pausedScheduleSkipsReminders() async throws {
         let fixture = try makeFixture()
