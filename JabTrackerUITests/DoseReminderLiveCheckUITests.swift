@@ -118,6 +118,18 @@ final class DoseReminderLiveCheckUITests: XCTestCase {
         settle()
     }
 
+    /// KAT-3613: turn dose reminders on and allow for the schedule the script seeded.
+    func testAllowRemindersForSeededSchedule() throws {
+        let app = launch()
+        openNotificationSettings(app)
+        flip(doseReminderToggle(app))
+        answerPermissionAlert("Allow")
+        XCTAssertTrue(isOn(doseReminderToggle(app)), "Dose reminders on")
+        sleep(3)  // let the queue refresh finish before the script reads it
+        attach("reminders-on", app.screenshot())
+        settle()
+    }
+
     /// Check 1 (main): relaunch, then turn dose reminders off and on again.
     func testTurnRemindersOffAndOn() throws {
         let app = launch()
