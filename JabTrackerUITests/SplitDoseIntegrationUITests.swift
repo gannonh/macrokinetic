@@ -23,6 +23,9 @@ final class SplitDoseIntegrationUITests: XCTestCase {
         app.launchEnvironment["TEST_DATA_BRAND"] = "Ozempic"
         app.launchEnvironment["TEST_DATA_DOSE"] = "1.0"
         app.launchEnvironment["TEST_DATA_SPLIT_SCHEDULE"] = "true"
+        // The split schedule is seeded from the first recorded dose, so that dose must never be randomly skipped.
+        app.launchEnvironment["TEST_DATA_ADHERENCE"] = "1.0"
+        app.launchEnvironment["TEST_DATA_SKIPPED"] = "false"
         app.launchArguments = ["--ui-testing", "--reset-app-data"]
     }
 
@@ -82,22 +85,42 @@ final class SplitDoseIntegrationUITests: XCTestCase {
         TestUtilities.navigateToHistoryView(in: app)
         app.segmentedControls["history-view-mode-picker"].buttons["Calendar"].tap()
         evidence("calendar")
-        XCTAssertTrue(app.descendants(matching: .any)["calendar-day-1"].firstMatch.waitForExistence(timeout: 5))
 
-        let scheduledCells = app.descendants(matching: .any).matching(NSPredicate(
-            format: "identifier BEGINSWITH 'calendar-day-' AND label CONTAINS ' scheduled'"
-        )).allElementsBoundByIndex
-        let labels = scheduledCells.map(\.label)
-        let days = scheduledCells.compactMap { Int($0.identifier.replacingOccurrences(of: "calendar-day-", with: "")) }
-        print("Scheduled days \(days): \(labels)")
-        XCTAssertFalse(days.isEmpty, "The recorded split schedule projects scheduled doses this month")
+        // The next administration can fall in the following month, so read this month and the next.
+        let thisMonth = scheduledDayLabels()
+        // The month title inherits the History section identifier, so the first day's date label marks the month.
+        let firstDay = app.descendants(matching: .any)["calendar-day-1"].firstMatch
+        let shownFirstDay = firstDay.label
+        app.buttons["Next month"].tap()
+        let nextMonthShown = expectation(for: NSPredicate(format: "label != %@", shownFirstDay), evaluatedWith: firstDay)
+        wait(for: [nextMonthShown], timeout: 5)
+        let nextMonth = scheduledDayLabels()
+        let labels = thisMonth + nextMonth
+        print("Scheduled day labels: \(labels)")
+        XCTAssertGreaterThanOrEqual(labels.count, 4, "Two months hold at least four twice-weekly administrations")
         XCTAssertTrue(
             labels.allSatisfy { $0.contains("1 scheduled") },
             "Twice weekly means one administration per scheduled day, not two: \(labels)")
+
         // Administrations are 3.5 days apart, so day gaps alternate 3 and 4 and any two consecutive gaps make a week.
-        let gaps = zip(days.dropFirst(), days).map { $0 - $1 }
-        XCTAssertTrue(gaps.allSatisfy { $0 == 3 || $0 == 4 }, "Gaps \(gaps) between days \(days)")
-        XCTAssertTrue(zip(gaps.dropFirst(), gaps).allSatisfy { $0 + $1 == 7 }, "Gaps \(gaps) between days \(days)")
+        // Gaps are checked within each month: KAT-3793 tracks the cadence restarting at the month boundary.
+        for month in [thisMonth, nextMonth] {
+            let days = month.compactMap { Int($0.components(separatedBy: " ")[1].dropLast()) }
+            XCTAssertEqual(days.count, month.count, "Every scheduled day label starts with its date: \(month)")
+            let gaps = zip(days.dropFirst(), days).map { $0 - $1 }
+            XCTAssertTrue(gaps.allSatisfy { $0 == 3 || $0 == 4 }, "Gaps \(gaps) between \(month)")
+            XCTAssertTrue(zip(gaps.dropFirst(), gaps).allSatisfy { $0 + $1 == 7 }, "Gaps \(gaps) between \(month)")
+        }
+    }
+
+    /// Labels such as "Oct 24, 2026, 1 scheduled" for the visible month, in day order.
+    private func scheduledDayLabels() -> [String] {
+        XCTAssertTrue(app.descendants(matching: .any)["calendar-day-1"].firstMatch.waitForExistence(timeout: 5))
+        let cells = app.descendants(matching: .any).matching(NSPredicate(
+            format: "identifier BEGINSWITH 'calendar-day-' AND label CONTAINS ' scheduled'"
+        )).allElementsBoundByIndex
+        let day = { (cell: XCUIElement) in Int(cell.identifier.dropFirst("calendar-day-".count)) ?? 0 }
+        return cells.sorted { day($0) < day($1) }.map(\.label)
     }
 
     func testSettingsShowsSplitDoseSchedule() throws {
