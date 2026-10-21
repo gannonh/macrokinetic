@@ -37,7 +37,7 @@ struct NotificationAuthorizationStatus: View {
 
             if status == .denied {
                 Button("Settings") {
-                    if let url = URL(string: UIApplication.openSettingsURLString) {
+                    if let url = URL(string: UIApplication.openNotificationSettingsURLString) {
                         UIApplication.shared.open(url)
                     }
                 }

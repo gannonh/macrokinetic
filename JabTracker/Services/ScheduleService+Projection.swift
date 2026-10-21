@@ -104,38 +104,55 @@ extension ScheduleService {
     }
 
     /**
-     * Refreshes the upcomingDoses property with scheduled doses for the next N days.
+     * Refreshes the upcomingDoses property with the nearest scheduled doses after `now`.
      *
-     * Updates the observable upcomingDoses array with all scheduled doses across
-     * all active schedules within the specified time window.
+     * Generating a dose for a stored schedule inserts it into the context, so this reconciles
+     * persisted future doses: a projected time keeps its existing row (and id, which a delivered
+     * reminder points to) but takes the projected amount and window, and unacted future rows the
+     * projection no longer produces are deleted.
      *
-     * - Parameter daysAhead: Number of days to look ahead (default: 30)
-     *
-     * - Note: Updates observable property for SwiftUI binding
+     * - Parameters:
+     *   - now: Start of the window (exclusive)
+     *   - daysAhead: Number of days to look ahead (default: 30)
+     *   - limit: Maximum number of doses to keep
      */
-    func refreshUpcomingDoses(daysAhead: Int = 30) {
-        print("🔍 [ScheduleService] refreshUpcomingDoses() called")
-        print("🔍 [ScheduleService] activeSchedules.count = \(activeSchedules.count)")
-
-        let now = Date()
+    func refreshUpcomingDoses(from now: Date = Date(), daysAhead: Int = 30, limit: Int = .max) {
+        // Other ScheduleService instances may have changed schedules since this one loaded them
+        loadActiveSchedules()
         let cutoffDate = Calendar.current.date(byAdding: .day, value: daysAhead, to: now)!
-        print("🔍 [ScheduleService] Looking for doses from \(now) to \(cutoffDate)")
+        let persisted =
+            (try? context.fetch(FetchDescriptor<ScheduledDose>(predicate: #Predicate { $0.scheduledTime > now })))
+            ?? []
+        let slot = { (dose: ScheduledDose) in "\(dose.schedule?.id.uuidString ?? "")|\(dose.scheduledTime)" }
+        let persistedBySlot = Dictionary(persisted.map { (slot($0), $0) }, uniquingKeysWith: { first, _ in first })
 
-        var allUpcomingDoses: [ScheduledDose] = []
-
-        for schedule in activeSchedules {
-            print("🔍 [ScheduleService] Generating doses for schedule \(schedule.id)")
-            print("🔍 [ScheduleService] Schedule pattern: \(schedule.patternType)")
-            print("🔍 [ScheduleService] Schedule createdAt: \(schedule.createdAt)")
-            let doses = generateScheduledDoses(for: schedule, from: now, to: cutoffDate)
-            print("🔍 [ScheduleService] Generated \(doses.count) doses for this schedule")
-            allUpcomingDoses.append(contentsOf: doses)
+        let unacted = { (dose: ScheduledDose) in
+            dose.actualDose == nil && dose.skippedAt == nil && dose.rescheduledFrom == nil
         }
 
-        print("🔍 [ScheduleService] Total upcoming doses generated: \(allUpcomingDoses.count)")
+        let generated = activeSchedules.flatMap { generateScheduledDoses(for: $0, from: now, to: cutoffDate) }
+        upcomingDoses = generated.filter { $0.scheduledTime > now }
+            .sorted { $0.scheduledTime < $1.scheduledTime }
+            .prefix(limit)
+            .map { projected in
+                guard let row = persistedBySlot[slot(projected)] else { return projected }
+                // A taken or skipped dose keeps the amount and window it was recorded against
+                guard unacted(row) else { return row }
+                row.doseAmount = projected.doseAmount
+                row.windowStart = projected.windowStart
+                row.windowEnd = projected.windowEnd
+                return row
+            }
 
-        // Sort chronologically
-        upcomingDoses = allUpcomingDoses.sorted { $0.scheduledTime < $1.scheduledTime }
+        let kept = Set(upcomingDoses.map(\.id))
+        for dose in generated + persisted where !kept.contains(dose.id) && unacted(dose) {
+            context.delete(dose)
+        }
+        do {
+            try context.save()
+        } catch {
+            logger.error("Failed to save upcoming doses: \(error.localizedDescription)")
+        }
     }
 
     /**
@@ -321,9 +338,8 @@ extension ScheduleService {
         let tolerance: TimeInterval = 60 * 60  // 1 hour tolerance
         while currentDate < endDate && (endDate.timeIntervalSince(currentDate) > tolerance) {
             // Skip if schedule is paused during this time
-            if let pausedUntil = schedule.pausedUntil,
-                let pausedAt = schedule.pausedAt,
-                currentDate >= pausedAt && currentDate < pausedUntil
+            if let pausedAt = schedule.pausedAt,
+                currentDate >= pausedAt && currentDate < schedule.pausedUntil ?? .distantFuture
             {
                 // Skip this dose and advance to next interval
                 currentDate = calendar.date(byAdding: .day, value: config.interval, to: currentDate)!
@@ -389,8 +405,8 @@ extension ScheduleService {
 
         var currentDate = startDate
 
-        // Align to start of day with configured time
-        var components = calendar.dateComponents([.year, .month, .day], from: currentDate)
+        // Align to the schedule's first day so every refresh keeps the same cadence
+        var components = calendar.dateComponents([.year, .month, .day], from: schedule.createdAt)
         components.hour = config.timeOfDay.hour
         components.minute = config.timeOfDay.minute
         components.second = 0
@@ -420,9 +436,8 @@ extension ScheduleService {
         let tolerance: TimeInterval = 60 * 60  // 1 hour tolerance
         while currentDate < endDate && (endDate.timeIntervalSince(currentDate) > tolerance) {
             // Skip if paused
-            if let pausedUntil = schedule.pausedUntil,
-                let pausedAt = schedule.pausedAt,
-                currentDate >= pausedAt && currentDate < pausedUntil
+            if let pausedAt = schedule.pausedAt,
+                currentDate >= pausedAt && currentDate < schedule.pausedUntil ?? .distantFuture
             {
                 currentDate = calendar.date(byAdding: .minute, value: splitInterval, to: currentDate)!
                 continue
@@ -481,23 +496,23 @@ extension ScheduleService {
         var doses: [ScheduledDose] = []
         let calendar = Calendar.current
 
-        var currentDate = startDate
-
-        // Align to start date with configured time
-        var components = calendar.dateComponents([.year, .month, .day], from: currentDate)
+        // Align to the schedule's first day so every refresh keeps the same cadence
+        var components = calendar.dateComponents([.year, .month, .day], from: schedule.createdAt)
         components.hour = config.timeOfDay.hour
         components.minute = config.timeOfDay.minute
         components.second = 0
-        currentDate = calendar.date(from: components)!
+        var currentDate = calendar.date(from: components)!
+        while config.interval > 0 && currentDate < calendar.startOfDay(for: startDate) {
+            currentDate = calendar.date(byAdding: .day, value: config.interval, to: currentDate)!
+        }
 
         // Generate doses at configured interval
         // Use tolerance to prevent boundary date inclusion due to floating-point precision
         let tolerance: TimeInterval = 60 * 60  // 1 hour tolerance
         while currentDate < endDate && (endDate.timeIntervalSince(currentDate) > tolerance) {
             // Skip if paused
-            if let pausedUntil = schedule.pausedUntil,
-                let pausedAt = schedule.pausedAt,
-                currentDate >= pausedAt && currentDate < pausedUntil
+            if let pausedAt = schedule.pausedAt,
+                currentDate >= pausedAt && currentDate < schedule.pausedUntil ?? .distantFuture
             {
                 currentDate = calendar.date(byAdding: .day, value: config.interval, to: currentDate)!
                 continue

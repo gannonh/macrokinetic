@@ -395,15 +395,11 @@ struct NotificationServiceActivationTests {
         // Enable notifications with default timing (60 minutes)
         try await service.enable()
 
-        // Reset mock to track new activity
-        mockCenter.didRemoveAll = false
-
         // Update reminder timing
         try await service.updateReminderTiming(30)
 
-        // Should have updated timing and called removeAll (part of refresh)
+        // NotificationQueueRenewalTests covers the rescheduled trigger times
         #expect(service.reminderMinutesBefore == 30)
-        #expect(mockCenter.didRemoveAll == true)  // refreshNotificationQueue calls removeAll
     }
 
     @Test("updateReminderTiming() does not reschedule when disabled")

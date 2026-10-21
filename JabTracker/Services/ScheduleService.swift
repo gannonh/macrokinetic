@@ -311,6 +311,7 @@ final class ScheduleService {
         loadActiveSchedules()
         print("🔍 [ScheduleService.createSchedule] loadActiveSchedules() called")
         print("🔍 [ScheduleService.createSchedule] activeSchedules.count after load: \(activeSchedules.count)")
+        NotificationCenter.default.post(name: .doseSchedulesChanged, object: nil)
 
         return schedule
     }
@@ -346,6 +347,7 @@ final class ScheduleService {
 
         // Save changes
         try context.save()
+        NotificationCenter.default.post(name: .doseSchedulesChanged, object: nil)
     }
 
     /**
@@ -367,6 +369,7 @@ final class ScheduleService {
 
         // Reload active schedules
         loadActiveSchedules()
+        NotificationCenter.default.post(name: .doseSchedulesChanged, object: nil)
     }
 
     /**
@@ -393,6 +396,7 @@ final class ScheduleService {
 
         // Save changes
         try context.save()
+        NotificationCenter.default.post(name: .doseSchedulesChanged, object: nil)
     }
 
     /**
@@ -409,6 +413,7 @@ final class ScheduleService {
 
         // Save changes
         try context.save()
+        NotificationCenter.default.post(name: .doseSchedulesChanged, object: nil)
     }
 
     // MARK: - Private Helpers
@@ -421,7 +426,7 @@ final class ScheduleService {
      *
      * Sets loadError property on failure for UI feedback.
      */
-    private func loadActiveSchedules() {
+    func loadActiveSchedules() {
         let descriptor = FetchDescriptor<DoseSchedule>(
             predicate: #Predicate { schedule in
                 schedule.isActive == true

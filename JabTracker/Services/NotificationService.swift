@@ -5,7 +5,7 @@ import UserNotifications
 /// NotificationService manages all notification functionality for the dose scheduling system.
 ///
 /// This service orchestrates dose reminder notifications, handles notification actions (take, skip, snooze),
-/// manages a 30-day rolling notification queue, and detects missed doses for timely alerts.
+/// manages a rolling notification queue within iOS's 64 pending requests, and detects missed doses.
 ///
 /// Architecture:
 /// - Uses @Observable pattern for real-time updates (iOS 17+)
@@ -16,8 +16,9 @@ import UserNotifications
 /// Notification Lifecycle:
 /// 1. Authorization requested on first use
 /// 2. Categories registered with actionable buttons (Take, Skip, Snooze)
-/// 3. Queue refreshed with 30 days of upcoming doses
-/// 4. Notifications scheduled at reminder time (default: 1 hour before dose)
+/// 3. Queue refreshed with the nearest upcoming doses on every foreground and schedule change
+/// 4. Notifications scheduled at reminder time (default: 1 hour before dose), plus a renewal notice
+///    at the last queued dose
 /// 5. User receives notification with actions
 /// 6. Actions handled through delegate methods
 /// 7. Queue updated after dose taken/skipped
@@ -99,6 +100,12 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     /// Time of day for end of day reminder
     public var endOfDayReminderTime: Date = Calendar.current.date(from: DateComponents(hour: 21, minute: 0)) ?? Date()
 
+    /// Refreshes the queue when any ScheduleService changes a schedule
+    @ObservationIgnored private var scheduleObserver: NSObjectProtocol?
+
+    /// The latest queue rebuild; each rebuild waits for the one before it
+    @ObservationIgnored private var queueRebuild: Task<Void, Error>?
+
     /// Logger for notification service operations
     internal let logger = Logger(subsystem: "com.gannonhall.JabTracker", category: "NotificationService")
 
@@ -109,6 +116,15 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
         static let scheduledDoseId = "scheduledDoseId"
         static let titrationId = "titrationId"
     }
+
+    /// iOS keeps at most this many pending local notification requests per app
+    static let pendingRequestLimit = 64
+
+    /// Identifier of the notice telling the user to open the app before reminders run out
+    static let renewalRequestIdentifier = "dose-reminders-renewal"
+
+    /// Furthest ahead the dose reminder queue looks
+    static let reminderHorizonDays = 365
 
     // MARK: - Initialization
 
@@ -130,6 +146,22 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
         super.init()
         self.notificationCenter.delegate = self
         registerNotificationCategories()
+        let launchResponses = LaunchNotificationDelegate.shared.takeResponses()
+        Task {
+            for response in launchResponses {
+                do {
+                    try await handleNotificationResponse(
+                        actionIdentifier: response.actionIdentifier, request: response.request)
+                } catch {
+                    logger.error("Failed to handle launch notification response: \(error.localizedDescription)")
+                }
+            }
+        }
+        scheduleObserver = NotificationCenter.default.addObserver(
+            forName: .doseSchedulesChanged, object: nil, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in await self?.refreshIfEnabled() }
+        }
         logger.info("NotificationService initialized")
     }
 
@@ -319,44 +351,53 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     // MARK: - Queue Management
 
     /**
-     * Refresh the notification queue with upcoming doses for the next 30 days.
+     * Rebuild the dose reminder queue with the nearest upcoming doses.
      *
-     * Cancels all existing pending notifications and schedules new ones based on the current
-     * dose schedule. Respects iOS 64-notification limit by prioritizing nearest doses.
+     * Dose reminders share iOS's 64 pending requests with weigh-in and food reminders. They take
+     * every free slot but one, which holds a notice at the last queued dose telling the user to open
+     * the app. Only dose reminders and that notice are replaced; other reminders stay.
      *
+     * Rebuilds run one at a time, so a schedule change during a rebuild is applied after it.
+     *
+     * - Parameter now: Doses after this time are queued
      * - Throws: NotificationServiceError if scheduling fails
      */
-    func refreshNotificationQueue() async throws {
+    func refreshNotificationQueue(now: Date = Date()) async throws {
+        let previous = queueRebuild
+        let rebuild = Task {
+            _ = await previous?.result
+            try await rebuildNotificationQueue(now: now)
+        }
+        queueRebuild = rebuild
+        try await rebuild.value
+    }
+
+    private func rebuildNotificationQueue(now: Date) async throws {
         logger.info("Refreshing notification queue")
         isRefreshing = true
         defer { isRefreshing = false }
 
-        // Refresh upcoming doses from ScheduleService (30 days ahead by default)
-        scheduleService.refreshUpcomingDoses()
+        let pending = await notificationCenter.pendingNotificationRequests()
+        let stale = pending.filter(Self.isDoseQueueRequest).map(\.identifier)
+        notificationCenter.removePendingNotificationRequests(withIdentifiers: stale)
+        let budget = max(0, Self.pendingRequestLimit - (pending.count - stale.count) - 1)
 
-        // Get upcoming doses from ScheduleService
-        let upcomingDoses = scheduleService.upcomingDoses
-        logger.debug("Found \(upcomingDoses.count) upcoming doses")
-
-        // Cancel all existing notifications
-        notificationCenter.removeAllPendingNotificationRequests()
-        logger.debug("Cancelled all existing pending notifications")
-
-        // Limit to 64 notifications (iOS constraint)
-        let dosesToSchedule = Array(upcomingDoses.prefix(64))
-        if upcomingDoses.count > 64 {
-            logger.warning(
-                "Upcoming doses (\(upcomingDoses.count)) exceeds iOS 64-notification limit, scheduling only first 64")
+        scheduleService.refreshUpcomingDoses(from: now, daysAhead: Self.reminderHorizonDays, limit: budget)
+        let doses = scheduleService.upcomingDoses
+        let reminderOffset = -TimeInterval(reminderMinutesBefore * 60)
+        for scheduledDose in doses {
+            try await scheduleDoseReminder(for: scheduledDose, reminderOffset: reminderOffset)
         }
-
-        // Schedule notifications for upcoming doses
-        for scheduledDose in dosesToSchedule {
-            try await scheduleDoseReminder(for: scheduledDose)
+        if let lastDose = doses.last {
+            try await scheduleRenewalNotice(at: lastDose.scheduledTime)
         }
-        logger.debug("Scheduled \(dosesToSchedule.count) dose reminders")
+        logger.debug("Scheduled \(doses.count) dose reminders within a budget of \(budget)")
 
         // Update queue property from pending notifications
         let pendingRequests = await notificationCenter.pendingNotificationRequests()
+        #if DEBUG || JABTRACKER_TEST_HARNESS
+        Self.writePendingRequestsForLiveChecks(pendingRequests)
+        #endif
         notificationQueue = pendingRequests.compactMap { request in
             guard let trigger = request.trigger as? UNCalendarNotificationTrigger,
                 let triggerDate = trigger.nextTriggerDate(),
@@ -381,6 +422,59 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
         }
 
         logger.info("Notification queue refreshed with \(self.notificationQueue.count) notifications")
+    }
+
+    /// Rebuild the queue when dose reminders are on and permitted. Runs on every foreground and
+    /// after every schedule change.
+    func refreshIfEnabled() async {
+        guard await checkAuthorizationStatus() == .authorized, notificationsEnabled else { return }
+        do {
+            try await refreshNotificationQueue()
+        } catch {
+            logger.error("Failed to refresh notification queue: \(error.localizedDescription)")
+        }
+    }
+
+    #if DEBUG || JABTRACKER_TEST_HARNESS
+    /// Live checks read the pending queue from Documents; iOS offers no way to query it from outside the app.
+    static func writePendingRequestsForLiveChecks(_ requests: [UNNotificationRequest]) {
+        guard ProcessInfo.processInfo.arguments.contains("--dump-pending-notifications"),
+            let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
+        else { return }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm"
+        let rows = requests.map { request in
+            let fireDate = (request.trigger as? UNCalendarNotificationTrigger)?.nextTriggerDate()
+            return [
+                fireDate.map(formatter.string) ?? "repeating", request.content.categoryIdentifier,
+                request.identifier, request.content.title,
+            ].joined(separator: "\t")
+        }
+        try? rows.sorted().joined(separator: "\n")
+            .write(to: documents.appendingPathComponent("pending-notifications.tsv"), atomically: true, encoding: .utf8)
+    }
+    #endif
+
+    static func isDoseQueueRequest(_ request: UNNotificationRequest) -> Bool {
+        request.content.categoryIdentifier == "DOSE_REMINDER" || request.identifier == renewalRequestIdentifier
+    }
+
+    /// Reminders stop after the last queued dose unless the app runs again, so say so when it fires.
+    private func scheduleRenewalNotice(at date: Date) async throws {
+        let content = UNMutableNotificationContent()
+        content.title = NSLocalizedString("Open JabTracker to keep dose reminders", comment: "Renewal notice title")
+        content.body = NSLocalizedString(
+            "That was your last scheduled dose reminder. Open the app to schedule more.",
+            comment: "Renewal notice body"
+        )
+        content.sound = .default
+        let components = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: date)
+        try await notificationCenter.add(
+            UNNotificationRequest(
+                identifier: Self.renewalRequestIdentifier,
+                content: content,
+                trigger: UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
+            ))
     }
 
     // MARK: - Activation Methods
@@ -439,18 +533,19 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     public func disable() async {
         logger.info("Disabling notifications")
 
-        // 1. Cancel all pending notifications
+        // 1. Stop new refreshes, and let a running rebuild finish so it adds nothing after the removal
+        notificationsEnabled = false
+        _ = await queueRebuild?.result
+
+        // 2. Cancel all pending notifications
         notificationCenter.removeAllPendingNotificationRequests()
         logger.debug("Cancelled all pending notifications")
 
-        // 2. Clear notification queue
+        // 3. Clear notification queue
         notificationQueue.removeAll()
 
-        // 3. Update badge count
+        // 4. Update badge count
         await updateBadgeCount()
-
-        // 4. Update enabled state
-        notificationsEnabled = false
 
         // 5. Persist state to UserDefaults
         saveState()
@@ -625,18 +720,22 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
 
     // MARK: - UNUserNotificationCenterDelegate
 
+    /// Uses the completion-handler form: iOS calls the async form's completion off the main thread, which
+    /// crashes UIKit when the user taps a reminder.
     nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter,
-        didReceive response: UNNotificationResponse
-    ) async {
-        await Task { @MainActor in
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping @Sendable () -> Void
+    ) {
+        Task { @MainActor in
             do {
                 try await self.handleNotificationResponse(response)
                 self.logger.info("Successfully handled notification response: \(response.actionIdentifier)")
             } catch {
                 self.logger.error("Failed to handle notification response: \(error.localizedDescription)")
             }
-        }.value
+            completionHandler()
+        }
     }
 
     nonisolated func userNotificationCenter(
@@ -651,6 +750,34 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
             return []
         }
         return [.banner, .sound, .badge]
+    }
+}
+
+// MARK: - LaunchNotificationDelegate
+
+/// Holds notification responses that arrive before NotificationService exists, such as the tap that launched
+/// the app. iOS delivers a launch tap only to a delegate set before launch finishes, and NotificationService
+/// needs the model container, so it is created later and replays these.
+@MainActor
+final class LaunchNotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
+    static let shared = LaunchNotificationDelegate()
+
+    private var responses: [(actionIdentifier: String, request: UNNotificationRequest)] = []
+
+    func takeResponses() -> [(actionIdentifier: String, request: UNNotificationRequest)] {
+        defer { responses = [] }
+        return responses
+    }
+
+    nonisolated func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping @Sendable () -> Void
+    ) {
+        Task { @MainActor in
+            self.responses.append((response.actionIdentifier, response.notification.request))
+            completionHandler()
+        }
     }
 }
 

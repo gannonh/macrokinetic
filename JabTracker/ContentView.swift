@@ -254,16 +254,18 @@ struct ContentView: View {
             updateCheckInBadge()
         }
         .task {
+            await AppServices.shared.notificationService?.refreshIfEnabled()
             await ensureTDEESnapshots()
             await ensureScheduledFoodsPopulated()
             // Re-check badge after Query has had time to load
             updateCheckInBadge()
         }
         .onChange(of: scenePhase) { _, newPhase in
-            // Refresh badge and populate scheduled foods when app becomes active
+            // Refresh badge, dose reminders and scheduled foods when app becomes active
             if newPhase == .active {
                 updateCheckInBadge()
                 Task {
+                    await AppServices.shared.notificationService?.refreshIfEnabled()
                     await ensureScheduledFoodsPopulated()
                 }
             }
