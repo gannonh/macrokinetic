@@ -1,0 +1,51 @@
+# Branch live checks at 90a2871a (app) on iPhone 18 Pro, iOS 27.0 simulator, 2026-10-21
+# Run 1: checks 1-4. Check 4 failed in the harness (Settings root, Apps off screen).
+c1-enable: PASS
+[c1-enable] now 2026-10-21 11:14 PDT; list written 11:14:12
+[c1-enable] total 64, dose reminders 63 (first 2026-10-22 07:00, last 2026-12-23 07:00), renewal ['2026-12-23 08:00'], amounts ['0.6'], ScheduledDose rows 63
+c1-relaunch: PASS
+[c1-relaunch] now 2026-10-21 11:14 PDT; list written 11:14:44
+[c1-relaunch] total 64, dose reminders 63 (first 2026-10-22 07:00, last 2026-12-23 07:00), renewal ['2026-12-23 08:00'], amounts ['0.6'], ScheduledDose rows 63
+c2-pause: PASS
+[c2-paused] now 2026-10-21 11:15 PDT; list written 11:15:16
+[c2-paused] total 64, dose reminders 63 (first 2026-10-29 07:00, last 2026-12-30 07:00), renewal ['2026-12-30 08:00'], amounts ['0.6'], ScheduledDose rows 63
+c2-resume: PASS
+[c2-resumed] now 2026-10-21 11:15 PDT; list written 11:15:42
+[c2-resumed] total 64, dose reminders 63 (first 2026-10-22 07:00, last 2026-12-23 07:00), renewal ['2026-12-23 08:00'], amounts ['0.6'], ScheduledDose rows 63
+c2-foreground: PASS
+[c2-foreground] now 2026-10-21 11:16 PDT; list written 11:16:00
+[c2-foreground] total 64, dose reminders 63 (first 2026-10-22 07:00, last 2026-12-23 07:00), renewal ['2026-12-23 08:00'], amounts ['0.6'], ScheduledDose rows 63
+11:15:16.166921-0700 Refreshing notification queue
+11:15:28.463933-0700 Notification state loaded: enabled=true, reminderMinutes=60
+11:15:28.818479-0700 Refreshing notification queue
+11:15:41.566624-0700 Refreshing notification queue
+11:15:53.091317-0700 Notification state loaded: enabled=true, reminderMinutes=60
+11:15:53.521551-0700 Refreshing notification queue
+11:15:59.506823-0700 Refreshing notification queue
+[c3-before] now 2026-10-21 11:16 PDT; list written 11:16:07
+[c3-before] total 64, dose reminders 63 (first 2026-10-22 07:00, last 2026-12-23 07:00), renewal ['2026-12-23 08:00'], amounts ['0.6'], ScheduledDose rows 63
+[c3-warm] reminder for dose 90A9D17A-A515-4E3B-AA8F-B58E9D0CADC4; app running: 1
+c3-warm: PASS
+  11:16:44.224153-0700 Handling notification response: com.apple.UNNotificationDefaultActionIdentifier
+  11:16:44.224212-0700 Received deeplink notification to show QuickDoseSheet for dose: 90A9D17A-A515-4E3B-AA8F-B58E9D0CADC4
+  11:16:44.224259-0700 Successfully handled notification response: com.apple.UNNotificationDefaultActionIdentifier
+[c3-cold] reminder for dose 90A9D17A-A515-4E3B-AA8F-B58E9D0CADC4; app running: 0
+c3-cold: PASS
+  11:16:44.224153-0700 Handling notification response: com.apple.UNNotificationDefaultActionIdentifier
+  11:16:44.224212-0700 Received deeplink notification to show QuickDoseSheet for dose: 90A9D17A-A515-4E3B-AA8F-B58E9D0CADC4
+  11:16:44.224259-0700 Successfully handled notification response: com.apple.UNNotificationDefaultActionIdentifier
+  11:17:21.563439-0700 Handling notification response: com.apple.UNNotificationDefaultActionIdentifier
+  11:17:21.563546-0700 Received deeplink notification to show QuickDoseSheet for dose: 90A9D17A-A515-4E3B-AA8F-B58E9D0CADC4
+c4-denied: FAIL
+/Users/gannonhall/.t3/worktrees/jab-tracker-ios/t3-ea6fb671/JabTrackerUITests/DoseReminderLiveCheckUITests.swift:220: error: -[JabTrackerUITests.DoseReminderLiveCheckUITests testDeniedPermissionRecoversFromSettings] : Failed to tap "Apps" StaticText: No matches found for first query match sequence: `Descendants matching type StaticText` -> `Elements matching predicate '"Apps" IN identifiers'`, given input App element pid: 53491
+KAT3601 Settings opened at root; tapping the app's Settings button again
+KAT3601 Settings still at root; navigating Apps > MacroKinetic > Notifications
+[c4-recovered] now 2026-10-21 11:24 PDT; list written never
+[c4-recovered] no pending list
+
+# Run 2: check 4 at 52081b39 (harness scrolls until Apps shows)
+c4-denied: PASS
+KAT3601 Settings opened at root; tapping the app's Settings button again
+KAT3601 Settings still at root; navigating Apps > MacroKinetic > Notifications
+[c4-recovered] now 2026-10-21 11:26 PDT; list written 11:26:25
+[c4-recovered] total 64, dose reminders 63 (first 2026-10-22 07:00, last 2026-12-23 07:00), renewal ['2026-12-23 08:00'], amounts ['0.6'], ScheduledDose rows 63
