@@ -119,7 +119,7 @@ extension ScheduleService {
     func refreshUpcomingDoses(from now: Date = Date(), daysAhead: Int = 30, limit: Int = .max) {
         // Other ScheduleService instances may have changed schedules since this one loaded them
         loadActiveSchedules()
-        let cutoffDate = Calendar.current.date(byAdding: .day, value: daysAhead, to: now)!
+        let cutoffDate = calendar.date(byAdding: .day, value: daysAhead, to: now)!
         let persisted =
             (try? context.fetch(FetchDescriptor<ScheduledDose>(predicate: #Predicate { $0.scheduledTime > now })))
             ?? []
@@ -171,7 +171,6 @@ extension ScheduleService {
             return nil
         }
 
-        let calendar = Calendar.current
         let now = Date()
 
         // Find the last taken dose from actual Dose records
@@ -278,7 +277,6 @@ extension ScheduleService {
         to endDate: Date
     ) -> [ScheduledDose] {
         var doses: [ScheduledDose] = []
-        let calendar = Calendar.current
 
         // Check for actual dose history to anchor projections correctly
         // This ensures future doses align with actual dosing behavior, not stored patterns
@@ -401,35 +399,32 @@ extension ScheduleService {
         }
 
         var doses: [ScheduledDose] = []
-        let calendar = Calendar.current
 
-        var currentDate = startDate
+        // Administration n falls n × splitInterval after the first one in local wall-clock time, so a
+        // daylight-saving change keeps the chosen time of day. Aligned to the schedule's first day so every
+        // refresh keeps the same cadence.
+        let firstDay = calendar.dateComponents([.year, .month, .day], from: schedule.createdAt)
+        let administration = { (index: Int) -> Date in
+            let minutes = config.timeOfDay.hour * 60 + config.timeOfDay.minute + index * splitInterval
+            var components = firstDay
+            components.day! += minutes / 1440
+            components.hour = minutes % 1440 / 60
+            components.minute = minutes % 60
+            components.second = 0
+            return self.calendar.date(from: components)!
+        }
 
-        // Align to the schedule's first day so every refresh keeps the same cadence
-        var components = calendar.dateComponents([.year, .month, .day], from: schedule.createdAt)
-        components.hour = config.timeOfDay.hour
-        components.minute = config.timeOfDay.minute
-        components.second = 0
-        let alignedDate = calendar.date(from: components)!
-
-        // For schedule projection, start from the aligned date for the first day.
+        // For schedule projection, start from the first administration on the first day.
         // This includes the scheduled dose even if the exact time has passed,
         // which is correct for projecting what the schedule produces.
-        // Only skip forward if the aligned date is on a PREVIOUS calendar day.
+        // Only skip forward if the first administration is on a PREVIOUS calendar day.
+        var index = 0
+        let alignedDate = administration(0)
         if alignedDate < startDate && !calendar.isDate(alignedDate, inSameDayAs: startDate) {
-            // Aligned date is on a previous day, calculate intervals needed
-            let intervalSeconds = TimeInterval(splitInterval * 60)
-            let timeSinceAligned = startDate.timeIntervalSince(alignedDate)
-            let intervalsNeeded = Int(ceil(timeSinceAligned / intervalSeconds))
-            currentDate = calendar.date(
-                byAdding: .minute,
-                value: splitInterval * intervalsNeeded,
-                to: alignedDate
-            )!
-        } else {
-            // Same day or aligned is in the future - use aligned date
-            currentDate = alignedDate
+            index = Int(startDate.timeIntervalSince(alignedDate) / TimeInterval(splitInterval * 60))
+            while administration(index) < startDate { index += 1 }
         }
+        var currentDate = administration(index)
 
         // Generate doses at splitInterval apart
         // Use tolerance to prevent boundary date inclusion due to floating-point precision
@@ -439,7 +434,8 @@ extension ScheduleService {
             if let pausedAt = schedule.pausedAt,
                 currentDate >= pausedAt && currentDate < schedule.pausedUntil ?? .distantFuture
             {
-                currentDate = calendar.date(byAdding: .minute, value: splitInterval, to: currentDate)!
+                index += 1
+                currentDate = administration(index)
                 continue
             }
 
@@ -468,7 +464,8 @@ extension ScheduleService {
             doses.append(scheduledDose)
 
             // Advance by splitInterval (e.g., 3.5 days for twice-weekly)
-            currentDate = calendar.date(byAdding: .minute, value: splitInterval, to: currentDate)!
+            index += 1
+            currentDate = administration(index)
         }
 
         return doses
@@ -494,7 +491,6 @@ extension ScheduleService {
         // For custom patterns, use the interval from config
         // (customRecurrence provides metadata but we use interval for actual scheduling)
         var doses: [ScheduledDose] = []
-        let calendar = Calendar.current
 
         // Align to the schedule's first day so every refresh keeps the same cadence
         var components = calendar.dateComponents([.year, .month, .day], from: schedule.createdAt)

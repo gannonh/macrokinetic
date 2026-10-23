@@ -91,6 +91,7 @@
 		1A850CC176F0B19D8CA2F4B6 /* FoodSearchSheet+Sections.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E7CE4A733EFDB27208B0EA1 /* FoodSearchSheet+Sections.swift */; };
 		1AF41FBF3F3E61C8F503F30B /* SeededRNG.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B8BFF184D022F813089BD4 /* SeededRNG.swift */; };
 		1B9F775C9AB1A9BF12BE4032 /* ScheduleServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD50A693411A3CE1A28E2071 /* ScheduleServiceTests.swift */; };
+		1BF114DA316D6FD6EEE31400 /* SplitDoseDaylightSavingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A9CDD8391630998C5E9E67F /* SplitDoseDaylightSavingTests.swift */; };
 		1C4F767E00C6B70C3058C2DF /* FoodServiceCustomFoodIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3026CB6FB161E81B6CF251E /* FoodServiceCustomFoodIntegrationTests.swift */; };
 		1CB29176ACFA1192B30ADCF6 /* CalendarDayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8214215372768B7456529178 /* CalendarDayView.swift */; };
 		1CBEBB4D0AC6C2E903D47874 /* NutritionDashboardUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 062046B8947A2AA9FE42A177 /* NutritionDashboardUITests.swift */; };
@@ -965,6 +966,7 @@
 		6A5D10958F733EFFFF528C2B /* DataControllerPreviewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataControllerPreviewTests.swift; sourceTree = "<group>"; };
 		6A7A66A68C069CC41D8E6F6C /* AdherenceMetricsCardTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdherenceMetricsCardTests.swift; sourceTree = "<group>"; };
 		6A962ED290149E1EC44C7BC7 /* NutritionCalculationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutritionCalculationService.swift; sourceTree = "<group>"; };
+		6A9CDD8391630998C5E9E67F /* SplitDoseDaylightSavingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitDoseDaylightSavingTests.swift; sourceTree = "<group>"; };
 		6AF9B518A6B3B2D31A437D78 /* ProgressPhoto.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressPhoto.swift; sourceTree = "<group>"; };
 		6B5B52CFA209D164B40E8152 /* QuickWeightSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickWeightSheet.swift; sourceTree = "<group>"; };
 		6C503FC88F78949C6306372C /* SearchMethodTabs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchMethodTabs.swift; sourceTree = "<group>"; };
@@ -1847,6 +1849,7 @@
 				FCA736FED86EAA65C843009E /* ScheduleServiceTitrationTests.swift */,
 				D48B54C24844D6D6DB6D3B95 /* ScheduleSummaryViewTests.swift */,
 				F70B4425884ACD872183473F /* SettingsViewNotificationIntegrationTests.swift */,
+				6A9CDD8391630998C5E9E67F /* SplitDoseDaylightSavingTests.swift */,
 				E6E36C06023081D64BA849FB /* SplitDoseWeeklyTotalTests.swift */,
 				5E2EF906ADB897D77E416C9B /* StoreKitConfigurationTests.swift */,
 				B235104E7844F74CD62FC895 /* SubscriptionManagerCoreLogicTests.swift */,
@@ -3336,6 +3339,7 @@
 				1FA9015CCE7682DC23A15961 /* ScheduledDoseTests.swift in Sources */,
 				E9E5B919A71038CEF22FE960 /* ShortcutButtonTests.swift in Sources */,
 				AB854F4E7F3E41AF0E0CF949 /* ShortcutsSheetTests.swift in Sources */,
+				1BF114DA316D6FD6EEE31400 /* SplitDoseDaylightSavingTests.swift in Sources */,
 				CF7C543372B96EBA677F4F87 /* SplitDoseWeeklyTotalTests.swift in Sources */,
 				4B71F3917DE9324DD9D91542 /* StreakCounterViewTests.swift in Sources */,
 				AC756189A6DAB4329ADFE40B /* SubscriptionManagerCoreLogicTests.swift in Sources */,

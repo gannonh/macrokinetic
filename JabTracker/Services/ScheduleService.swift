@@ -247,6 +247,9 @@ final class ScheduleService {
     /// UI can observe this property to display error feedback
     var loadError: Error?
 
+    /// Calendar whose time zone dose times are projected in
+    var calendar: Calendar = .current
+
     // MARK: - Initialization
 
     /**
