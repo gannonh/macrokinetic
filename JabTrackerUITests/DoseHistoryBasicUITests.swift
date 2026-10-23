@@ -127,6 +127,7 @@ final class DoseHistoryBasicUITests: XCTestCase {
         }
         XCTAssertEqual(app.buttons.matching(identifier: "dose-history-row").count, 0)
         XCTAssertTrue(app.staticTexts["No doses match your current filters."].exists)
+        XCTAssertFalse(app.staticTexts["No doses logged yet"].exists)
         XCTAssertFalse(app.buttons["Log Your First Dose"].exists)
 
         app.buttons["Clear text"].tap()
